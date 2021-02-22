@@ -1,0 +1,2 @@
+#define MAX_THREAD_COUNT 6
+#define TAB_SIZE 100000
