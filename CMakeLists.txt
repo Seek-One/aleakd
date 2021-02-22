@@ -2,13 +2,17 @@ cmake_minimum_required (VERSION 3.0)
 
 project (libaleakd VERSION 1.0.0 DESCRIPTION "Another leak detection library")
 
-# Compile properties
+# Sources
 SET (LIBALEAKD_SRC
 	src/alloc-entry.c
 	src/alloc-entry.h
 	src/aleakd.c
 	src/aleakd.h
 )
+
+#################
+# Dynamic library
+#################
 
 add_library (aleakd SHARED ${LIBALEAKD_SRC})
 
@@ -26,3 +30,20 @@ set_target_properties(aleakd PROPERTIES PUBLIC_HEADER src/aleakd.h)
 install (TARGETS aleakd
 		PUBLIC_HEADER DESTINATION include/libaleakd
         LIBRARY DESTINATION lib)
+
+#################
+# Static library
+#################
+
+#add_library (aleakd-static STATIC ${LIBALEAKD_SRC})
+
+#target_compile_definitions(aleakd PRIVATE RUNTIME -D_GNU_SOURCE)
+
+# Library version
+#set_target_properties(aleakd-static PROPERTIES VERSION ${PROJECT_VERSION})
+#set_target_properties(aleakd-static PROPERTIES SOVERSION 1)
+
+#set_target_properties(toolkit_dbg_mymalloc PROPERTIES CMAKE_EXE_LINKER_FLAGS "-Wl,-wrap,malloc -shared")
+
+#install (TARGETS aleakd-static
+ #       LIBRARY DESTINATION lib)
