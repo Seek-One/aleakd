@@ -19,6 +19,10 @@ set_target_properties(libaleakd PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(libaleakd PROPERTIES SOVERSION 1)
 
 # Library headers
-set_target_properties(libaleakd PROPERTIES PUBLIC_HEADER include/aleakd.h)
+set_target_properties(libaleakd PROPERTIES PUBLIC_HEADER src/aleakd.h)
 
 #set_target_properties(toolkit_dbg_mymalloc PROPERTIES CMAKE_EXE_LINKER_FLAGS "-Wl,-wrap,malloc -shared")
+
+install (TARGETS libaleakd
+		PUBLIC_HEADER DESTINATION include
+        LIBRARY DESTINATION lib)
