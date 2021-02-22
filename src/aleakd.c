@@ -247,26 +247,26 @@ void myfree(void *ptr, char *file, int line)
 }
 #endif
 
-void  alkead_allow_print()
+void  aleakd_allow_print()
 {
 	g_iEnablePrint = 1;
 }
 
-void  alkead_init(int idx)
+void  aleakd_init(int idx)
 {
 	g_listThread[idx].name = NULL;
 	g_listThread[idx].thread = 0;
 	AllocList_Reset(&g_listAllocEntryList[idx]);
 }
 
-void  alkead_set_current_thread(int idx, const char* name)
+void  aleakd_set_current_thread(int idx, const char* name)
 {
 	g_listThread[idx].name = name;
 	g_listThread[idx].thread = pthread_self();
 	g_listAllocEntryList[idx].name = name;
 }
 
-void  alkead_set_current_thread_name(const char* name)
+void  aleakd_set_current_thread_name(const char* name)
 {
 	pthread_t thread = pthread_self();
 	int idx = ThreadEntry_getIdxAdd(g_listThread, MAX_THREAD_COUNT, thread, TAB_SIZE);
@@ -279,7 +279,7 @@ void  alkead_set_current_thread_name(const char* name)
 	}
 }
 
-void  alkead_start(int idx)
+void  aleakd_start(int idx)
 {
 #ifdef USE_THREAD_START
 	//printf("mymalloc started\n");
@@ -287,7 +287,7 @@ void  alkead_start(int idx)
 #endif
 }
 
-void  alkead_stop(int idx)
+void  aleakd_stop(int idx)
 {
 #ifdef USE_THREAD_START
 	g_listThread[idx].iDetectionStarted = 0;
@@ -295,12 +295,12 @@ void  alkead_stop(int idx)
 #endif
 }
 
-void  alkead_reset(int idx)
+void  aleakd_reset(int idx)
 {
 	AllocList_Reset(&g_listAllocEntryList[idx]);
 }
 
-void  alkead_print_leak(int idx)
+void  aleakd_print_leak(int idx)
 {
 	AllocList_Print(&g_listAllocEntryList[idx]);
 }
