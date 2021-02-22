@@ -56,3 +56,5 @@ CMakeFiles
 Makefile
 *.cmake
 CMakeCache.txt
+
+install_manifest.txt
