@@ -10,6 +10,8 @@ SET (LIBALEAKD_SRC
 	src/aleakd.h
 	src/aleakd-data.c
 	src/aleakd-data.h
+	src/thread-entry.c
+	src/thread-entry.h
 	src/wrapper.c
 	src/wrapper.h
 )
