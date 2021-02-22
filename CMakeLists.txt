@@ -20,8 +20,6 @@ SET (LIBALEAKD_SRC
 
 add_library (aleakd SHARED ${LIBALEAKD_SRC})
 
-target_compile_definitions(aleakd PRIVATE RUNTIME -D_GNU_SOURCE)
-
 # Library version
 set_target_properties(aleakd PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(aleakd PROPERTIES SOVERSION 1)
@@ -51,3 +49,15 @@ install (TARGETS aleakd
 
 #install (TARGETS aleakd-static
  #       LIBRARY DESTINATION lib)
+
+#################
+# Test program
+#################
+
+
+# Sources
+SET (ALEAKDTEST_SRC
+	test/aleakd-test.cpp
+)
+
+add_executable(aleakd-test ${ALEAKDTEST_SRC})
