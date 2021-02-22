@@ -8,6 +8,10 @@ SET (LIBALEAKD_SRC
 	src/alloc-entry.h
 	src/aleakd.c
 	src/aleakd.h
+	src/aleakd-data.c
+	src/aleakd-data.h
+	src/wrapper.c
+	src/wrapper.h
 )
 
 #################
