@@ -8,21 +8,26 @@
 
 void AllocList_Reset(struct AllocEntryList* pEntryList)
 {
+	struct AllocEntry* pAllocEntry;
 	pEntryList->count = 0;
 	for (int i=0; i<pEntryList->max_count; i++) {
-		pEntryList->list[i].ptr = NULL;
-		pEntryList->list[i].thread = 0;
+		pAllocEntry = AllocList_getByIdx(pEntryList, i);
+		pAllocEntry->ptr = NULL;
+		pAllocEntry->thread = 0;
 	}
 }
 
 void AllocList_Add(struct AllocEntryList* pEntryList, void* ptr, size_t size, pthread_t thread, int alloc_num)
 {
-	for(int i=0; i<pEntryList->max_count; i++){
-		if(pEntryList->list[i].ptr == NULL){
-			pEntryList->list[i].ptr = ptr;
-			pEntryList->list[i].thread = thread;
-			pEntryList->list[i].size = size;
-			pEntryList->list[i].alloc_num = alloc_num;
+	struct AllocEntry* pAllocEntry;
+	for(int i=0; i<pEntryList->max_count; i++)
+	{
+		pAllocEntry = AllocList_getByIdx(pEntryList, i);
+		if(pAllocEntry->ptr == NULL){
+			pAllocEntry->ptr = ptr;
+			pAllocEntry->thread = thread;
+			pAllocEntry->size = size;
+			pAllocEntry->alloc_num = alloc_num;
 			pEntryList->count++;
 			pEntryList->total_size += size;
 
@@ -39,19 +44,21 @@ void AllocList_Add(struct AllocEntryList* pEntryList, void* ptr, size_t size, pt
 
 int AllocList_Remove(struct AllocEntryList* pEntryList, void* ptr, size_t* bufsize)
 {
+	struct AllocEntry* pAllocEntry;
 	for (int i = 0; i < pEntryList->max_count; i++)
 	{
-		if (pEntryList->list[i].ptr == ptr)
+		pAllocEntry = AllocList_getByIdx(pEntryList, i);
+		if (pAllocEntry->ptr == ptr)
 		{
-			pEntryList->total_size -= pEntryList->list[i].size;
+			pEntryList->total_size -= pAllocEntry->size;
 			pEntryList->count--;
-			pEntryList->list[i].ptr = NULL;
-			pEntryList->list[i].thread = 0;
+			pAllocEntry->ptr = NULL;
+			pAllocEntry->thread = 0;
 			if(bufsize){
-				*bufsize = pEntryList->list[i].size;
+				*bufsize = pAllocEntry->size;
 			}
-			pEntryList->list[i].size = 0;
-			pEntryList->list[i].alloc_num = 0;
+			pAllocEntry->size = 0;
+			pAllocEntry->alloc_num = 0;
 			return 1;
 		}
 	}
@@ -60,18 +67,27 @@ int AllocList_Remove(struct AllocEntryList* pEntryList, void* ptr, size_t* bufsi
 
 void AllocList_Print(struct AllocEntryList* pEntryList)
 {
+	struct AllocEntry* pAllocEntry;
 	if(pEntryList->count > 0) {
-		for (int i = 0; i < pEntryList->max_count; i++) {
-			if (pEntryList->list[i].ptr != NULL) {
-				fprintf(stderr, "still => %p (thread=%lu(%s), size=%lu, num=%d)\n",
-						pEntryList->list[i].ptr,
-						pEntryList->list[i].thread,
+		for (int i = 0; i < pEntryList->max_count; i++)
+		{
+			pAllocEntry = AllocList_getByIdx(pEntryList, i);
+			if (pAllocEntry->ptr != NULL) {
+				fprintf(stderr, "[aleakd] thread %lu (%s): leak %p, size=%lu, alloc_num=%d\n",
+						pAllocEntry->thread,
 						(pEntryList->name ? pEntryList->name : ""),
-						pEntryList->list[i].size,
-						pEntryList->list[i].alloc_num
+						pAllocEntry->ptr,
+						pAllocEntry->size,
+						pAllocEntry->alloc_num
 				);
 			}
 		}
-		fprintf(stderr, "count => %d (%ld bytes)\n", pEntryList->count, pEntryList->total_size);
+		fprintf(stderr, "[aleakd] leak total: count=%d, size=%ld bytes\n", pEntryList->count, pEntryList->total_size);
 	}
+}
+
+
+struct AllocEntry* AllocList_getByIdx(struct AllocEntryList* pAllocEntryList, int idx)
+{
+	return &pAllocEntryList->list[idx];
 }

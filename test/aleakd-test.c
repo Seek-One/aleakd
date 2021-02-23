@@ -3,8 +3,12 @@
 //#include <pthread.h>
 #include <malloc.h>
 
+#include "../src/aleakd.h"
+
 int main()
 {
+	aleakd_set_current_thread_name("main");
+
 	{
 		//pthread_t thread = pthread_self();
 

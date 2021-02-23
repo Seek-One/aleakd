@@ -6,13 +6,16 @@
 #include "alloc-entry.h"
 #include "thread-entry.h"
 
-static unsigned long g_iAllocNumber;
-static int g_iEnablePrint;
+void aleakd_data_set_enable_print(int bEnable);
+int aleakd_data_get_enable_print();
 
-static char g_scanThread;
+void aleakd_data_init_thread_list();
+struct ThreadEntryList* aleakd_data_get_thread_list();
+struct ThreadEntry* aleakd_data_get_thread(int idx);
 
-static struct ThreadEntry g_listThread[MAX_THREAD_COUNT];
-static struct AllocEntry g_listAllocEntry[MAX_THREAD_COUNT][TAB_SIZE];
-static struct AllocEntryList g_listAllocEntryList[MAX_THREAD_COUNT];
+struct AllocEntry* aleakd_data_get_alloc_list(int idx);
+
+void aleakd_data_incr_alloc_number();
+int aleakd_data_get_alloc_number();
 
 #endif // ALEAKD_DATA

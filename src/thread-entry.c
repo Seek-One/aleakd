@@ -13,31 +13,41 @@ int ThreadEntry_Reset(struct ThreadEntry* pThread)
 	pThread->iAllocCount = 0;
 }
 
-int ThreadEntry_getIdx(struct ThreadEntry* pEntryList, int iCount, pthread_t thread)
+struct ThreadEntry* ThreadEntry_getByIdx(struct ThreadEntryList* pThreadEntryList, int idx)
 {
-	for(int i=0; i<iCount; i++)
+	return &pThreadEntryList->list[idx];
+}
+
+int ThreadEntry_getIdx(struct ThreadEntryList* pEntryList, pthread_t thread)
+{
+	struct ThreadEntry* pThreadEntry;
+	for(int i=0; i<pEntryList->count; i++)
 	{
-		if(pEntryList[i].thread == thread){
+		pThreadEntry = &pEntryList->list[i];
+		if(pThreadEntry->thread == thread){
 			return i;
 		}
 	}
 	return -1;
 }
 
-int ThreadEntry_getIdxAdd(struct ThreadEntry* pEntryList, int iCount, pthread_t thread, int iTabSize)
+int ThreadEntry_getIdxAdd(struct ThreadEntryList* pEntryList, pthread_t thread, int iTabSize)
 {
-	for(int i=0; i<iCount; i++)
+	struct ThreadEntry* pThreadEntry;
+	for(int i=0; i<pEntryList->count; i++)
 	{
-		if(pEntryList[i].thread == thread){
+		pThreadEntry = &pEntryList->list[i];
+		if(pThreadEntry->thread == thread){
 			return i;
 		}
 	}
-	for(int i=0; i<iCount; i++)
+	for(int i=0; i<pEntryList->count; i++)
 	{
-		if(pEntryList[i].thread == 0){
-			ThreadEntry_Reset(&pEntryList[i]);
-			pEntryList[i].thread = thread;
-			pEntryList[i].iTabSize = iTabSize;
+		pThreadEntry = &pEntryList->list[i];
+		if(pThreadEntry->thread == 0){
+			ThreadEntry_Reset(pThreadEntry);
+			pThreadEntry->thread = thread;
+			pThreadEntry->iTabSize = iTabSize;
 			return i;
 		}
 	}

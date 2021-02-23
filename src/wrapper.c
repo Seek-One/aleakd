@@ -41,22 +41,27 @@ void dummy_free(void *ptr)
 
 void wrapper_init()
 {
-			fprintf(stderr, "[aleakd] init");
 	if(g_bIsInitializing == 0)
 	{
 		g_bIsInitializing = 1;
-		//fprintf(stderr, "[aleakd] init");
+		fprintf(stderr, "[aleakd] wrapper_init\n");
+
+		aleakd_data_init_thread_list();
 
 		// Free store data
-		for (int i = 0; i < MAX_THREAD_COUNT; i++) {
-			ThreadEntry_Reset(&g_listThread[i]);
+		for (int i = 0; i < MAX_THREAD_COUNT; i++)
+		{
+			// Init thread
+			struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(i);
+			ThreadEntry_Reset(pThreadEntry);
 #ifndef USE_THREAD_START
 			//printf("mymalloc started\n");
-			g_listThread[i].iDetectionStarted = 1;
+			pThreadEntry->iDetectionStarted = 1;
 #endif
-			g_listAllocEntryList[i].max_count = TAB_SIZE;
-			g_listAllocEntryList[i].list = g_listAllocEntry[i];
-			AllocList_Reset(&g_listAllocEntryList[i]);
+
+			pThreadEntry->alloc_list.max_count = TAB_SIZE;
+			pThreadEntry->alloc_list.list = aleakd_data_get_alloc_list(i);
+			AllocList_Reset(&pThreadEntry->alloc_list);
 		}
 
 		// Wrap functions
@@ -80,49 +85,54 @@ void wrapper_init()
 			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
 		}
 
+		fprintf(stderr, "[aleakd] wrapper_init done\n");
 		g_bIsInitializing = 0;
 		//fprintf(stderr, "[aleakd] done");
 	}
-			fprintf(stderr, "[aleakd] dispose");
 }
 
 int displayEntry(struct ThreadEntry* pThread, size_t size)
 {
-	if(pThread->name && pThread->name[0] == g_scanThread){
-		return 1;
-	}
+	//if(pThread->name && pThread->name[0] == g_scanThread){
+	//	return 1;
+	//}
 	return 1;
 }
 
 void addEntry(void* ptr, size_t size, char* szAction)
 {
+	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
+	struct ThreadEntry* pThreadEntry;
+
 	pthread_t thread = pthread_self();
-	int idx = ThreadEntry_getIdx(g_listThread, MAX_THREAD_COUNT, thread);
+	int idx = ThreadEntry_getIdx(pThreadEntryList, thread);
 	if(idx == -1) {
-		idx = ThreadEntry_getIdxAdd(g_listThread, MAX_THREAD_COUNT, thread, TAB_SIZE);
+		idx = ThreadEntry_getIdxAdd(pThreadEntryList, thread, TAB_SIZE);
 		if(idx != -1) {
+			pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
 #ifndef USE_THREAD_START
-			g_listThread[idx].iDetectionStarted = 1;
+			pThreadEntry->iDetectionStarted = 1;
 #endif
 		}
 	}
 	if(idx != -1) {
-		if (g_listThread[idx].iDetectionStarted){
-			AllocList_Add(&g_listAllocEntryList[idx], ptr, size, thread, g_iAllocNumber);
+		pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
+		if (pThreadEntry->iDetectionStarted){
+			AllocList_Add(&pThreadEntry->alloc_list, ptr, size, thread, aleakd_data_get_alloc_number());
 		}
-		g_listThread[idx].iCurrentSize += size;
-		g_listThread[idx].iAllocCount++;
-		if(g_listThread[idx].iCurrentSize > g_listThread[idx].iMaxSize) {
-			g_listThread[idx].iMaxSize = g_listThread[idx].iCurrentSize;
-			if(g_iEnablePrint) {
+		pThreadEntry->iCurrentSize += size;
+		pThreadEntry->iAllocCount++;
+		if(pThreadEntry->iCurrentSize > pThreadEntry->iMaxSize) {
+			pThreadEntry->iMaxSize = pThreadEntry->iCurrentSize;
+			if(aleakd_data_get_enable_print()) {
 				//ThreadEntry_print(&g_listThread[idx], size);
 			}
 		}
-		if(displayEntry(&g_listThread[idx], size)){
-			fprintf(stderr, "[aleakd] thread %lu (%s): %s %p (%lu bytes) => alloc=%d, memory=%lu bytes\n",
-		   		g_listThread[idx].thread, (g_listThread[idx].name ? g_listThread[idx].name : ""),
+		if(displayEntry(pThreadEntry, size)){
+			fprintf(stderr, "[aleakd] thread %lu (%s): %s %p (%lu bytes) => alloc_num=%d, memory=%lu bytes\n",
+				pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""),
 				szAction, ptr, size,
-				g_listThread[idx].iAllocCount, g_listThread[idx].iCurrentSize);
+					pThreadEntry->iAllocCount, pThreadEntry->iCurrentSize);
 			if(size==49){
 				fprintf(stderr, "[aleakd] leak detected\n");
 			}
@@ -132,21 +142,25 @@ void addEntry(void* ptr, size_t size, char* szAction)
 
 void removeEntry(void* ptr, char* szAction)
 {
+	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
+	struct ThreadEntry* pThreadEntry;
+
 	int iFound = 0;
 	size_t iSizeFree = 0;
 	pthread_t thread = pthread_self();
-	int idx = ThreadEntry_getIdx(g_listThread, MAX_THREAD_COUNT, thread);
+	int idx = ThreadEntry_getIdx(pThreadEntryList, thread);
 	if(idx != -1) {
-		if (g_listThread[idx].iDetectionStarted) {
-			iFound = AllocList_Remove(&g_listAllocEntryList[idx], ptr, &iSizeFree);
+		pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
+		if (pThreadEntry->iDetectionStarted) {
+			iFound = AllocList_Remove(&pThreadEntry->alloc_list, ptr, &iSizeFree);
 			if(iFound){
-				g_listThread[idx].iCurrentSize-=iSizeFree;
-				g_listThread[idx].iAllocCount--;
-				if(displayEntry(&g_listThread[idx], iSizeFree)){
-					fprintf(stderr, "[aleakd] thread %lu (%s): %s %p (%lu bytes) => alloc=%d, memory=%lu bytes\n",
-							g_listThread[idx].thread, (g_listThread[idx].name ? g_listThread[idx].name : ""),
+				pThreadEntry->iCurrentSize-=iSizeFree;
+				pThreadEntry->iAllocCount--;
+				if(displayEntry(pThreadEntry, iSizeFree)){
+					fprintf(stderr, "[aleakd] thread %lu (%s): %s %p (%lu bytes) => alloc_num=%d, memory=%lu bytes\n",
+							pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""),
 							szAction, ptr, iSizeFree,
-							g_listThread[idx].iAllocCount, g_listThread[idx].iCurrentSize);
+							pThreadEntry->iAllocCount, pThreadEntry->iCurrentSize);
 				}
 			}
 		}
@@ -154,16 +168,17 @@ void removeEntry(void* ptr, char* szAction)
 	// Look in other thread if not found
 	if(iFound == 0){
 		for(int i=0; i<MAX_THREAD_COUNT; i++){
-			if ((i != idx) && g_listThread[i].iDetectionStarted) {
-				iFound = AllocList_Remove(&g_listAllocEntryList[i], ptr, &iSizeFree);
+			pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, i);
+			if ((i != idx) && pThreadEntry->iDetectionStarted) {
+				iFound = AllocList_Remove(&pThreadEntry->alloc_list, ptr, &iSizeFree);
 				if(iFound){
-					g_listThread[idx].iCurrentSize-=iSizeFree;
-					g_listThread[i].iAllocCount--;
-					if(displayEntry(&g_listThread[i], iSizeFree)){
-						fprintf(stderr, "[aleakd] thread::fallback %lu (%s): %s %p (%lu bytes) => alloc=%d, memory=%lu bytes\n",
-		   					 g_listThread[i].thread, (g_listThread[i].name ? g_listThread[i].name : ""),
+					pThreadEntry->iCurrentSize-=iSizeFree;
+					pThreadEntry->iAllocCount--;
+					if(displayEntry(pThreadEntry, iSizeFree)){
+						fprintf(stderr, "[aleakd] thread::fallback %lu (%s): %s %p (%lu bytes) => alloc_num=%d, memory=%lu bytes\n",
+							pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""),
 		   					 szAction, ptr, iSizeFree,
-		   					 g_listThread[i].iAllocCount, g_listThread[i].iCurrentSize);
+							pThreadEntry->iAllocCount, pThreadEntry->iCurrentSize);
 					}
 				}
 			}
@@ -175,11 +190,11 @@ void *malloc(size_t size)
 {
 	void *p = NULL;
 
+	aleakd_data_incr_alloc_number();
+
 	if(!real_malloc){
 		wrapper_init();
 	}
-
-	g_iAllocNumber++;
 
 	if(real_malloc){
 		p = real_malloc(size);
@@ -190,16 +205,17 @@ void *malloc(size_t size)
 	if(p){
 		addEntry(p, size, "malloc");
 	}
+
 	return p;
 }
 
 void *calloc(size_t num, size_t size)
 {
+	aleakd_data_incr_alloc_number();
+
 	if(!real_calloc){
 		wrapper_init();
 	}
-
-	g_iAllocNumber++;
 
 	void *p = NULL;
 	if(real_calloc){
@@ -209,8 +225,9 @@ void *calloc(size_t num, size_t size)
 	}
 
 	if(p){
-		addEntry(p, size*num, "malloc");
+		addEntry(p, size*num, "calloc");
 	}
+
 	return p;
 }
 

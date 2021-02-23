@@ -65,5 +65,8 @@ SET (ALEAKDTEST_SRC
 )
 
 add_executable(aleakd-test ${ALEAKDTEST_SRC})
+set_target_properties(aleakd-test PROPERTIES LINK_LIBRARIES "-lpthread -ldl")
+
+target_link_libraries(aleakd-test aleakd)
 
 #set_target_properties(aleakd-test PROPERTIES CMAKE_EXE_LINKER_FLAGS "-lpthread  -ldl -fPIC -O0")

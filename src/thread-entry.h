@@ -3,6 +3,8 @@
 
 #include <pthread.h>
 
+#include "alloc-entry.h"
+
 struct ThreadEntry
 {
 	const char* name;
@@ -12,11 +14,20 @@ struct ThreadEntry
 	size_t iCurrentSize;
 	size_t iMaxSize;
 	int iAllocCount;
+
+	struct AllocEntryList alloc_list;
 } _ThreadEntry;
 
+struct ThreadEntryList {
+	struct ThreadEntry* list;
+	int count;
+} _ThreadEntryList;
+
 int ThreadEntry_Reset(struct ThreadEntry* pThread);
-int ThreadEntry_getIdx(struct ThreadEntry* pEntryList, int iCount, pthread_t thread);
-int ThreadEntry_getIdxAdd(struct ThreadEntry* pEntryList, int iCount, pthread_t thread, int iTabSize);
 void ThreadEntry_print(struct ThreadEntry* pThread, size_t size_added);
+
+struct ThreadEntry* ThreadEntry_getByIdx(struct ThreadEntryList* pThreadEntryList, int idx);
+int ThreadEntry_getIdx(struct ThreadEntryList* pEntryList, pthread_t thread);
+int ThreadEntry_getIdxAdd(struct ThreadEntryList* pEntryList, pthread_t thread, int iTabSize);
 
 #endif // ALEAKD_THREADENTRY_H

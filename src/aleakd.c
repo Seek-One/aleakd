@@ -32,39 +32,46 @@
  */
 
 
-void  aleakd_allow_print()
+void aleakd_allow_print()
 {
-	g_iEnablePrint = 1;
+	aleakd_data_set_enable_print(1);
 }
 
-void  aleakd_init(int idx)
+void aleakd_init(int idx)
 {
-	g_listThread[idx].name = NULL;
-	g_listThread[idx].thread = 0;
-	AllocList_Reset(&g_listAllocEntryList[idx]);
+	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
+	pThreadEntry->name = NULL;
+	pThreadEntry->thread = 0;
+	AllocList_Reset(&pThreadEntry->alloc_list);
 }
 
-void  aleakd_set_current_thread(int idx, const char* name)
+void aleakd_set_current_thread(int idx, const char* name)
 {
-	g_listThread[idx].name = name;
-	g_listThread[idx].thread = pthread_self();
-	g_listAllocEntryList[idx].name = name;
+	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
+	pThreadEntry->name = name;
+	pThreadEntry->thread = pthread_self();
+
+	pThreadEntry->alloc_list.name = name;
 }
 
-void  aleakd_set_current_thread_name(const char* name)
+void aleakd_set_current_thread_name(const char* name)
 {
+	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
+
 	pthread_t thread = pthread_self();
-	int idx = ThreadEntry_getIdxAdd(g_listThread, MAX_THREAD_COUNT, thread, TAB_SIZE);
+	int idx = ThreadEntry_getIdxAdd(pThreadEntryList, thread, TAB_SIZE);
 	if(idx != -1){
+		struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
+
 #ifndef USE_THREAD_START
 		//printf("mymalloc started\n");
-		g_listThread[idx].iDetectionStarted = 1;
+		pThreadEntry->iDetectionStarted = 1;
 #endif
-		g_listThread[idx].name = name;
+		pThreadEntry->name = name;
 	}
 }
 
-void  aleakd_start(int idx)
+void aleakd_start(int idx)
 {
 #ifdef USE_THREAD_START
 	//printf("mymalloc started\n");
@@ -72,7 +79,7 @@ void  aleakd_start(int idx)
 #endif
 }
 
-void  aleakd_stop(int idx)
+void aleakd_stop(int idx)
 {
 #ifdef USE_THREAD_START
 	g_listThread[idx].iDetectionStarted = 0;
@@ -80,23 +87,33 @@ void  aleakd_stop(int idx)
 #endif
 }
 
-void  aleakd_reset(int idx)
+void aleakd_reset(int idx)
 {
-	AllocList_Reset(&g_listAllocEntryList[idx]);
+	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
+	AllocList_Reset(&pThreadEntry->alloc_list);
 }
 
-void  aleakd_print_leak(int idx)
+void aleakd_print_leak(int idx)
 {
-	AllocList_Print(&g_listAllocEntryList[idx]);
+	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
+	AllocList_Print(&pThreadEntry->alloc_list);
 }
 
 void __attribute__((constructor)) aleakd_constructor()
 {
-	//fprintf(stderr, "[aleakd] init\n");
+	fprintf(stderr, "[aleakd] init\n");
 	wrapper_init();
 }
 
 void __attribute__((destructor)) aleakd_destructor()
 {
-	//fprintf(stderr, "[aleakd] dispose\n");
+	fprintf(stderr, "[aleakd] dispose\n");
+
+	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
+	struct ThreadEntry* pThreadEntry;
+	for(int i=0; i<pThreadEntryList->count; i++)
+	{
+		pThreadEntry = &pThreadEntryList->list[i];
+		AllocList_Print(&pThreadEntry->alloc_list);
+	}
 }
