@@ -3,8 +3,11 @@
  *              library interposition.
  */
 
+#include <stdio.h>
 #include <pthread.h>
 #include <bits/pthreadtypes.h>
+
+#include "wrapper.h"
 
 #include "aleakd-data.h"
 
@@ -85,4 +88,15 @@ void  aleakd_reset(int idx)
 void  aleakd_print_leak(int idx)
 {
 	AllocList_Print(&g_listAllocEntryList[idx]);
+}
+
+void __attribute__((constructor)) aleakd_constructor()
+{
+	//fprintf(stderr, "[aleakd] init\n");
+	wrapper_init();
+}
+
+void __attribute__((destructor)) aleakd_destructor()
+{
+	//fprintf(stderr, "[aleakd] dispose\n");
 }

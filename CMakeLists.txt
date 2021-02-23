@@ -29,7 +29,9 @@ set_target_properties(aleakd PROPERTIES SOVERSION 1)
 # Library headers
 set_target_properties(aleakd PROPERTIES PUBLIC_HEADER src/aleakd.h)
 
-#set_target_properties(toolkit_dbg_mymalloc PROPERTIES CMAKE_EXE_LINKER_FLAGS "-Wl,-wrap,malloc -shared")
+#set_target_properties(aleakd PROPERTIES CMAKE_EXE_LINKER_FLAGS "-fPIC -O0 -Wl,--wrap,malloc -Wl,--wrap,free")
+
+set_target_properties(aleakd PROPERTIES LINK_LIBRARIES "-lpthread -ldl")
 
 install (TARGETS aleakd
 		PUBLIC_HEADER DESTINATION include/libaleakd
@@ -59,7 +61,9 @@ install (TARGETS aleakd
 
 # Sources
 SET (ALEAKDTEST_SRC
-	test/aleakd-test.cpp
+	test/aleakd-test.c
 )
 
 add_executable(aleakd-test ${ALEAKDTEST_SRC})
+
+#set_target_properties(aleakd-test PROPERTIES CMAKE_EXE_LINKER_FLAGS "-lpthread  -ldl -fPIC -O0")

@@ -1,46 +1,89 @@
-
-#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <dlfcn.h>
 
 #include "aleakd-data.h"
 
-static void* (*real_malloc)(size_t)=NULL;
-static void (*real_free)(void*)=NULL;
-static void* (*real_realloc)(void*, size_t)=NULL;
+static int g_bIsInitializing = 0;
+static void* (*real_malloc)(size_t) = NULL;
+static void* (*real_calloc)(size_t, size_t) = NULL;
+static void (*real_free)(void*) = NULL;
+static void* (*real_realloc)(void*, size_t) = NULL;
 
-static void mtrace_init(void)
+// Dummy buffer to wrap initialization because dlsym can call malloc function
+char tmpbuf[4096];
+unsigned long tmppos = 0;
+unsigned long tmpallocs = 0;
+
+void* dummy_malloc(size_t size)
 {
-	real_malloc = dlsym(RTLD_NEXT, "malloc");
-	if (NULL == real_malloc) {
-		fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
-	}
+    if (tmppos + size >= sizeof(tmpbuf)) exit(1);
+    void *retptr = tmpbuf + tmppos;
+    tmppos += size;
+    ++tmpallocs;
+    return retptr;
+}
 
-	real_free = dlsym(RTLD_NEXT, "free");
-	if (NULL == real_free) {
-		fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
-	}
+void* dummy_calloc(size_t nmemb, size_t size)
+{
+    void *ptr = dummy_malloc(nmemb * size);
+    unsigned int i = 0;
+    for (; i < nmemb * size; ++i)
+        *((char*)(ptr + i)) = '\0';
+    return ptr;
+}
 
-	real_realloc = dlsym(RTLD_NEXT, "realloc");
-	if (NULL == real_realloc) {
-		fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
-	}
+void dummy_free(void *ptr)
+{
 
-	for(int i=0; i<MAX_THREAD_COUNT; i++)
+}
+
+void wrapper_init()
+{
+			fprintf(stderr, "[aleakd] init");
+	if(g_bIsInitializing == 0)
 	{
-		ThreadEntry_Reset(&g_listThread[i]);
+		g_bIsInitializing = 1;
+		//fprintf(stderr, "[aleakd] init");
+
+		// Free store data
+		for (int i = 0; i < MAX_THREAD_COUNT; i++) {
+			ThreadEntry_Reset(&g_listThread[i]);
 #ifndef USE_THREAD_START
-		//printf("mymalloc started\n");
-		g_listThread[i].iDetectionStarted = 1;
+			//printf("mymalloc started\n");
+			g_listThread[i].iDetectionStarted = 1;
 #endif
-		g_listAllocEntryList[i].max_count = TAB_SIZE;
-		g_listAllocEntryList[i].list = g_listAllocEntry[i];
-		AllocList_Reset(&g_listAllocEntryList[i]);
+			g_listAllocEntryList[i].max_count = TAB_SIZE;
+			g_listAllocEntryList[i].list = g_listAllocEntry[i];
+			AllocList_Reset(&g_listAllocEntryList[i]);
+		}
+
+		// Wrap functions
+		real_malloc = dlsym(RTLD_NEXT, "malloc");
+		if (NULL == real_malloc) {
+			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
+		}
+
+		real_calloc = dlsym(RTLD_NEXT, "calloc");
+		if (NULL == real_calloc) {
+			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
+		}
+
+		real_free = dlsym(RTLD_NEXT, "free");
+		if (NULL == real_free) {
+			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
+		}
+
+		real_realloc = dlsym(RTLD_NEXT, "realloc");
+		if (NULL == real_realloc) {
+			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
+		}
+
+		g_bIsInitializing = 0;
+		//fprintf(stderr, "[aleakd] done");
 	}
+			fprintf(stderr, "[aleakd] dispose");
 }
 
 int displayEntry(struct ThreadEntry* pThread, size_t size)
@@ -48,7 +91,7 @@ int displayEntry(struct ThreadEntry* pThread, size_t size)
 	if(pThread->name && pThread->name[0] == g_scanThread){
 		return 1;
 	}
-	return 0;
+	return 1;
 }
 
 void addEntry(void* ptr, size_t size, char* szAction)
@@ -128,17 +171,21 @@ void removeEntry(void* ptr, char* szAction)
 	}
 }
 
-
 void *malloc(size_t size)
 {
-	if(real_malloc==NULL) {
-		mtrace_init();
+	void *p = NULL;
+
+	if(!real_malloc){
+		wrapper_init();
 	}
 
 	g_iAllocNumber++;
 
-	void *p = NULL;
-	p = real_malloc(size);
+	if(real_malloc){
+		p = real_malloc(size);
+	}else{
+		p = dummy_malloc(size);
+	}
 
 	if(p){
 		addEntry(p, size, "malloc");
@@ -146,11 +193,32 @@ void *malloc(size_t size)
 	return p;
 }
 
+void *calloc(size_t num, size_t size)
+{
+	if(!real_calloc){
+		wrapper_init();
+	}
+
+	g_iAllocNumber++;
+
+	void *p = NULL;
+	if(real_calloc){
+		p = real_calloc(num, size);
+	}else{
+		p = dummy_calloc(num, size);
+	}
+
+	if(p){
+		addEntry(p, size*num, "malloc");
+	}
+	return p;
+}
+
 
 void *realloc(void* ptr, size_t size)
 {
-	if(real_realloc==NULL) {
-		mtrace_init();
+	if(!real_realloc){
+		wrapper_init();
 	}
 
 	if(ptr){	
@@ -169,14 +237,19 @@ void *realloc(void* ptr, size_t size)
 
 void free(void *ptr)
 {
-	if(real_free==NULL) {
-		mtrace_init();
+	if(!real_free){
+		wrapper_init();
 	}
 
 	if(ptr != NULL) {
 		removeEntry(ptr, "free");
 	}
 
-	//fprintf(stderr, "free => %p\n", ptr);
-	real_free(ptr);
+	if(real_free){
+		real_free(ptr);
+	}else{
+		dummy_free(ptr);
+	}
 }
+
+

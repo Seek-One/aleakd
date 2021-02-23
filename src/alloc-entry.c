@@ -27,14 +27,14 @@ void AllocList_Add(struct AllocEntryList* pEntryList, void* ptr, size_t size, pt
 			pEntryList->total_size += size;
 
 			if(size == 15 && pEntryList->name && pEntryList->name[0] == 'p') {
-				fprintf(stderr, "thread:%lu malloc(%ld) #%d => %p\n", thread, size, alloc_num, ptr);
+				fprintf(stderr, "[aleakd] thread %lu: malloc(%ld) #%d => %p\n", thread, size, alloc_num, ptr);
 			}
 
 			return;
 		}
 	}
 
-	fprintf(stderr, "thread:%lu no more space\n", thread);
+	fprintf(stderr, "[aleakd] thread %lu: no more space\n", thread);
 }
 
 int AllocList_Remove(struct AllocEntryList* pEntryList, void* ptr, size_t* bufsize)
