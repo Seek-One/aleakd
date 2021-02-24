@@ -58,3 +58,7 @@ Makefile
 CMakeCache.txt
 
 install_manifest.txt
+aleakd-test
+*.cbp
+.idea
+release
