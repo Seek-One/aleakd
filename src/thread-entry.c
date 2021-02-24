@@ -13,6 +13,14 @@ int ThreadEntry_Reset(struct ThreadEntry* pThread)
 	pThread->iAllocCount = 0;
 }
 
+int ThreadEntry_Reinit(struct ThreadEntry* pThread)
+{
+	pThread->iCurrentSize = 0;
+	pThread->iMaxSize = 0;
+	pThread->iAllocCount = 0;
+	AllocList_Clear(&pThread->alloc_list);
+}
+
 struct ThreadEntry* ThreadEntry_getByIdx(struct ThreadEntryList* pThreadEntryList, int idx)
 {
 	return &pThreadEntryList->list[idx];

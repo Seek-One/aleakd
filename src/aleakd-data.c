@@ -3,6 +3,8 @@
 #include "aleakd-data.h"
 
 static unsigned long g_iAllocNumber = 0;
+static unsigned long g_iBreakAllocNumber = 0;
+static unsigned long g_iDisplayMinAllocNumber = 0;
 static int g_iEnablePrint = 0;
 
 static char g_scanThread = 'm';
@@ -48,7 +50,27 @@ void aleakd_data_incr_alloc_number()
 	g_iAllocNumber++;
 }
 
-int aleakd_data_get_alloc_number()
+unsigned long aleakd_data_get_alloc_number()
 {
 	return g_iAllocNumber;
+}
+
+void aleakd_data_set_break_alloc_num(unsigned long num)
+{
+	g_iBreakAllocNumber = num;
+}
+
+unsigned long aleakd_data_get_break_alloc_num()
+{
+	return g_iBreakAllocNumber;
+}
+
+void aleakd_data_set_display_min_alloc_num(unsigned long num)
+{
+	g_iDisplayMinAllocNumber = num;
+}
+
+unsigned long aleakd_data_get_display_min_alloc_num()
+{
+	return g_iDisplayMinAllocNumber;
 }

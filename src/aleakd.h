@@ -13,5 +13,6 @@ void aleakd_reset(int idx);
 void aleakd_start(int idx);
 void aleakd_stop(int idx);
 void aleakd_print_leaks(int idx);
+void aleakd_set_break_alloc_num(unsigned long num);
 
 #endif // LIB_ALEAKD_H

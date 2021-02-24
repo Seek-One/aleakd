@@ -6,7 +6,7 @@
 
 #include "alloc-entry.h"
 
-void AllocList_Reset(struct AllocEntryList* pEntryList)
+void AllocList_Clear(struct AllocEntryList* pEntryList)
 {
 	struct AllocEntry* pAllocEntry;
 	pEntryList->count = 0;
@@ -17,32 +17,32 @@ void AllocList_Reset(struct AllocEntryList* pEntryList)
 	}
 }
 
-void AllocList_Add(struct AllocEntryList* pEntryList, void* ptr, size_t size, pthread_t thread, int alloc_num)
+void AllocList_Add(struct AllocEntryList* pEntryList, struct AllocEntry* pEntry)
 {
 	struct AllocEntry* pAllocEntry;
 	for(int i=0; i<pEntryList->max_count; i++)
 	{
 		pAllocEntry = AllocList_getByIdx(pEntryList, i);
 		if(pAllocEntry->ptr == NULL){
-			pAllocEntry->ptr = ptr;
-			pAllocEntry->thread = thread;
-			pAllocEntry->size = size;
-			pAllocEntry->alloc_num = alloc_num;
+			pAllocEntry->ptr = pEntry->ptr;
+			pAllocEntry->thread = pEntry->thread;
+			pAllocEntry->size = pEntry->size;
+			pAllocEntry->alloc_num = pEntry->alloc_num;
 			pEntryList->count++;
-			pEntryList->total_size += size;
+			pEntryList->total_size += pEntry->size;
 
-			if(size == 15 && pEntryList->name && pEntryList->name[0] == 'p') {
-				fprintf(stderr, "[aleakd] thread %lu: malloc(%ld) #%d => %p\n", thread, size, alloc_num, ptr);
+			if(pEntry->size == 15 && pEntryList->name && pEntryList->name[0] == 'p') {
+				fprintf(stderr, "[aleakd] thread %lu: malloc(%ld) #%d => %p\n", pEntry->thread, pEntry->size, pEntry->alloc_num, pEntry->ptr);
 			}
 
 			return;
 		}
 	}
 
-	fprintf(stderr, "[aleakd] thread %lu: no more space\n", thread);
+	fprintf(stderr, "[aleakd] thread %lu: no more space\n", pEntry->thread);
 }
 
-int AllocList_Remove(struct AllocEntryList* pEntryList, void* ptr, size_t* bufsize)
+int AllocList_Remove(struct AllocEntryList* pEntryList, void* ptr, struct AllocEntry* pOutAllocEntry)
 {
 	struct AllocEntry* pAllocEntry;
 	for (int i = 0; i < pEntryList->max_count; i++)
@@ -50,39 +50,55 @@ int AllocList_Remove(struct AllocEntryList* pEntryList, void* ptr, size_t* bufsi
 		pAllocEntry = AllocList_getByIdx(pEntryList, i);
 		if (pAllocEntry->ptr == ptr)
 		{
+			// Copy info of suppressed entry
+			if(pOutAllocEntry){
+				pOutAllocEntry->ptr = pAllocEntry->ptr;
+				pOutAllocEntry->thread = pAllocEntry->thread;
+				pOutAllocEntry->size = pAllocEntry->size;
+				pOutAllocEntry->alloc_num = pAllocEntry->alloc_num;
+			}
+
+			// Decrement list
 			pEntryList->total_size -= pAllocEntry->size;
 			pEntryList->count--;
+
+			// Reset entry
 			pAllocEntry->ptr = NULL;
 			pAllocEntry->thread = 0;
-			if(bufsize){
-				*bufsize = pAllocEntry->size;
-			}
 			pAllocEntry->size = 0;
 			pAllocEntry->alloc_num = 0;
+
 			return 1;
 		}
 	}
 	return 0;
 }
 
-void AllocList_Print(struct AllocEntryList* pEntryList)
+void AllocList_Print(struct AllocEntryList* pEntryList, unsigned long min_alloc)
 {
+	int iVisibleCount = 0;
+	size_t iVisibleSize = 0;
+
 	struct AllocEntry* pAllocEntry;
 	if(pEntryList->count > 0) {
+		fprintf(stderr, "[aleakd] leak summary\n");
 		for (int i = 0; i < pEntryList->max_count; i++)
 		{
 			pAllocEntry = AllocList_getByIdx(pEntryList, i);
-			if (pAllocEntry->ptr != NULL) {
-				fprintf(stderr, "[aleakd] thread %lu (%s): leak %p, size=%lu, alloc_num=%d\n",
+			if (pAllocEntry->ptr != NULL && pAllocEntry->alloc_num >= min_alloc) {
+				fprintf(stderr, "[aleakd]   leak for thread %lu (%s): leak %p, size=%lu, alloc_num=%d\n",
 						pAllocEntry->thread,
 						(pEntryList->name ? pEntryList->name : ""),
 						pAllocEntry->ptr,
 						pAllocEntry->size,
 						pAllocEntry->alloc_num
 				);
+				iVisibleCount++;
+				iVisibleSize+=pAllocEntry->size;
 			}
 		}
-		fprintf(stderr, "[aleakd] leak total: count=%d, size=%ld bytes\n", pEntryList->count, pEntryList->total_size);
+		fprintf(stderr, "[aleakd]   leak visible: count=%d, size=%ld bytes\n", iVisibleCount, pAllocEntry->size);
+		fprintf(stderr, "[aleakd]   leak total: count=%d, size=%ld bytes\n", pEntryList->count, pEntryList->total_size);
 	}
 }
 

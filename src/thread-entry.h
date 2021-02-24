@@ -24,6 +24,7 @@ struct ThreadEntryList {
 } _ThreadEntryList;
 
 int ThreadEntry_Reset(struct ThreadEntry* pThread);
+int ThreadEntry_Reinit(struct ThreadEntry* pThread);
 void ThreadEntry_print(struct ThreadEntry* pThread, size_t size_added);
 
 struct ThreadEntry* ThreadEntry_getByIdx(struct ThreadEntryList* pThreadEntryList, int idx);

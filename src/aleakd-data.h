@@ -16,6 +16,12 @@ struct ThreadEntry* aleakd_data_get_thread(int idx);
 struct AllocEntry* aleakd_data_get_alloc_list(int idx);
 
 void aleakd_data_incr_alloc_number();
-int aleakd_data_get_alloc_number();
+unsigned long aleakd_data_get_alloc_number();
+
+void aleakd_data_set_break_alloc_num(unsigned long num);
+unsigned long aleakd_data_get_break_alloc_num();
+
+void aleakd_data_set_display_min_alloc_num(unsigned long num);
+unsigned long aleakd_data_get_display_min_alloc_num();
 
 #endif // ALEAKD_DATA

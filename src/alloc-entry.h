@@ -22,10 +22,10 @@ struct AllocEntryList {
 	const char* name;
 };
 
-void AllocList_Reset(struct AllocEntryList* pEntryList);
-void AllocList_Add(struct AllocEntryList* pEntryList, void* ptr, size_t size, pthread_t thread, int alloc_num);
-int AllocList_Remove(struct AllocEntryList* pEntryList, void* ptr, size_t* bufsize);
-void AllocList_Print(struct AllocEntryList* pEntryList);
+void AllocList_Clear(struct AllocEntryList* pEntryList);
+void AllocList_Add(struct AllocEntryList* pEntryList, struct AllocEntry* pEntry);
+int AllocList_Remove(struct AllocEntryList* pEntryList, void* ptr, struct AllocEntry* pEntry);
+void AllocList_Print(struct AllocEntryList* pEntryList, unsigned long min_alloc);
 struct AllocEntry* AllocList_getByIdx(struct AllocEntryList* pAllocEntryList, int idx);
 
 #endif // ALEAKD_ALLOCENTRY_H
