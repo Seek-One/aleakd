@@ -145,9 +145,9 @@ void addEntry(void* ptr, size_t size, char* szAction)
 			}
 		}
 		if(displayEntry(pThreadEntry, &allocEntry)){
-			fprintf(stderr, "[aleakd] thread %lu (%s): %s %p (%lu bytes) => thread state: alloc_count=%d, memory=%lu bytes\n",
+			fprintf(stderr, "[aleakd] thread %lu (%s): %s ptr=%p, size=%lu bytes, alloc_num=%lu => thread state: alloc_count=%d, memory=%lu bytes\n",
 				pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""),
-				szAction, ptr, size,
+				szAction, ptr, size, allocEntry.alloc_num,
 					pThreadEntry->iAllocCount, pThreadEntry->iCurrentSize);
 		}
 		if(aleakd_data_get_alloc_number() == aleakd_data_get_break_alloc_num()){
