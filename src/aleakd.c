@@ -13,8 +13,6 @@
 
 #include "aleakd.h"
 
-//#define USE_THREAD_START
-
 /*
  * Run-time interposition of malloc and free based
  * on the dynamic linker's (ld-linux.so) LD_PRELOAD mechanism
@@ -63,7 +61,7 @@ void aleakd_set_current_thread_name(const char* name)
 	if(idx != -1){
 		struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
 
-#ifndef USE_THREAD_START
+#ifndef USE_AUTO_THREAD_START
 		//printf("mymalloc started\n");
 		pThreadEntry->iDetectionStarted = 1;
 #endif
@@ -74,16 +72,18 @@ void aleakd_set_current_thread_name(const char* name)
 
 void aleakd_start(int idx)
 {
-#ifdef USE_THREAD_START
+#ifdef USE_AUTO_THREAD_START
 	//printf("mymalloc started\n");
-	g_listThread[idx].iDetectionStarted = 1;
+	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
+	pThreadEntry->iDetectionStarted = 1;
 #endif
 }
 
 void aleakd_stop(int idx)
 {
-#ifdef USE_THREAD_START
-	g_listThread[idx].iDetectionStarted = 0;
+#ifdef USE_AUTO_THREAD_START
+	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
+	pThreadEntry->iDetectionStarted = 0;
 	//printf("mymalloc stopped\n");
 #endif
 }

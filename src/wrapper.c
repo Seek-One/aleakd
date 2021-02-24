@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 
+#include "../config.h"
+
 #include "aleakd-data.h"
 
 static int g_bIsInitializing = 0;
@@ -54,7 +56,7 @@ void wrapper_init()
 			// Init thread
 			struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(i);
 			ThreadEntry_Reset(pThreadEntry);
-#ifndef USE_THREAD_START
+#ifndef USE_AUTO_THREAD_START
 			//printf("mymalloc started\n");
 			pThreadEntry->iDetectionStarted = 1;
 #endif
@@ -120,7 +122,7 @@ void addEntry(void* ptr, size_t size, char* szAction)
 		idx = ThreadEntry_getIdxAdd(pThreadEntryList, thread, TAB_SIZE);
 		if(idx != -1) {
 			pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
-#ifndef USE_THREAD_START
+#ifndef USE_AUTO_THREAD_START
 			pThreadEntry->iDetectionStarted = 1;
 #endif
 		}
@@ -133,25 +135,28 @@ void addEntry(void* ptr, size_t size, char* szAction)
 		allocEntry.alloc_num = aleakd_data_get_alloc_number();
 
 		pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
-		if (pThreadEntry->iDetectionStarted){
+		if (pThreadEntry->iDetectionStarted)
+		{
 			AllocList_Add(&pThreadEntry->alloc_list, &allocEntry);
-		}
-		pThreadEntry->iCurrentSize += size;
-		pThreadEntry->iAllocCount++;
-		if(pThreadEntry->iCurrentSize > pThreadEntry->iMaxSize) {
-			pThreadEntry->iMaxSize = pThreadEntry->iCurrentSize;
-			if(aleakd_data_get_enable_print()) {
-				//ThreadEntry_print(&g_listThread[idx], size);
+
+			pThreadEntry->iCurrentSize += size;
+			pThreadEntry->iAllocCount++;
+			if (pThreadEntry->iCurrentSize > pThreadEntry->iMaxSize) {
+				pThreadEntry->iMaxSize = pThreadEntry->iCurrentSize;
+				if (aleakd_data_get_enable_print()) {
+					//ThreadEntry_print(&g_listThread[idx], size);
+				}
 			}
-		}
-		if(displayEntry(pThreadEntry, &allocEntry)){
-			fprintf(stderr, "[aleakd] thread %lu (%s): %s ptr=%p, size=%lu bytes, alloc_num=%lu => thread state: alloc_count=%d, memory=%lu bytes\n",
-				pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""),
-				szAction, ptr, size, allocEntry.alloc_num,
-					pThreadEntry->iAllocCount, pThreadEntry->iCurrentSize);
-		}
-		if(aleakd_data_get_alloc_number() == aleakd_data_get_break_alloc_num()){
-			fprintf(stderr, "[aleakd] break\n");
+			if (displayEntry(pThreadEntry, &allocEntry)) {
+				fprintf(stderr,
+						"[aleakd] thread %lu (%s): %s ptr=%p, size=%lu bytes, alloc_num=%lu => thread state: alloc_count=%d, memory=%lu bytes\n",
+						pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""),
+						szAction, ptr, size, allocEntry.alloc_num,
+						pThreadEntry->iAllocCount, pThreadEntry->iCurrentSize);
+			}
+			if (aleakd_data_get_alloc_number() == aleakd_data_get_break_alloc_num()) {
+				fprintf(stderr, "[aleakd] break\n");
+			}
 		}
 	}
 }
