@@ -5,7 +5,7 @@
 static unsigned long g_iAllocNumber = 0;
 static unsigned long g_iBreakAllocNumber = 0;
 static unsigned long g_iDisplayMinAllocNumber = 0;
-static int g_iEnablePrint = 0;
+static int g_bPrintAction = 1;
 
 static char g_scanThread = 'm';
 
@@ -14,14 +14,14 @@ static struct ThreadEntryList g_listThreadList;
 
 static struct AllocEntry g_listAllocEntry[MAX_THREAD_COUNT][TAB_SIZE];
 
-void aleakd_data_set_enable_print(int bEnable)
+void aleakd_data_set_enable_print_action(int bEnable)
 {
-	g_iEnablePrint = bEnable;
+	g_bPrintAction = bEnable;
 }
 
-int aleakd_data_get_enable_print()
+int aleakd_data_get_enable_print_action()
 {
-	return g_iEnablePrint;
+	return g_bPrintAction;
 }
 
 void aleakd_data_init_thread_list()

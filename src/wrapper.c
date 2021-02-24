@@ -1,11 +1,13 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <bits/pthreadtypes.h>
 #include <dlfcn.h>
 
 #include "../config.h"
 
 #include "aleakd-data.h"
+#include "aleakd.h"
 
 static int g_bIsInitializing = 0;
 static void* (*real_malloc)(size_t) = NULL;
@@ -56,7 +58,7 @@ void wrapper_init()
 			// Init thread
 			struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(i);
 			ThreadEntry_Reset(pThreadEntry);
-#ifndef USE_AUTO_THREAD_START
+#ifdef USE_AUTO_THREAD_START
 			//printf("mymalloc started\n");
 			pThreadEntry->iDetectionStarted = 1;
 #endif
@@ -101,6 +103,9 @@ void wrapper_init()
 
 int displayEntry(struct ThreadEntry* pThread, struct AllocEntry* pAllocEntry)
 {
+	if(!aleakd_data_get_enable_print_action()){
+		return 0;
+	}
 	if(pAllocEntry->alloc_num < aleakd_data_get_display_min_alloc_num())
 	{
 		//if(pThread->name && pThread->iAllocCount > 10){
@@ -143,9 +148,6 @@ void addEntry(void* ptr, size_t size, char* szAction)
 			pThreadEntry->iAllocCount++;
 			if (pThreadEntry->iCurrentSize > pThreadEntry->iMaxSize) {
 				pThreadEntry->iMaxSize = pThreadEntry->iCurrentSize;
-				if (aleakd_data_get_enable_print()) {
-					//ThreadEntry_print(&g_listThread[idx], size);
-				}
 			}
 			if (displayEntry(pThreadEntry, &allocEntry)) {
 				fprintf(stderr,
@@ -155,6 +157,9 @@ void addEntry(void* ptr, size_t size, char* szAction)
 						pThreadEntry->iAllocCount, pThreadEntry->iCurrentSize);
 			}
 			if (aleakd_data_get_alloc_number() == aleakd_data_get_break_alloc_num()) {
+				fprintf(stderr, "[aleakd] break\n");
+			}
+			if (size== 382) {
 				fprintf(stderr, "[aleakd] break\n");
 			}
 		}
@@ -291,4 +296,90 @@ void free(void *ptr)
 	}
 }
 
+static void thread_cleanup (void * data)
+{
+	struct ThreadEntry* pThreadEntry = (struct ThreadEntry* )data;
+	fprintf(stderr, "[aleakd] thread %lu (%s): celanup\n",
+			pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""));
 
+	pthread_key_delete(pThreadEntry->key);
+	//aleakd_print_leaks(idx);
+
+}
+
+int (*real_pthread_create)(pthread_t *, const pthread_attr_t *, void *(*) (void *), void *);
+//nt (*real_pthread_join)(pthread_t thread, void **retval);
+//void (*real_pthread_exit)(void *rval_ptr);
+//int (*real_pthread_cancel)(pthread_t thread);
+
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start) (void *), void *arg)
+{
+	int res;
+
+	fprintf(stderr, "[aleakd] creating thread\n");
+	if (!real_pthread_create) {
+		real_pthread_create = dlsym(RTLD_NEXT, "pthread_create");
+	}
+	res = real_pthread_create(thread, attr, start, arg);
+
+	if(thread){
+		struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
+		struct ThreadEntry* pThreadEntry;
+		int idx = ThreadEntry_getIdxAdd(pThreadEntryList, *thread, TAB_SIZE);
+		if(idx != -1){
+			pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
+			pthread_key_create(&pThreadEntry->key, thread_cleanup);
+			pthread_setspecific(pThreadEntry->key, pThreadEntry);
+		}
+	}
+
+	return res;
+}
+
+/*
+int pthread_join(pthread_t thread, void **retval)
+{
+	int res;
+
+	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
+	struct ThreadEntry* pThreadEntry;
+	int idx = ThreadEntry_getIdx(pThreadEntryList, thread);
+
+	if (!real_pthread_join) {
+		real_pthread_join = dlsym(RTLD_NEXT, "pthread_join");
+	}
+	res =  real_pthread_join(thread, retval);
+
+	if(idx != -1){
+		pThreadEntry = aleakd_data_get_thread(idx);
+		fprintf(stderr, "[aleakd] thread %lu (%s): join\n",
+			pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""));
+
+		aleakd_print_leaks(idx);
+	}
+
+	return res;
+}
+
+void pthread_exit(void *rval_ptr)
+{
+	fprintf(stderr, "[aleakd] exit thread\n");
+	if (!real_pthread_exit) {
+		real_pthread_exit = dlsym(RTLD_NEXT, "pthread_exit");
+	}
+
+	real_pthread_exit(rval_ptr);
+}
+
+int pthread_cancel(pthread_t thread)
+{
+	int res;
+
+	fprintf(stderr, "[aleakd] cancel thread\n");
+	if (!real_pthread_cancel) {
+		real_pthread_cancel = dlsym(RTLD_NEXT, "pthread_cancel");
+	}
+
+	return res;
+}
+*/

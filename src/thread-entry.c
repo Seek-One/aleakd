@@ -21,6 +21,52 @@ int ThreadEntry_Reinit(struct ThreadEntry* pThread)
 	AllocList_Clear(&pThread->alloc_list);
 }
 
+void ThreadEntry_Print_Internal(struct ThreadEntry* pThreadEntry, int bPrintDetail, unsigned long min_alloc_num, int* piVisibleCount, size_t* piVisibleSize)
+{
+	struct AllocEntry* pAllocEntry;
+
+	int iVisibleCount = 0;
+	size_t iVisibleSize = 0;
+	if(pThreadEntry->alloc_list.count > 0)
+	{
+		if(pThreadEntry->name) {
+			fprintf(stderr, "[aleakd] thread %lu (%s) leak summary\n", pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""));
+		}else{
+			fprintf(stderr, "[aleakd] thread %lu leak summary\n", pThreadEntry->thread);
+		}
+		for (int i = 0; i < pThreadEntry->alloc_list.max_count; i++)
+		{
+			pAllocEntry = AllocList_getByIdx(&pThreadEntry->alloc_list, i);
+			if (pAllocEntry->ptr != NULL && pAllocEntry->alloc_num >= min_alloc_num) {
+				if(bPrintDetail) {
+					fprintf(stderr, "[aleakd]   leak %p, size=%lu, alloc_num=%d\n",
+							pAllocEntry->thread,
+							pAllocEntry->ptr,
+							pAllocEntry->size,
+							pAllocEntry->alloc_num
+					);
+				}
+				iVisibleCount++;
+				iVisibleSize+=pAllocEntry->size;
+			}
+		}
+		fprintf(stderr, "[aleakd]   leak visible: count=%d, size=%ld bytes\n", iVisibleCount, iVisibleSize);
+		fprintf(stderr, "[aleakd]   leak total: count=%d, size=%ld bytes\n", pThreadEntry->alloc_list.count, pThreadEntry->alloc_list.total_size);
+	}
+
+	if(piVisibleCount){
+		*piVisibleCount += iVisibleCount;
+	}
+	if(piVisibleSize){
+		*piVisibleSize += iVisibleSize;
+	}
+}
+
+void ThreadEntry_Print(struct ThreadEntry* pThreadEntry, int bPrintDetail, unsigned long min_alloc_num)
+{
+	ThreadEntry_Print_Internal(pThreadEntry, bPrintDetail, min_alloc_num, NULL, NULL);
+}
+
 struct ThreadEntry* ThreadEntry_getByIdx(struct ThreadEntryList* pThreadEntryList, int idx)
 {
 	return &pThreadEntryList->list[idx];
@@ -62,8 +108,24 @@ int ThreadEntry_getIdxAdd(struct ThreadEntryList* pEntryList, pthread_t thread, 
 	return -1;
 }
 
-void ThreadEntry_print(struct ThreadEntry* pThread, size_t size_added)
+void ThreadEntryList_Print(struct ThreadEntryList* pEntryList, int bPrintDetail, unsigned long min_alloc_num)
 {
-	fprintf(stderr, "thread #%lu '%s' : total=%ld bytes, alloc=%ld, added=%lu bytes)\n",
-		 pThread->thread, (pThread->name ? pThread->name : ""), pThread->iMaxSize, pThread->iAllocCount, size_added);
+	int iTotalCount = 0;
+	size_t iTotalSize = 0;
+	int iVisibleCount = 0;
+	size_t iVisibleSize = 0;
+
+	struct ThreadEntry* pThreadEntry;
+	for(int i=0; i<pEntryList->count; i++)
+	{
+		pThreadEntry = &pEntryList->list[i];
+		ThreadEntry_Print_Internal(pThreadEntry, bPrintDetail, min_alloc_num, &iVisibleCount, &iVisibleSize);
+
+		iTotalCount += pThreadEntry->iAllocCount;
+		iTotalSize += pThreadEntry->iCurrentSize;
+	}
+
+	fprintf(stderr, "[aleakd] global leak visible: count=%d, size=%ld bytes\n", iVisibleCount, iVisibleSize);
+	fprintf(stderr, "[aleakd] global leak total: count=%d, size=%ld bytes\n", iTotalCount, iTotalSize);
+
 }

@@ -7,7 +7,7 @@
 
 int main()
 {
-	aleakd_set_current_thread_name("main");
+	aleakd_current_thread_set_name("main");
 
 	{
 		//pthread_t thread = pthread_self();

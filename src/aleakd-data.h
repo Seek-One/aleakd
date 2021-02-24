@@ -6,8 +6,8 @@
 #include "alloc-entry.h"
 #include "thread-entry.h"
 
-void aleakd_data_set_enable_print(int bEnable);
-int aleakd_data_get_enable_print();
+void aleakd_data_set_enable_print_action(int bEnable);
+int aleakd_data_get_enable_print_action();
 
 void aleakd_data_init_thread_list();
 struct ThreadEntryList* aleakd_data_get_thread_list();

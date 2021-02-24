@@ -15,6 +15,8 @@ struct ThreadEntry
 	size_t iMaxSize;
 	int iAllocCount;
 
+	pthread_key_t key;
+
 	struct AllocEntryList alloc_list;
 } _ThreadEntry;
 
@@ -25,10 +27,12 @@ struct ThreadEntryList {
 
 int ThreadEntry_Reset(struct ThreadEntry* pThread);
 int ThreadEntry_Reinit(struct ThreadEntry* pThread);
-void ThreadEntry_print(struct ThreadEntry* pThread, size_t size_added);
+void ThreadEntry_Print(struct ThreadEntry* pThread, int bPrintDetail, unsigned long min_alloc_num);
 
 struct ThreadEntry* ThreadEntry_getByIdx(struct ThreadEntryList* pThreadEntryList, int idx);
 int ThreadEntry_getIdx(struct ThreadEntryList* pEntryList, pthread_t thread);
 int ThreadEntry_getIdxAdd(struct ThreadEntryList* pEntryList, pthread_t thread, int iTabSize);
+
+void ThreadEntryList_Print(struct ThreadEntryList* pEntryList, int bPrintDetail, unsigned long min_alloc_num);
 
 #endif // ALEAKD_THREADENTRY_H
