@@ -109,25 +109,3 @@ int ThreadEntry_getIdxAdd(struct ThreadEntryList* pEntryList, pthread_t thread, 
 	}
 	return -1;
 }
-
-void ThreadEntryList_Print(struct ThreadEntryList* pEntryList, int bPrintDetail, unsigned long min_alloc_num)
-{
-	int iTotalCount = 0;
-	size_t iTotalSize = 0;
-	int iVisibleCount = 0;
-	size_t iVisibleSize = 0;
-
-	struct ThreadEntry* pThreadEntry;
-	for(int i=0; i<pEntryList->count; i++)
-	{
-		pThreadEntry = &pEntryList->list[i];
-		ThreadEntry_Print_Internal(pThreadEntry, bPrintDetail, min_alloc_num, &iVisibleCount, &iVisibleSize);
-
-		iTotalCount += pThreadEntry->iAllocCount;
-		iTotalSize += pThreadEntry->iCurrentSize;
-	}
-
-	fprintf(stderr, "[aleakd] global leak visible: count=%d, size=%ld bytes\n", iVisibleCount, iVisibleSize);
-	fprintf(stderr, "[aleakd] global leak total: count=%d, size=%ld bytes\n", iTotalCount, iTotalSize);
-
-}

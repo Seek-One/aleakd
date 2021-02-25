@@ -31,6 +31,4 @@ struct ThreadEntry* ThreadEntry_getByIdx(struct ThreadEntryList* pThreadEntryLis
 int ThreadEntry_getIdx(struct ThreadEntryList* pEntryList, pthread_t thread);
 int ThreadEntry_getIdxAdd(struct ThreadEntryList* pEntryList, pthread_t thread, int iTabSize);
 
-void ThreadEntryList_Print(struct ThreadEntryList* pEntryList, int bPrintDetail, unsigned long min_alloc_num);
-
 #endif // ALEAKD_THREADENTRY_H

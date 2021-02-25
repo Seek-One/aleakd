@@ -27,7 +27,7 @@ void aleakd_set_current_thread(int idx, const char* name);
 void aleakd_reset(int idx);
 void aleakd_start(int idx);
 void aleakd_stop(int idx);
-void aleakd_print_leaks(int idx, int bDetail);
+void aleakd_thread_print_leaks(int idx, int bDetail);
 int aleakd_thread_alloc_count(int idx);
 size_t aleakd_thread_memory_usage(int idx);
 size_t aleakd_thread_memory_usage_max(int idx);

@@ -55,8 +55,7 @@ void aleakd_all_threads_stop()
 
 void aleakd_all_threads_print_leaks(int bDetail)
 {
-	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
-	ThreadEntryList_Print(pThreadEntryList, bDetail, aleakd_data_get_display_min_alloc_num());
+	AllocList_PrintLeaks_All(aleakd_data_get_alloc_list(), aleakd_data_get_alloc_number());
 }
 
 int aleakd_all_threads_count()
@@ -156,10 +155,10 @@ void aleakd_reset(int idx)
 	ThreadEntry_Reinit(pThreadEntry);
 }
 
-void aleakd_print_leaks(int idx, int bDetail)
+void aleakd_thread_print_leaks(int idx, int bDetail)
 {
 	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
-	ThreadEntry_Print(pThreadEntry, bDetail, aleakd_data_get_display_min_alloc_num());
+	AllocList_PrintLeaks_ForThread(aleakd_data_get_alloc_list(), pThreadEntry->thread, aleakd_data_get_alloc_number());
 }
 
 int aleakd_thread_alloc_count(int idx)
@@ -194,5 +193,5 @@ void __attribute__((constructor)) aleakd_constructor()
 void __attribute__((destructor)) aleakd_destructor()
 {
 	fprintf(stderr, "[aleakd] dispose\n");
-	AllocList_Print(aleakd_data_get_alloc_list(), aleakd_data_get_display_min_alloc_num());
+	AllocList_PrintLeaks_All(aleakd_data_get_alloc_list(), aleakd_data_get_display_min_alloc_num());
 }

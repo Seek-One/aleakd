@@ -75,12 +75,19 @@ int AllocList_Remove(struct AllocEntryList* pEntryList, void* ptr, struct AllocE
 	return 0;
 }
 
-void AllocList_Print(struct AllocEntryList* pEntryList, unsigned long min_alloc)
+struct AllocEntry* AllocList_getByIdx(struct AllocEntryList* pAllocEntryList, int idx)
+{
+	return &pAllocEntryList->list[idx];
+}
+
+static void AllocList_PrintLeaks_Internal(struct AllocEntryList* pEntryList, pthread_t *pThread, unsigned long min_alloc)
 {
 	int iVisibleCount = 0;
 	size_t iVisibleSize = 0;
 
 	fprintf(stderr, "[aleakd] leak summary\n");
+
+	int iPrint;
 
 	struct AllocEntry* pAllocEntry;
 	if(pEntryList->count > 0) {
@@ -88,7 +95,19 @@ void AllocList_Print(struct AllocEntryList* pEntryList, unsigned long min_alloc)
 		for (int i = 0; i < pEntryList->max_count; i++)
 		{
 			pAllocEntry = AllocList_getByIdx(pEntryList, i);
-			if (pAllocEntry->ptr != NULL && pAllocEntry->alloc_num >= min_alloc) {
+
+			iPrint = 1;
+			if(pAllocEntry->ptr == NULL){
+				iPrint = 0;
+			}
+			if(pAllocEntry->alloc_num < min_alloc){
+				iPrint = 0;
+			}
+			if(pThread && (*pThread != pAllocEntry->thread)){
+				iPrint = 0;
+			}
+
+			if (iPrint) {
 				fprintf(stderr, "[aleakd]   leak for thread %lu: leak %p, size=%lu, alloc_num=%d\n",
 						pAllocEntry->thread,
 						//(pEntryList->name ? pEntryList->name : ""),
@@ -105,8 +124,12 @@ void AllocList_Print(struct AllocEntryList* pEntryList, unsigned long min_alloc)
 	}
 }
 
-
-struct AllocEntry* AllocList_getByIdx(struct AllocEntryList* pAllocEntryList, int idx)
+void AllocList_PrintLeaks_All(struct AllocEntryList* pEntryList, unsigned long min_alloc)
 {
-	return &pAllocEntryList->list[idx];
+	AllocList_PrintLeaks_Internal(pEntryList, NULL, min_alloc);
+}
+
+void AllocList_PrintLeaks_ForThread(struct AllocEntryList* pEntryList, pthread_t thread, unsigned long min_alloc)
+{
+	AllocList_PrintLeaks_Internal(pEntryList, &thread, min_alloc);
 }
