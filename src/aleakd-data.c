@@ -9,8 +9,8 @@ static int g_bPrintAction = 0;
 
 static char g_scanThread = 'm';
 
-static struct ThreadEntry g_listThread[MAX_THREAD_COUNT];
-static struct ThreadEntryList g_listThreadList;
+static struct ThreadEntry g_tabThreadEntry[MAX_THREAD_COUNT];
+static struct ThreadEntryList g_listThreadEntry;
 
 static struct AllocEntry g_tabAllocEntry[MAX_ALLOC_COUNT];
 static struct AllocEntryList g_listAllocEntry;
@@ -35,8 +35,8 @@ void aleakd_data_init_alloc_list()
 
 void aleakd_data_init_thread_list()
 {
-	g_listThreadList.count = MAX_THREAD_COUNT;
-	g_listThreadList.list = (struct ThreadEntry*)g_listThread;
+	g_listThreadEntry.count = MAX_THREAD_COUNT;
+	g_listThreadEntry.list = (struct ThreadEntry*)g_tabThreadEntry;
 
 	// Free store data
 	for (int i = 0; i < MAX_THREAD_COUNT; i++)
@@ -53,12 +53,12 @@ void aleakd_data_init_thread_list()
 
 struct ThreadEntryList* aleakd_data_get_thread_list()
 {
-	return (struct ThreadEntryList*)&g_listThreadList;
+	return (struct ThreadEntryList*)&g_listThreadEntry;
 }
 
 struct ThreadEntry* aleakd_data_get_thread(int idx)
 {
-	return ThreadEntry_getByIdx(&g_listThreadList, idx);
+	return ThreadEntry_getByIdx(&g_listThreadEntry, idx);
 }
 
 struct AllocEntryList* aleakd_data_get_alloc_list()
