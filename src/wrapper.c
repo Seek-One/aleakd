@@ -104,7 +104,7 @@ int displayEntry(struct ThreadEntry* pThread, struct AllocEntry* pAllocEntry)
 	return 1;
 }
 
-void addEntry(void* ptr, size_t size, char* szAction)
+void addEntry(void* ptr, size_t size, char* szAction, int alloc_num)
 {
 	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
 	struct ThreadEntry* pThreadEntry;
@@ -130,7 +130,7 @@ void addEntry(void* ptr, size_t size, char* szAction)
 	allocEntry.ptr = ptr;
 	allocEntry.size = size;
 	allocEntry.thread = thread;
-	allocEntry.alloc_num = aleakd_data_get_alloc_number();
+	allocEntry.alloc_num = alloc_num;
 
 	// Add allocation in the list
 	if(bMustAdd){
@@ -214,6 +214,7 @@ void *malloc(size_t size)
 	void *p = NULL;
 
 	aleakd_data_incr_alloc_number();
+	int alloc_num = aleakd_data_get_alloc_number();
 
 	if(!real_malloc){
 		wrapper_init();
@@ -226,7 +227,7 @@ void *malloc(size_t size)
 	}
 
 	if(p){
-		addEntry(p, size, "malloc");
+		addEntry(p, size, "malloc", alloc_num);
 	}
 
 	return p;
@@ -235,6 +236,7 @@ void *malloc(size_t size)
 void *calloc(size_t num, size_t size)
 {
 	aleakd_data_incr_alloc_number();
+	int alloc_num = aleakd_data_get_alloc_number();
 
 	if(!real_calloc){
 		wrapper_init();
@@ -248,7 +250,7 @@ void *calloc(size_t num, size_t size)
 	}
 
 	if(p){
-		addEntry(p, size*num, "calloc");
+		addEntry(p, size*num, "calloc", alloc_num);
 	}
 
 	return p;
@@ -261,6 +263,9 @@ void *realloc(void* ptr, size_t size)
 		wrapper_init();
 	}
 
+	aleakd_data_incr_alloc_number();
+	int alloc_num = aleakd_data_get_alloc_number();
+
 	if(ptr){	
 		removeEntry(ptr, "realloc::free");
 	}
@@ -269,7 +274,7 @@ void *realloc(void* ptr, size_t size)
 	p = real_realloc(ptr, size);
 	
 	if(p){
-		addEntry(p, size, "realloc");
+		addEntry(p, size, "realloc", alloc_num);
 	}
 
 	return p;
