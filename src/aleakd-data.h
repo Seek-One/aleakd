@@ -9,11 +9,14 @@
 void aleakd_data_set_enable_print_action(int bEnable);
 int aleakd_data_get_enable_print_action();
 
+// Alloc list
+void aleakd_data_init_alloc_list();
+struct AllocEntryList* aleakd_data_get_alloc_list();
+
+// Thread list
 void aleakd_data_init_thread_list();
 struct ThreadEntryList* aleakd_data_get_thread_list();
 struct ThreadEntry* aleakd_data_get_thread(int idx);
-
-struct AllocEntry* aleakd_data_get_alloc_list(int idx);
 
 void aleakd_data_incr_alloc_number();
 unsigned long aleakd_data_get_alloc_number();

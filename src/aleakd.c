@@ -56,10 +56,12 @@ void aleakd_all_threads_stop()
 void aleakd_all_threads_print_leaks(int bDetail)
 {
 	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
-	for(int i=0; i<pThreadEntryList->count; i++)
-	{
-		ThreadEntry_Print(&pThreadEntryList->list[i], bDetail, aleakd_data_get_display_min_alloc_num());
-	}
+	ThreadEntryList_Print(pThreadEntryList, bDetail, aleakd_data_get_display_min_alloc_num());
+}
+
+int aleakd_all_threads_count()
+{
+	return MAX_THREAD_COUNT;
 }
 
 void aleakd_init(int idx)
@@ -67,7 +69,9 @@ void aleakd_init(int idx)
 	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
 	pThreadEntry->name = NULL;
 	pThreadEntry->thread = 0;
-	AllocList_Clear(&pThreadEntry->alloc_list);
+
+	//aleakd_data_get_thread_list();
+	//AllocList_Clear(&pThreadEntry->alloc_list);
 }
 
 void aleakd_set_current_thread(int idx, const char* name)
@@ -75,8 +79,6 @@ void aleakd_set_current_thread(int idx, const char* name)
 	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
 	pThreadEntry->name = name;
 	pThreadEntry->thread = pthread_self();
-
-	pThreadEntry->alloc_list.name = name;
 }
 
 void aleakd_current_thread_set_name(const char* name)
@@ -84,7 +86,7 @@ void aleakd_current_thread_set_name(const char* name)
 	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
 
 	pthread_t thread = pthread_self();
-	int idx = ThreadEntry_getIdxAdd(pThreadEntryList, thread, TAB_SIZE);
+	int idx = ThreadEntry_getIdxAdd(pThreadEntryList, thread, MAX_ALLOC_COUNT);
 	if(idx != -1){
 		struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
 #ifdef USE_AUTO_THREAD_START
@@ -92,7 +94,6 @@ void aleakd_current_thread_set_name(const char* name)
 		pThreadEntry->iDetectionStarted = 1;
 #endif
 		pThreadEntry->name = name;
-		pThreadEntry->alloc_list.name = name;
 	}
 }
 
@@ -101,7 +102,7 @@ void aleakd_current_thread_start()
 	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
 
 	pthread_t thread = pthread_self();
-	int idx = ThreadEntry_getIdxAdd(pThreadEntryList, thread, TAB_SIZE);
+	int idx = ThreadEntry_getIdxAdd(pThreadEntryList, thread, MAX_ALLOC_COUNT);
 	if(idx != -1) {
 		struct ThreadEntry *pThreadEntry = aleakd_data_get_thread(idx);
 		pThreadEntry->iDetectionStarted = 1;
@@ -142,7 +143,7 @@ void aleakd_start(int idx)
 
 void aleakd_stop(int idx)
 {
-#ifdef USE_AUTO_THREAD_START
+#ifndef USE_AUTO_THREAD_START
 	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
 	pThreadEntry->iDetectionStarted = 0;
 	//printf("mymalloc stopped\n");
@@ -158,7 +159,25 @@ void aleakd_reset(int idx)
 void aleakd_print_leaks(int idx, int bDetail)
 {
 	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
-	AllocList_Print(&pThreadEntry->alloc_list, aleakd_data_get_display_min_alloc_num());
+	ThreadEntry_Print(pThreadEntry, bDetail, aleakd_data_get_display_min_alloc_num());
+}
+
+int aleakd_thread_alloc_count(int idx)
+{
+	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
+	return pThreadEntry->iAllocCount;
+}
+
+size_t aleakd_thread_memory_usage(int idx)
+{
+	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
+	return pThreadEntry->iCurrentSize;
+}
+
+size_t aleakd_thread_memory_usage_max(int idx)
+{
+	struct ThreadEntry* pThreadEntry = aleakd_data_get_thread(idx);
+	return pThreadEntry->iMaxSize;
 }
 
 void aleakd_set_break_alloc_num(unsigned long num)
@@ -175,5 +194,5 @@ void __attribute__((constructor)) aleakd_constructor()
 void __attribute__((destructor)) aleakd_destructor()
 {
 	fprintf(stderr, "[aleakd] dispose\n");
-	ThreadEntryList_Print(aleakd_data_get_thread_list(), 0, aleakd_data_get_display_min_alloc_num());
+	AllocList_Print(aleakd_data_get_alloc_list(), aleakd_data_get_display_min_alloc_num());
 }

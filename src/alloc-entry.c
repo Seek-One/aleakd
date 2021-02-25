@@ -10,6 +10,7 @@ void AllocList_Clear(struct AllocEntryList* pEntryList)
 {
 	struct AllocEntry* pAllocEntry;
 	pEntryList->count = 0;
+	pEntryList->total_size = 0;
 	for (int i=0; i<pEntryList->max_count; i++) {
 		pAllocEntry = AllocList_getByIdx(pEntryList, i);
 		pAllocEntry->ptr = NULL;
@@ -31,9 +32,9 @@ void AllocList_Add(struct AllocEntryList* pEntryList, struct AllocEntry* pEntry)
 			pEntryList->count++;
 			pEntryList->total_size += pEntry->size;
 
-			if(pEntry->size == 15 && pEntryList->name && pEntryList->name[0] == 'p') {
-				fprintf(stderr, "[aleakd] thread %lu: malloc(%ld) #%d => %p\n", pEntry->thread, pEntry->size, pEntry->alloc_num, pEntry->ptr);
-			}
+			//if(pEntry->size == 15 && pEntryList->name && pEntryList->name[0] == 'p') {
+			//	fprintf(stderr, "[aleakd] thread %lu: malloc(%ld) #%d => %p\n", pEntry->thread, pEntry->size, pEntry->alloc_num, pEntry->ptr);
+			//}
 
 			return;
 		}
@@ -79,6 +80,8 @@ void AllocList_Print(struct AllocEntryList* pEntryList, unsigned long min_alloc)
 	int iVisibleCount = 0;
 	size_t iVisibleSize = 0;
 
+	fprintf(stderr, "[aleakd] leak summary\n");
+
 	struct AllocEntry* pAllocEntry;
 	if(pEntryList->count > 0) {
 		fprintf(stderr, "[aleakd] leak summary\n");
@@ -86,9 +89,9 @@ void AllocList_Print(struct AllocEntryList* pEntryList, unsigned long min_alloc)
 		{
 			pAllocEntry = AllocList_getByIdx(pEntryList, i);
 			if (pAllocEntry->ptr != NULL && pAllocEntry->alloc_num >= min_alloc) {
-				fprintf(stderr, "[aleakd]   leak for thread %lu (%s): leak %p, size=%lu, alloc_num=%d\n",
+				fprintf(stderr, "[aleakd]   leak for thread %lu: leak %p, size=%lu, alloc_num=%d\n",
 						pAllocEntry->thread,
-						(pEntryList->name ? pEntryList->name : ""),
+						//(pEntryList->name ? pEntryList->name : ""),
 						pAllocEntry->ptr,
 						pAllocEntry->size,
 						pAllocEntry->alloc_num

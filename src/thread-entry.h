@@ -16,8 +16,6 @@ struct ThreadEntry
 	int iAllocCount;
 
 	pthread_key_t key;
-
-	struct AllocEntryList alloc_list;
 } _ThreadEntry;
 
 struct ThreadEntryList {

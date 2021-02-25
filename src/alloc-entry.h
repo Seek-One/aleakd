@@ -18,8 +18,8 @@ struct AllocEntryList {
 	struct AllocEntry* list;
 	int max_count;
 	int count;
+	int last_alloc_num;
 	size_t total_size;
-	const char* name;
 };
 
 void AllocList_Clear(struct AllocEntryList* pEntryList);

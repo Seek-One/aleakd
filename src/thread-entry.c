@@ -18,7 +18,6 @@ int ThreadEntry_Reinit(struct ThreadEntry* pThread)
 	pThread->iCurrentSize = 0;
 	pThread->iMaxSize = 0;
 	pThread->iAllocCount = 0;
-	AllocList_Clear(&pThread->alloc_list);
 }
 
 void ThreadEntry_Print_Internal(struct ThreadEntry* pThreadEntry, int bPrintDetail, unsigned long min_alloc_num, int* piVisibleCount, size_t* piVisibleSize)
@@ -27,6 +26,8 @@ void ThreadEntry_Print_Internal(struct ThreadEntry* pThreadEntry, int bPrintDeta
 
 	int iVisibleCount = 0;
 	size_t iVisibleSize = 0;
+
+	/*
 	if(pThreadEntry->alloc_list.count > 0)
 	{
 		if(pThreadEntry->name) {
@@ -60,6 +61,7 @@ void ThreadEntry_Print_Internal(struct ThreadEntry* pThreadEntry, int bPrintDeta
 	if(piVisibleSize){
 		*piVisibleSize += iVisibleSize;
 	}
+	 */
 }
 
 void ThreadEntry_Print(struct ThreadEntry* pThreadEntry, int bPrintDetail, unsigned long min_alloc_num)
