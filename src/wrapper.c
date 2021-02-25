@@ -109,6 +109,8 @@ void addEntry(void* ptr, size_t size, char* szAction)
 	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
 	struct ThreadEntry* pThreadEntry;
 
+	int bMustAdd = 1;
+
 	pthread_t thread = pthread_self();
 	int idx = ThreadEntry_getIdx(pThreadEntryList, thread);
 	if(idx == -1) {
@@ -119,19 +121,27 @@ void addEntry(void* ptr, size_t size, char* szAction)
 			pThreadEntry->iDetectionStarted = 1;
 #endif
 		}
+		if(pThreadEntry && !pThreadEntry->iDetectionStarted){
+			bMustAdd = 0;
+		}
 	}
-	if(idx != -1) {
-		struct AllocEntry allocEntry;
-		allocEntry.ptr = ptr;
-		allocEntry.size = size;
-		allocEntry.thread = thread;
-		allocEntry.alloc_num = aleakd_data_get_alloc_number();
 
+	struct AllocEntry allocEntry;
+	allocEntry.ptr = ptr;
+	allocEntry.size = size;
+	allocEntry.thread = thread;
+	allocEntry.alloc_num = aleakd_data_get_alloc_number();
+
+	// Add allocation in the list
+	if(bMustAdd){
+		AllocList_Add(aleakd_data_get_alloc_list(), &allocEntry);
+	}
+
+	// Add thread in the list
+	if(pThreadEntry) {
 		pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
 		if (pThreadEntry->iDetectionStarted)
 		{
-			AllocList_Add(aleakd_data_get_alloc_list(), &allocEntry);
-
 			pThreadEntry->iCurrentSize += size;
 			pThreadEntry->iAllocCount++;
 			if (pThreadEntry->iCurrentSize > pThreadEntry->iMaxSize) {
@@ -166,44 +176,37 @@ void removeEntry(void* ptr, char* szAction)
 
 	struct AllocEntry allocEntry;
 
-	int iFound = 0;
+	int bMustRemove = 1;
+
+	// Get current thread
 	pthread_t thread = pthread_self();
+	// Update thread data
 	int idx = ThreadEntry_getIdx(pThreadEntryList, thread);
 	if(idx != -1) {
 		pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
-		if (pThreadEntry->iDetectionStarted) {
-			iFound = AllocList_Remove(aleakd_data_get_alloc_list(), ptr, &allocEntry);
-			if(iFound){
-				pThreadEntry->iCurrentSize-=allocEntry.size;
-				pThreadEntry->iAllocCount--;
-				if(displayEntry(pThreadEntry, &allocEntry)){
-					fprintf(stderr, "[aleakd] thread %lu (%s): %s %p (%lu bytes) => alloc_count=%d, memory=%lu bytes\n",
-							pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""),
-							szAction, ptr, allocEntry.size,
-							pThreadEntry->iAllocCount, pThreadEntry->iCurrentSize);
-				}
-			}
+		if (!pThreadEntry->iDetectionStarted) {
+			bMustRemove = 0;
 		}
 	}
-	// Look in other thread if not found
-	if(iFound == 0){
-		for(int i=0; i<MAX_THREAD_COUNT; i++){
-			pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, i);
-			if ((i != idx) && pThreadEntry->iDetectionStarted) {
-				iFound = AllocList_Remove(aleakd_data_get_alloc_list(), ptr, &allocEntry);
-				if(iFound){
-					pThreadEntry->iCurrentSize-=allocEntry.size;
-					pThreadEntry->iAllocCount--;
-					if(displayEntry(pThreadEntry, &allocEntry)){
-						fprintf(stderr, "[aleakd] thread::fallback %lu (%s): %s %p (%lu bytes) => alloc_count=%d, memory=%lu bytes\n",
-							pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""),
-		   					 szAction, ptr, allocEntry.size,
-							pThreadEntry->iAllocCount, pThreadEntry->iCurrentSize);
-					}
-				}
-			}
+
+	// Remove allocation in the list
+	int iFound = 0;
+	if(bMustRemove) {
+		iFound = AllocList_Remove(aleakd_data_get_alloc_list(), ptr, &allocEntry);
+	}
+
+	// Update the thread data
+	if(iFound && pThreadEntry){
+		pThreadEntry->iCurrentSize-=allocEntry.size;
+		pThreadEntry->iAllocCount--;
+		if(displayEntry(pThreadEntry, &allocEntry)){
+			fprintf(stderr, "[aleakd] thread %lu (%s): %s %p (%lu bytes) => alloc_count=%d, memory=%lu bytes\n",
+					pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""),
+					szAction, ptr, allocEntry.size,
+					pThreadEntry->iAllocCount, pThreadEntry->iCurrentSize);
 		}
 	}
+
 }
 
 void *malloc(size_t size)
