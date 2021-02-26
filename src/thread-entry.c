@@ -109,3 +109,39 @@ int ThreadEntry_getIdxAdd(struct ThreadEntryList* pEntryList, pthread_t thread, 
 	}
 	return -1;
 }
+
+void ThreadEntryList_PrintLeaks_Summary(struct ThreadEntryList* pEntryList)
+{
+	int iTotalAllocCount = 0;
+	size_t iTotalAllocSize = 0;
+
+	int bPrint;
+
+	fprintf(stderr, "[aleakd] leak summary for threads\n");
+
+	struct ThreadEntry* pThreaEntry;
+	if(pEntryList->count > 0) {
+		for (int i = 0; i < pEntryList->count; i++)
+		{
+			pThreaEntry = ThreadEntry_getByIdx(pEntryList, i);
+
+			bPrint = 1;
+			if(pThreaEntry->iAllocCount == 0){
+				bPrint = 0;
+			}
+
+			if (bPrint) {
+				fprintf(stderr, "[aleakd]   leak for thread %lu (%s): alloc_count=%d, size=%lu, max_size=%lu\n",
+						pThreaEntry->thread,
+						(pThreaEntry->name ? pThreaEntry->name : ""),
+						pThreaEntry->iAllocCount,
+						pThreaEntry->iCurrentSize,
+						pThreaEntry->iMaxSize
+				);
+				iTotalAllocCount+=pThreaEntry->iAllocCount;
+				iTotalAllocSize+=pThreaEntry->iCurrentSize;
+			}
+		}
+		fprintf(stderr, "[aleakd]   leak total: count=%d, size=%ld bytes\n", iTotalAllocCount, iTotalAllocSize);
+	}
+}

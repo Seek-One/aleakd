@@ -80,34 +80,37 @@ struct AllocEntry* AllocList_getByIdx(struct AllocEntryList* pAllocEntryList, in
 	return &pAllocEntryList->list[idx];
 }
 
-static void AllocList_PrintLeaks_Internal(struct AllocEntryList* pEntryList, pthread_t *pThread, unsigned long min_alloc)
+static void AllocList_PrintLeaks_Internal(struct AllocEntryList* pEntryList, int bDetail, pthread_t *pThread, unsigned long min_alloc)
 {
 	int iVisibleCount = 0;
 	size_t iVisibleSize = 0;
 
-	fprintf(stderr, "[aleakd] leak summary\n");
+	int bPrint;
 
-	int iPrint;
+	if(pThread) {
+		fprintf(stderr, "[aleakd] leak summary for thread %lu\n", pThread);
+	}else{
+		fprintf(stderr, "[aleakd] leak summary\n");
+	}
 
 	struct AllocEntry* pAllocEntry;
 	if(pEntryList->count > 0) {
-		fprintf(stderr, "[aleakd] leak summary\n");
 		for (int i = 0; i < pEntryList->max_count; i++)
 		{
 			pAllocEntry = AllocList_getByIdx(pEntryList, i);
 
-			iPrint = 1;
+			bPrint = 1;
 			if(pAllocEntry->ptr == NULL){
-				iPrint = 0;
+				bPrint = 0;
 			}
 			if(pAllocEntry->alloc_num < min_alloc){
-				iPrint = 0;
+				bPrint = 0;
 			}
 			if(pThread && (*pThread != pAllocEntry->thread)){
-				iPrint = 0;
+				bPrint = 0;
 			}
 
-			if (iPrint) {
+			if (bPrint && bDetail) {
 				fprintf(stderr, "[aleakd]   leak for thread %lu: leak %p, size=%lu, alloc_num=%d\n",
 						pAllocEntry->thread,
 						//(pEntryList->name ? pEntryList->name : ""),
@@ -124,12 +127,12 @@ static void AllocList_PrintLeaks_Internal(struct AllocEntryList* pEntryList, pth
 	}
 }
 
-void AllocList_PrintLeaks_All(struct AllocEntryList* pEntryList, unsigned long min_alloc)
+void AllocList_PrintLeaks_All(struct AllocEntryList* pEntryList, int bDetail, unsigned long min_alloc)
 {
-	AllocList_PrintLeaks_Internal(pEntryList, NULL, min_alloc);
+	AllocList_PrintLeaks_Internal(pEntryList, bDetail, NULL, min_alloc);
 }
 
-void AllocList_PrintLeaks_ForThread(struct AllocEntryList* pEntryList, pthread_t thread, unsigned long min_alloc)
+void AllocList_PrintLeaks_ForThread(struct AllocEntryList* pEntryList, int bDetail, pthread_t thread, unsigned long min_alloc)
 {
-	AllocList_PrintLeaks_Internal(pEntryList, &thread, min_alloc);
+	AllocList_PrintLeaks_Internal(pEntryList, bDetail, &thread, min_alloc);
 }

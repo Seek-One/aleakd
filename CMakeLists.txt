@@ -65,7 +65,7 @@ SET (ALEAKDTEST_SRC
 )
 
 add_executable(aleakd-test ${ALEAKDTEST_SRC})
-set_target_properties(aleakd-test PROPERTIES LINK_LIBRARIES "-lpthread -ldl")
+#set_target_properties(aleakd-test PROPERTIES LINK_LIBRARIES "-lpthread -ldl")
 
 target_link_libraries(aleakd-test aleakd)
 
