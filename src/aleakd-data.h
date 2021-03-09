@@ -27,4 +27,7 @@ unsigned long aleakd_data_get_break_alloc_num();
 void aleakd_data_set_display_min_alloc_num(unsigned long num);
 unsigned long aleakd_data_get_display_min_alloc_num();
 
+void aleakd_data_lock();
+unsigned long aleakd_data_unlock();
+
 #endif // ALEAKD_DATA

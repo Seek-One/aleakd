@@ -3,11 +3,11 @@
 //#include <pthread.h>
 #include <malloc.h>
 
-#include "../src/aleakd.h"
+//#include "../src/aleakd.h"
 
 int main()
 {
-	aleakd_current_thread_set_name("main");
+	//aleakd_current_thread_set_name("main");
 
 	{
 		//pthread_t thread = pthread_self();
@@ -15,7 +15,7 @@ int main()
 		char* szTxt = malloc(10);
 		free(szTxt);
 
-		printf("Another Leak Detection Library\n");
+		//printf("Another Leak Detection Library\n");
 		//printf("-- Thread: %lu\n", thread);
 		//fprintf(stdout, "Another Leak Detection Library\n");
 	}

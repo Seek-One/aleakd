@@ -106,6 +106,14 @@ int displayEntry(struct ThreadEntry* pThread, struct AllocEntry* pAllocEntry)
 
 void addEntry(void* ptr, size_t size, char* szAction, int alloc_num)
 {
+#ifdef START_ON_ENV
+	if(!getenv("ALEAKD_START")) {
+		return;
+	}
+#endif
+
+	aleakd_data_lock();
+
 	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
 	struct ThreadEntry* pThreadEntry = NULL;
 
@@ -132,6 +140,10 @@ void addEntry(void* ptr, size_t size, char* szAction, int alloc_num)
 	allocEntry.thread = thread;
 	allocEntry.alloc_num = alloc_num;
 
+	if(size == 304 || size == 272){
+		fprintf(stderr, "[aleakd] leak\n");
+	}
+
 	// Add allocation in the list
 	if(bMustAdd){
 		AllocList_Add(aleakd_data_get_alloc_list(), &allocEntry);
@@ -139,6 +151,11 @@ void addEntry(void* ptr, size_t size, char* szAction, int alloc_num)
 
 	// Add thread in the list
 	if(pThreadEntry) {
+
+		if(pThreadEntry->name == NULL){
+			//fprintf(stderr, "[aleakd] null thread\n");
+		}
+
 		pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
 		if (pThreadEntry->iDetectionStarted)
 		{
@@ -167,10 +184,19 @@ void addEntry(void* ptr, size_t size, char* szAction, int alloc_num)
 		fprintf(stderr, "[aleakd] break\n");
 	}
 
+	aleakd_data_unlock();
 }
 
 void removeEntry(void* ptr, char* szAction)
 {
+#ifdef START_ON_ENV
+	if(!getenv("ALEAKD_START")) {
+		return;
+	}
+#endif
+
+	aleakd_data_lock();
+
 	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
 	struct ThreadEntry* pThreadEntry;
 
@@ -186,6 +212,10 @@ void removeEntry(void* ptr, char* szAction)
 		int idx = ThreadEntry_getIdx(pThreadEntryList, allocEntry.thread);
 		if(idx != -1) {
 			pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
+		}
+
+		if(pThreadEntry->thread == 0){
+			fprintf(stderr, "[aleakd] bug");
 		}
 
 		if(pThreadEntry) {
@@ -205,6 +235,7 @@ void removeEntry(void* ptr, char* szAction)
 		}
 	}
 
+	aleakd_data_unlock();
 }
 
 void *malloc(size_t size)
@@ -295,6 +326,7 @@ void free(void *ptr)
 	}
 }
 
+/*
 static void thread_cleanup (void * data)
 {
 	struct ThreadEntry* pThreadEntry = (struct ThreadEntry* )data;
@@ -305,6 +337,7 @@ static void thread_cleanup (void * data)
 	//aleakd_print_leaks(idx);
 
 }
+*/
 
 int (*real_pthread_create)(pthread_t *, const pthread_attr_t *, void *(*) (void *), void *);
 //nt (*real_pthread_join)(pthread_t thread, void **retval);
@@ -327,8 +360,8 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)
 		int idx = ThreadEntry_getIdxAdd(pThreadEntryList, *thread, MAX_ALLOC_COUNT);
 		if(idx != -1){
 			pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
-			pthread_key_create(&pThreadEntry->key, thread_cleanup);
-			pthread_setspecific(pThreadEntry->key, pThreadEntry);
+			//pthread_key_create(&pThreadEntry->key, thread_cleanup);
+			//pthread_setspecific(pThreadEntry->key, pThreadEntry);
 		}
 	}
 

@@ -45,6 +45,9 @@ void AllocList_Add(struct AllocEntryList* pEntryList, struct AllocEntry* pEntry)
 
 int AllocList_Remove(struct AllocEntryList* pEntryList, void* ptr, struct AllocEntry* pOutAllocEntry)
 {
+	int iFound = 0;
+	int idx = -1;
+
 	struct AllocEntry* pAllocEntry;
 	for (int i = 0; i < pEntryList->max_count; i++)
 	{
@@ -69,10 +72,36 @@ int AllocList_Remove(struct AllocEntryList* pEntryList, void* ptr, struct AllocE
 			pAllocEntry->size = 0;
 			pAllocEntry->alloc_num = 0;
 
-			return 1;
+			iFound = 1;
+			idx = i;
+			break;
 		}
 	}
-	return 0;
+
+	if(iFound){
+		struct AllocEntry* pAllocEntry1 = NULL;
+		struct AllocEntry* pAllocEntry2 = NULL;
+		for (int i = idx; i < pEntryList->max_count-1; i++)
+		{
+			pAllocEntry1 = AllocList_getByIdx(pEntryList, i);
+			pAllocEntry2 = AllocList_getByIdx(pEntryList, i+1);
+			if (pAllocEntry1 && pAllocEntry2)
+			{
+				pAllocEntry1->ptr = pAllocEntry2->ptr;
+				pAllocEntry1->thread = pAllocEntry2->thread;
+				pAllocEntry1->size = pAllocEntry2->size;
+				pAllocEntry1->alloc_num = pAllocEntry2->alloc_num;
+
+				pAllocEntry2->ptr = NULL;
+				pAllocEntry2->thread = 0;
+				pAllocEntry2->size = 0;
+				pAllocEntry2->alloc_num = 0;
+			}
+		}
+	}
+
+
+	return iFound;
 }
 
 struct AllocEntry* AllocList_getByIdx(struct AllocEntryList* pAllocEntryList, int idx)
@@ -80,21 +109,39 @@ struct AllocEntry* AllocList_getByIdx(struct AllocEntryList* pAllocEntryList, in
 	return &pAllocEntryList->list[idx];
 }
 
-static void AllocList_PrintLeaks_Internal(struct AllocEntryList* pEntryList, int bDetail, pthread_t *pThread, unsigned long min_alloc)
+
+void AllocEntryListPrintFilter_Reset(struct AllocEntryListPrintFilter* pFilter)
+{
+	pFilter->thread = 0;
+	pFilter->iLimit = 0;
+	pFilter->bLastest = 0;
+	pFilter->iMinAlloc = 0;
+	pFilter->bDetail = 0;
+	pFilter->bNoMainThread = 0;
+}
+
+static void AllocList_PrintLeaks_Internal(struct AllocEntryList* pEntryList, struct AllocEntryListPrintFilter* pFilter)
 {
 	int iVisibleCount = 0;
 	size_t iVisibleSize = 0;
 
 	int bPrint;
 
-	if(pThread) {
-		fprintf(stderr, "[aleakd] leak summary for thread %lu\n", pThread);
+	if(pFilter->thread){
+		fprintf(stderr, "[aleakd] leak summary for thread %lu\n", pFilter->thread);
 	}else{
 		fprintf(stderr, "[aleakd] leak summary\n");
 	}
 
 	struct AllocEntry* pAllocEntry;
-	if(pEntryList->count > 0) {
+	if(pEntryList->count > 0)
+	{
+		pthread_t threadMain;
+		pAllocEntry = AllocList_getByIdx(pEntryList, 0);
+		if(pAllocEntry) {
+			threadMain = pAllocEntry->thread;
+		}
+
 		for (int i = 0; i < pEntryList->max_count; i++)
 		{
 			pAllocEntry = AllocList_getByIdx(pEntryList, i);
@@ -103,14 +150,28 @@ static void AllocList_PrintLeaks_Internal(struct AllocEntryList* pEntryList, int
 			if(pAllocEntry->ptr == NULL){
 				bPrint = 0;
 			}
-			if(pAllocEntry->alloc_num < min_alloc){
+			if(pAllocEntry->alloc_num < pFilter->iMinAlloc){
 				bPrint = 0;
 			}
-			if(pThread && (*pThread != pAllocEntry->thread)){
+			if(pFilter->thread != 0 && (pFilter->thread != pAllocEntry->thread)){
 				bPrint = 0;
+			}
+			if(pFilter->bLastest && (pFilter->iLimit > 0))
+			{
+				if(i<(pEntryList->count - pFilter->iLimit))
+				{
+					bPrint = 0;
+				}
+			}
+			if(pFilter->bNoMainThread){
+				if(pAllocEntry->thread == threadMain)
+				{
+					bPrint = 0;
+				}
 			}
 
-			if (bPrint && bDetail) {
+			if (bPrint && pFilter->bDetail)
+			{
 				fprintf(stderr, "[aleakd]   leak for thread %lu: leak %p, size=%lu, alloc_num=%d\n",
 						pAllocEntry->thread,
 						//(pEntryList->name ? pEntryList->name : ""),
@@ -121,6 +182,11 @@ static void AllocList_PrintLeaks_Internal(struct AllocEntryList* pEntryList, int
 				iVisibleCount++;
 				iVisibleSize+=pAllocEntry->size;
 			}
+
+			if(pFilter->iLimit > 0 && iVisibleCount == pFilter->iLimit){
+				break;
+			}
+
 		}
 		fprintf(stderr, "[aleakd]   leak visible: count=%d, size=%ld bytes\n", iVisibleCount, pAllocEntry->size);
 		fprintf(stderr, "[aleakd]   leak total: count=%d, size=%ld bytes\n", pEntryList->count, pEntryList->total_size);
@@ -129,10 +195,30 @@ static void AllocList_PrintLeaks_Internal(struct AllocEntryList* pEntryList, int
 
 void AllocList_PrintLeaks_All(struct AllocEntryList* pEntryList, int bDetail, unsigned long min_alloc)
 {
-	AllocList_PrintLeaks_Internal(pEntryList, bDetail, NULL, min_alloc);
+	struct AllocEntryListPrintFilter filter;
+	AllocEntryListPrintFilter_Reset(&filter);
+	filter.bDetail = bDetail;
+	filter.iMinAlloc = min_alloc;
+	AllocList_PrintLeaks_Internal(pEntryList, &filter);
 }
 
 void AllocList_PrintLeaks_ForThread(struct AllocEntryList* pEntryList, int bDetail, pthread_t thread, unsigned long min_alloc)
 {
-	AllocList_PrintLeaks_Internal(pEntryList, bDetail, &thread, min_alloc);
+	struct AllocEntryListPrintFilter filter;
+	AllocEntryListPrintFilter_Reset(&filter);
+	filter.bDetail = bDetail;
+	filter.thread = thread;
+	filter.iMinAlloc = min_alloc;
+	AllocList_PrintLeaks_Internal(pEntryList, &filter);
+}
+
+void AllocList_PrintLeaks_Last(struct AllocEntryList* pEntryList, int iCount)
+{
+	struct AllocEntryListPrintFilter filter;
+	AllocEntryListPrintFilter_Reset(&filter);
+	filter.bDetail = 1;
+	filter.iLimit = iCount;
+	filter.bLastest = 1;
+	filter.bNoMainThread = 0;
+	AllocList_PrintLeaks_Internal(pEntryList, &filter);
 }

@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "../config.h"
 
 #include "aleakd-data.h"
@@ -15,6 +17,8 @@ static struct ThreadEntryList g_listThreadEntry;
 static struct AllocEntry g_tabAllocEntry[MAX_ALLOC_COUNT];
 static struct AllocEntryList g_listAllocEntry;
 
+static pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
+
 void aleakd_data_set_enable_print_action(int bEnable)
 {
 	g_bPrintAction = bEnable;
@@ -27,6 +31,7 @@ int aleakd_data_get_enable_print_action()
 
 void aleakd_data_init_alloc_list()
 {
+	memset(&g_tabAllocEntry, 0, sizeof(g_tabAllocEntry));
 	g_listAllocEntry.max_count = MAX_ALLOC_COUNT;
 	g_listAllocEntry.list = (struct AllocEntry*)&g_tabAllocEntry;
 	g_listAllocEntry.last_alloc_num = 0;
@@ -35,6 +40,7 @@ void aleakd_data_init_alloc_list()
 
 void aleakd_data_init_thread_list()
 {
+	memset(&g_tabThreadEntry, 0, sizeof(g_tabThreadEntry));
 	g_listThreadEntry.count = MAX_THREAD_COUNT;
 	g_listThreadEntry.list = (struct ThreadEntry*)g_tabThreadEntry;
 
@@ -94,4 +100,14 @@ void aleakd_data_set_display_min_alloc_num(unsigned long num)
 unsigned long aleakd_data_get_display_min_alloc_num()
 {
 	return g_iDisplayMinAllocNumber;
+}
+
+void aleakd_data_lock()
+{
+	pthread_mutex_lock(&g_lock);
+}
+
+unsigned long aleakd_data_unlock()
+{
+	pthread_mutex_unlock(&g_lock);
 }

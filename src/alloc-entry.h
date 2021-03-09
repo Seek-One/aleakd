@@ -26,8 +26,21 @@ void AllocList_Clear(struct AllocEntryList* pEntryList);
 void AllocList_Add(struct AllocEntryList* pEntryList, struct AllocEntry* pEntry);
 int AllocList_Remove(struct AllocEntryList* pEntryList, void* ptr, struct AllocEntry* pEntry);
 struct AllocEntry* AllocList_getByIdx(struct AllocEntryList* pAllocEntryList, int idx);
+void AllocList_Sort(struct AllocEntryList* pEntryList);
+
+struct AllocEntryListPrintFilter
+{
+	int bDetail;
+	int iLimit;
+	int bLastest;
+	unsigned long iMinAlloc;
+	pthread_t thread;
+	int bNoMainThread;
+};
+void AllocEntryListPrintFilter_Reset(struct AllocEntryListPrintFilter* pFilter);
 
 void AllocList_PrintLeaks_All(struct AllocEntryList* pEntryList, int bDetail, unsigned long min_alloc);
 void AllocList_PrintLeaks_ForThread(struct AllocEntryList* pEntryList, int bDetail, pthread_t thread, unsigned long min_alloc);
+void AllocList_PrintLeaks_Last(struct AllocEntryList* pEntryList, int iCount);
 
 #endif // ALEAKD_ALLOCENTRY_H

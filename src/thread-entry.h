@@ -14,8 +14,7 @@ struct ThreadEntry
 	size_t iCurrentSize;
 	size_t iMaxSize;
 	int iAllocCount;
-
-	pthread_key_t key;
+	//pthread_key_t key;
 } _ThreadEntry;
 
 struct ThreadEntryList {

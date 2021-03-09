@@ -125,10 +125,14 @@ void ThreadEntryList_PrintLeaks_Summary(struct ThreadEntryList* pEntryList)
 		{
 			pThreaEntry = ThreadEntry_getByIdx(pEntryList, i);
 
-			bPrint = 1;
-			if(pThreaEntry->iAllocCount == 0){
+			if(pThreaEntry->thread == 0) {
 				bPrint = 0;
+			}else{
+				bPrint = 1;
 			}
+			//if(pThreaEntry->iAllocCount == 0){
+			//	bPrint = 0;
+			//}
 
 			if (bPrint) {
 				fprintf(stderr, "[aleakd]   leak for thread %lu (%s): alloc_count=%d, size=%lu, max_size=%lu\n",

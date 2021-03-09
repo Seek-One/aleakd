@@ -14,6 +14,7 @@ void aleakd_all_threads_start();
 void aleakd_all_threads_stop();
 void aleakd_all_threads_print_leaks(int bDetail);
 void aleakd_all_threads_print_leaks_summary(int bDetail);
+void aleakd_all_threads_print_last_leaks(int iCount);
 int aleakd_all_threads_count();
 
 // Current thread
