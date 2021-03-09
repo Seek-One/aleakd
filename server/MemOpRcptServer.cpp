@@ -22,6 +22,7 @@ MemOpRcptServer::~MemOpRcptServer()
 
 void MemOpRcptServer::incomingConnection(qintptr socketDescriptor)
 {
+	qInfo("[aleak-server] New connection on socket %lu", socketDescriptor);
 	QTcpSocket* pSocket = new QTcpSocket();
 	if(pSocket) {
 		pSocket->setSocketDescriptor(socketDescriptor);
