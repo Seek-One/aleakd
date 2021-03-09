@@ -1,5 +1,5 @@
-# libaleakd
-Another leak detection library
+# aleakd
+Another leak detector
 
 aleakd use is a simple libray that override the malloc and free function to help to find some memory leaks problems.
 

@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.0)
 
-project (libaleakd VERSION 1.0.0 DESCRIPTION "Another leak detection library")
+project (aleakd VERSION 1.0.0 DESCRIPTION "Another leak detection library")
 
 # Sources
 SET (LIBALEAKD_SRC
@@ -36,6 +36,12 @@ set_target_properties(aleakd PROPERTIES LINK_LIBRARIES "-lpthread -ldl")
 install (TARGETS aleakd
 		PUBLIC_HEADER DESTINATION include/libaleakd
         LIBRARY DESTINATION lib)
+
+#################
+# Server
+#################
+
+add_subdirectory("server")
 
 #################
 # Static library
