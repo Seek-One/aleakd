@@ -62,3 +62,5 @@ aleakd-test
 *.cbp
 .idea
 release
+
+cmake-build-*
