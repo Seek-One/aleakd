@@ -11,12 +11,17 @@ class QTcpSocket;
 
 class MemOpRcptServer : public QTcpServer
 {
+	Q_OBJECT
 public:
 	MemOpRcptServer(QObject* parent = NULL);
 	virtual ~MemOpRcptServer();
 
 protected:
 	void incomingConnection(qintptr socketDescriptor);
+
+private slots:
+	void onSocketReadyToRead();
+	void onSocketDisconnected();
 
 private:
 	QTcpSocket* m_pClientSocket;

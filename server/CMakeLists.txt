@@ -3,6 +3,8 @@
 # Dynamic library
 #################
 
+set(CMAKE_AUTOMOC ON)
+
 find_package(Qt5 COMPONENTS Core Gui Widgets Network REQUIRED)
 
 #################

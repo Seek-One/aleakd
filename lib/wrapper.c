@@ -3,11 +3,15 @@
 #include <stdlib.h>
 #include <bits/pthreadtypes.h>
 #include <dlfcn.h>
+#include <string.h>
 
 #include "../config.h"
+#include "../shared/global-const.h"
 
 #include "aleakd-data.h"
 #include "aleakd.h"
+
+#include "server-comm.h"
 
 static int g_bIsInitializing = 0;
 static void* (*real_malloc)(size_t) = NULL;
@@ -19,6 +23,8 @@ static void* (*real_realloc)(void*, size_t) = NULL;
 char tmpbuf[4096];
 unsigned long tmppos = 0;
 unsigned long tmpallocs = 0;
+
+int g_bUseSocket = 1;
 
 void* dummy_malloc(size_t size)
 {
@@ -79,6 +85,10 @@ void wrapper_init()
 		real_realloc = dlsym(RTLD_NEXT, "realloc");
 		if (NULL == real_realloc) {
 			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
+		}
+
+		if(g_bUseSocket){
+			servercomm_init();
 		}
 
 		fprintf(stderr, "[aleakd] wrapper_init done\n");
@@ -257,6 +267,16 @@ void *malloc(size_t size)
 
 	if(p){
 		addEntry(p, size, "malloc", alloc_num);
+
+		if(g_bUseSocket) {
+			struct ServerMemoryMsgV1 msg;
+			servercomm_msg_init_v1(&msg);
+			msg.msg_type = ALeakD_malloc;
+			msg.alloc_num = (int64_t)alloc_num;
+			msg.alloc_ptr = (int64_t)p;
+			msg.alloc_size = (int64_t)size;
+			servercomm_msg_send_v1(&msg);
+		}
 	}
 
 	return p;
@@ -280,6 +300,16 @@ void *calloc(size_t num, size_t size)
 
 	if(p){
 		addEntry(p, size*num, "calloc", alloc_num);
+
+		if(g_bUseSocket) {
+			struct ServerMemoryMsgV1 msg;
+			servercomm_msg_init_v1(&msg);
+			msg.msg_type = ALeakD_calloc;
+			msg.alloc_num = (int64_t)alloc_num;
+			msg.alloc_ptr = (int64_t)p;
+			msg.alloc_size = (int64_t)size;
+			servercomm_msg_send_v1(&msg);
+		}
 	}
 
 	return p;
@@ -304,6 +334,17 @@ void *realloc(void* ptr, size_t size)
 	
 	if(p){
 		addEntry(p, size, "realloc", alloc_num);
+
+		if(g_bUseSocket) {
+			struct ServerMemoryMsgV1 msg;
+			servercomm_msg_init_v1(&msg);
+			msg.msg_type = ALeakD_realloc;
+			msg.alloc_num = (int64_t)alloc_num;
+			msg.alloc_ptr = (int64_t)p;
+			msg.alloc_size = (int64_t)size;
+			msg.free_ptr = (int64_t)ptr;
+			servercomm_msg_send_v1(&msg);
+		}
 	}
 
 	return p;
@@ -317,6 +358,14 @@ void free(void *ptr)
 
 	if(ptr != NULL) {
 		removeEntry(ptr, "free");
+
+		if(g_bUseSocket) {
+			struct ServerMemoryMsgV1 msg;
+			servercomm_msg_init_v1(&msg);
+			msg.msg_type = ALeakD_free;
+			msg.free_ptr = (int64_t)ptr;
+			servercomm_msg_send_v1(&msg);
+		}
 	}
 
 	if(real_free){

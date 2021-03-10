@@ -13,6 +13,8 @@ SET (ALEAKD_LIB_SRC
 	thread-entry.h
 	wrapper.c
 	wrapper.h
+	server-comm.c
+	server-comm.h
 )
 
 #################
