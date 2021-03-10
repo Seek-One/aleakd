@@ -13,8 +13,14 @@ find_package(Qt5 COMPONENTS Core Gui Widgets Network REQUIRED)
 
 SET (ALEAKD_SERVER_SRC
 	main.cpp
+	MemoryOperation.cpp
+	MemoryOperation.h
 	MemOpRcptServer.cpp
 	MemOpRcptServer.h
+	QMainEventFilter.cpp
+	QMainEventFilter.h
+	QMemoryOperationEvent.cpp
+	QMemoryOperationEvent.h
 )
 
 ####################

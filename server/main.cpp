@@ -1,6 +1,8 @@
 #include <QApplication>
 #include <QPushButton>
 
+#include "QMainEventFilter.h"
+
 #include "MemOpRcptServer.h"
 
 int main( int argc, char **argv )
@@ -10,6 +12,9 @@ int main( int argc, char **argv )
     QApplication a( argc, argv );
 
 	qCritical("[aleakd-server] Starting server application");
+
+	QMainEventFilter eventFilter;
+	a.installEventFilter(&eventFilter);
 
 	// Initialize tcp server
 	int iPort = 19999;

@@ -3,8 +3,11 @@
 //
 
 #include <QTcpSocket>
+#include <QCoreApplication>
 
 #include "../shared/server-msg.h"
+
+#include "QMemoryOperationEvent.h"
 
 #include "MemOpRcptServer.h"
 
@@ -69,7 +72,23 @@ void MemOpRcptServer::onSocketReadyToRead()
 		do {
 			qint64 byteRead = m_pClientSocket->read((char *) &msg, sizeof(msg));
 			if (byteRead > 0) {
-				qDebug("[aleakd-server] msg: %d time=%lu,%lu", msg.msg_type, msg.time_sec, msg.time_usec);
+				MemoryOperation* pMemoryOperation = new MemoryOperation();
+
+				pMemoryOperation->m_tvOperation.tv_sec = msg.time_sec;
+				pMemoryOperation->m_tvOperation.tv_usec = msg.time_usec;
+				pMemoryOperation->m_iMemOpType = (ALeakD_AllocType)msg.msg_type;
+				pMemoryOperation->m_iThreadId = msg.thread_id;
+				pMemoryOperation->m_iAllocSize = msg.alloc_size;
+				pMemoryOperation->m_iAllocPtr = msg.alloc_ptr;
+				pMemoryOperation->m_iAllocNum = msg.alloc_num;
+				pMemoryOperation->m_iFreePtr = msg.free_ptr;
+
+				qDebug("[aleakd-server] msg received: type=%d, time=%lu,%lu, thread=%lu, size=%lu",
+		   			msg.msg_type, msg.time_sec, msg.time_usec,
+				   msg.thread_id, msg.alloc_size);
+
+				QMemoryOperationEvent* pEvent = new QMemoryOperationEvent(QSharedPointer<MemoryOperation>(pMemoryOperation));
+				QCoreApplication::postEvent(QCoreApplication::instance(), pEvent);
 			} else {
 				break;
 			}
