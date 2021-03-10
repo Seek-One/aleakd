@@ -25,6 +25,10 @@ private slots:
 
 private:
 	QTcpSocket* m_pClientSocket;
+
+	int m_iState;
+
+	uint8_t m_iProtocolVersion;
 };
 
 

@@ -55,6 +55,12 @@ int servercomm_init()
 		}
 	}
 
+	// Send protocol version
+	if(res == 0) {
+		uint8_t version = ALEAKD_PROTOCOL_VERSION;
+		res = servercomm_send((void *) &version, sizeof(uint8_t));
+	}
+
 	// Send some data
 	if(res == 0) {
 		if(g_preInitPop > 0) {

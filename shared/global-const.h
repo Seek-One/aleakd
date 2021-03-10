@@ -5,6 +5,7 @@
 #ifndef ALEAKD_GLOBAL_CONST_H
 #define ALEAKD_GLOBAL_CONST_H
 
+#define ALEAKD_PROTOCOL_VERSION 1
 #define ALEAKD_MSG_VERSION 1
 
 enum ALeakD_AllocType {

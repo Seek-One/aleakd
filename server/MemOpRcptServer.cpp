@@ -12,6 +12,7 @@ MemOpRcptServer::MemOpRcptServer(QObject* parent)
 	: QTcpServer(parent)
 {
 	m_pClientSocket = NULL;
+	m_iState = 0;
 }
 
 MemOpRcptServer::~MemOpRcptServer()
@@ -46,16 +47,34 @@ void MemOpRcptServer::incomingConnection(qintptr socketDescriptor)
 
 void MemOpRcptServer::onSocketReadyToRead()
 {
-	ServerMemoryMsgV1 msg;
-
-	do{
-		qint64 byteRead = m_pClientSocket->read((char *) &msg, sizeof(msg));
+	// Read protocol version
+	if(m_iState == 0)
+	{
+		uint8_t iProtocolVersion;
+		qint64 byteRead = m_pClientSocket->read((char *) &iProtocolVersion, sizeof(uint8_t));
 		if(byteRead > 0){
-			qDebug("[aleakd-server] msg: %d time=%lu,%lu", msg.msg_type, msg.time_sec, msg.time_usec);
+			m_iState = 1;
+			m_iProtocolVersion = iProtocolVersion;
+			qDebug("[aleakd-server] Client using protocol version %d", m_iProtocolVersion);
 		}else{
-			break;
+			qDebug("[aleakd-server] Unable to get version, closing connection");
+			m_pClientSocket->close();
 		}
-	}while(true);
+	}
+
+	// Read message
+	if(m_iState == 1)
+	{
+		ServerMemoryMsgV1 msg;
+		do {
+			qint64 byteRead = m_pClientSocket->read((char *) &msg, sizeof(msg));
+			if (byteRead > 0) {
+				qDebug("[aleakd-server] msg: %d time=%lu,%lu", msg.msg_type, msg.time_sec, msg.time_usec);
+			} else {
+				break;
+			}
+		} while (true);
+	}
 }
 
 void MemOpRcptServer::onSocketDisconnected()
