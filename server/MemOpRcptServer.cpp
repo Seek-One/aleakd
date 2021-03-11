@@ -60,6 +60,10 @@ void MemOpRcptServer::onSocketReadyToRead()
 			m_iState = 1;
 			m_iProtocolVersion = iProtocolVersion;
 			qDebug("[aleakd-server] Client using protocol version %d", m_iProtocolVersion);
+
+			QMemoryOperationClearEvent* pEvent = new QMemoryOperationClearEvent();
+			QCoreApplication::postEvent(QCoreApplication::instance(), pEvent);
+
 		}else{
 			qDebug("[aleakd-server] Unable to get version, closing connection");
 			m_pClientSocket->close();

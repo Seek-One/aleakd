@@ -3,6 +3,7 @@
 //
 
 #include <QTreeView>
+#include <QHeaderView>
 
 #include "QApplicationWindow.h"
 
@@ -28,6 +29,24 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 	QTreeView* pTreeView = m_pApplicationWindow->getTreeView();
 	pTreeView->setModel(m_pModels);
 
+	QList<QString> listLabel;
+	listLabel.append(tr("Timestamp"));
+	listLabel.append(tr("Thread"));
+	listLabel.append(tr("Operation"));
+	listLabel.append(tr("Alloc size"));
+	listLabel.append(tr("Alloc ptr"));
+	listLabel.append(tr("Alloc num"));
+	listLabel.append(tr("Free ptr"));
+	m_pModels->setHorizontalHeaderLabels(listLabel);
+
+	pTreeView->header()->resizeSection(0, 200);
+	pTreeView->header()->resizeSection(1, 150);
+	pTreeView->header()->resizeSection(2, 100);
+	pTreeView->header()->resizeSection(3, 100);
+	pTreeView->header()->resizeSection(4, 150);
+	pTreeView->header()->resizeSection(5, 100);
+	pTreeView->header()->resizeSection(6, 150);
+
 	return true;
 }
 
@@ -44,13 +63,13 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 	pItem->setText(szTmp);
 	listCols.append(pItem);
 
-	// Operation type
+	// Thread ID
 	pItem = new QStandardItem();
 	szTmp = QString::number(pMemoryOperation->m_iThreadId);
 	pItem->setText(szTmp);
 	listCols.append(pItem);
 
-	// Alloc type
+	// Operation type
 	pItem = new QStandardItem();
 	szTmp = ALeakD_TypeName(pMemoryOperation->m_iMemOpType);
 	pItem->setText(szTmp);
@@ -76,7 +95,7 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 	pItem->setText(szTmp);
 	listCols.append(pItem);
 
-	// Alloc size
+	// Alloc num
 	pItem = new QStandardItem();
 	if(pMemoryOperation->m_iAllocNum) {
 		szTmp = QString::number(pMemoryOperation->m_iAllocNum);
@@ -97,4 +116,9 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 	listCols.append(pItem);
 
 	m_pModels->appendRow(listCols);
+}
+
+void QApplicationWindowController::clearMemoryOperation()
+{
+	m_pModels->removeRows(0, m_pModels->rowCount());
 }

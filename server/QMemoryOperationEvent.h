@@ -12,6 +12,7 @@
 #include "MemoryOperation.h"
 
 #define MemoryOperationEvent (QEvent::Type)(QEvent::User + 1)
+#define MemoryOperationClearEvent (QEvent::Type)(QEvent::User + 2)
 
 class QMemoryOperationEvent : public QEvent
 {
@@ -21,6 +22,13 @@ public:
 
 public:
 	QSharedPointer<MemoryOperation> m_pMemoryOperation;
+};
+
+class QMemoryOperationClearEvent : public QEvent
+{
+public:
+	QMemoryOperationClearEvent();
+	virtual ~QMemoryOperationClearEvent();
 };
 
 

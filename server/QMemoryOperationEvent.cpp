@@ -14,3 +14,14 @@ QMemoryOperationEvent::~QMemoryOperationEvent()
 {
 
 }
+
+QMemoryOperationClearEvent::QMemoryOperationClearEvent()
+		: QEvent(MemoryOperationClearEvent)
+{
+
+}
+
+QMemoryOperationClearEvent::~QMemoryOperationClearEvent()
+{
+
+}

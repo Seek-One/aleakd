@@ -22,6 +22,7 @@ public:
 	bool init(QApplicationWindow* pApplicationWindow);
 
 	void addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation);
+	void clearMemoryOperation();
 
 private:
 	QApplicationWindow* m_pApplicationWindow;

@@ -33,5 +33,10 @@ bool QMainEventFilter::eventFilter(QObject *watched, QEvent *event)
 		m_pApplicationWindowController->addMemoryOperation(pEvent->m_pMemoryOperation);
 		return true;
 	}
+	if(event->type() == MemoryOperationClearEvent)
+	{
+		m_pApplicationWindowController->clearMemoryOperation();
+		return true;
+	}
 	return false;
 }
