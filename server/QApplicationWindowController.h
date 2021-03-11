@@ -1,0 +1,14 @@
+//
+// Created by ebeuque on 11/03/2021.
+//
+
+#ifndef ALEAKD_QAPPLICATIONWINDOWCONTROLLER_H
+#define ALEAKD_QAPPLICATIONWINDOWCONTROLLER_H
+
+
+class QApplicationWindowController {
+
+};
+
+
+#endif //ALEAKD_QAPPLICATIONWINDOWCONTROLLER_H
