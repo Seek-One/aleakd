@@ -38,6 +38,7 @@ void MemOpRcptServer::incomingConnection(qintptr socketDescriptor)
 		connect(pSocket, SIGNAL(disconnected()), this, SLOT(onSocketDisconnected()));
 
 		m_pClientSocket = pSocket;
+		m_iState = 0;
 	}else{
 		qInfo("[aleakd-server] A connection is already present, closing the connection");
 		if(pSocket) {

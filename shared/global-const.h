@@ -20,4 +20,6 @@ enum ALeakD_AllocType {
 	ALeakD_pvalloc = 9
 };
 
+const char* ALeakD_TypeName(enum ALeakD_AllocType iType);
+
 #endif //ALEAKD_GLOBAL_CONST_H

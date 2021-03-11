@@ -21,6 +21,11 @@ SET (ALEAKD_SERVER_SRC
 	QMainEventFilter.h
 	QMemoryOperationEvent.cpp
 	QMemoryOperationEvent.h
+	QApplicationWindow.cpp
+	QApplicationWindow.h
+	QApplicationWindowController.cpp
+	QApplicationWindowController.h
+	../shared/common.c
 )
 
 ####################

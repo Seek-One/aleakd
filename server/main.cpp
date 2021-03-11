@@ -1,7 +1,8 @@
 #include <QApplication>
-#include <QPushButton>
 
 #include "QMainEventFilter.h"
+#include "QApplicationWindow.h"
+#include "QApplicationWindowController.h"
 
 #include "MemOpRcptServer.h"
 
@@ -13,7 +14,11 @@ int main( int argc, char **argv )
 
 	qCritical("[aleakd-server] Starting server application");
 
-	QMainEventFilter eventFilter;
+	QApplicationWindow windowApp;
+	QApplicationWindowController windowController;
+
+	QMainEventFilter eventFilter(&windowController);
+	eventFilter.setApplicationWindowController(&windowController);
 	a.installEventFilter(&eventFilter);
 
 	// Initialize tcp server
@@ -27,10 +32,18 @@ int main( int argc, char **argv )
 		}
 	}
 
+    // Init controller
 	if(bGoOn) {
-		QPushButton hello("Hello world!", 0);
-		hello.resize(100, 30);
-		hello.show();
+		bGoOn = windowController.init(&windowApp);
+		if(!bGoOn){
+			qCritical("[aleakd-server] Unable to init main window");
+		}
+	}
+
+	// Display window
+	if(bGoOn) {
+		windowApp.resize(1280, 800);
+		windowApp.show();
 
 		a.exec();
 	}

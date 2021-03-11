@@ -5,8 +5,21 @@
 #ifndef ALEAKD_QAPPLICATIONWINDOW_H
 #define ALEAKD_QAPPLICATIONWINDOW_H
 
+#include <QMainWindow>
 
-class QApplicationWindow {
+class QTreeView;
+
+class QApplicationWindow : public QMainWindow
+{
+public:
+	QApplicationWindow(QWidget* parent = NULL);
+	virtual ~QApplicationWindow();
+
+public:
+	QTreeView* getTreeView() const;
+
+private:
+	QTreeView* m_pTreeView;
 
 };
 

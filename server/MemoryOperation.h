@@ -8,7 +8,9 @@
 #include <stdint.h>
 #include <time.h>
 
+extern "C" {
 #include "../shared/global-const.h"
+};
 
 class MemoryOperation
 {
