@@ -55,11 +55,47 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 
 void QApplicationWindowController::addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation)
 {
+	MemoryOperationSharedPtr pMemoryOperationFreed;
+
 	m_lockListMemoryOperation.lockForWrite();
 	if(pMemoryOperation->m_iFreePtr){
-		m_listMemoryOperation.setPtrFreed(pMemoryOperation->m_iFreePtr);
+		pMemoryOperationFreed = m_listMemoryOperation.getPtrNotFreed(pMemoryOperation->m_iFreePtr);
+		if(pMemoryOperationFreed) {
+			pMemoryOperation->m_bFreed = true;
+		}
 	}
 	m_listMemoryOperation.append(pMemoryOperation);
+
+	m_lockGlobalStats.lockForWrite();
+	m_globalStats.m_iOpCount++;
+	m_globalStats.m_iAllocSize += pMemoryOperation->m_iAllocSize;
+	m_globalStats.m_iRemaingSize += pMemoryOperation->m_iAllocSize;
+	if(pMemoryOperationFreed){
+		m_globalStats.m_iFreeSize += pMemoryOperationFreed->m_iAllocSize;
+		m_globalStats.m_iRemaingSize -= pMemoryOperationFreed->m_iAllocSize;
+	}
+	switch (pMemoryOperation->m_iMemOpType) {
+	case ALeakD_malloc:
+		m_globalStats.m_iMallocCount++; break;
+	case ALeakD_calloc:
+		m_globalStats.m_iCallocCount++; break;
+	case ALeakD_realloc:
+		m_globalStats.m_iReallocCount++; break;
+	case ALeakD_free:
+		m_globalStats.m_iFreeCount++; break;
+	case ALeakD_posix_memalign:
+		m_globalStats.m_iPosixMemalignCount++; break;
+	case ALeakD_aligned_alloc:
+		m_globalStats.m_iAlignedAllocCount++; break;
+	case ALeakD_memalign:
+		m_globalStats.m_iMemAlignCount++; break;
+	case ALeakD_valloc:
+		m_globalStats.m_iVAllocCount++; break;
+	case ALeakD_pvalloc:
+		m_globalStats.m_iPVAllocCount++; break;
+	}
+	m_lockGlobalStats.unlock();
+
 	m_lockListMemoryOperation.unlock();
 }
 
@@ -109,9 +145,23 @@ void QApplicationWindowController::onSearchButtonClicked()
 
 void QApplicationWindowController::onTimerUpdate()
 {
-	int iNewCount = m_listMemoryOperation.count();
+	m_lockGlobalStats.lockForRead();
 
-	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_OpCount, QString::number(iNewCount));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_OpCount, QString::number(m_globalStats.m_iOpCount));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_AllocSize, QString::number(m_globalStats.m_iAllocSize));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_FreeSize, QString::number(m_globalStats.m_iFreeSize));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_RemainingSize, QString::number(m_globalStats.m_iRemaingSize));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_malloc, QString::number(m_globalStats.m_iMallocCount));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_calloc, QString::number(m_globalStats.m_iCallocCount));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_realloc, QString::number(m_globalStats.m_iReallocCount));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_free, QString::number(m_globalStats.m_iFreeCount));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_posix_memalign, QString::number(m_globalStats.m_iPosixMemalignCount));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_aligned_alloc, QString::number(m_globalStats.m_iAlignedAllocCount));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_memalign, QString::number(m_globalStats.m_iMemAlignCount));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_valloc, QString::number(m_globalStats.m_iVAllocCount));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_pvalloc, QString::number(m_globalStats.m_iPVAllocCount));
+
+	m_lockGlobalStats.unlock();
 }
 
 void QApplicationWindowController::onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation)

@@ -17,6 +17,8 @@ SET (ALEAKD_SERVER_SRC
 	IMemOpRcptServerHandler.h
 	MemoryOperation.cpp
 	MemoryOperation.h
+	MemoryStats.cpp
+	MemoryStats.h
 	MemOpRcptServer.cpp
 	MemOpRcptServer.h
 	QMainEventFilter.cpp

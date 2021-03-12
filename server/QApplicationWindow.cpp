@@ -142,6 +142,8 @@ QString QApplicationWindow::getColName(int iCol)
 		return tr("free");
 	case StatusBarCol_posix_memalign:
 		return tr("posix_memalign");
+	case StatusBarCol_aligned_alloc:
+		return tr("aligned_alloc");
 	case StatusBarCol_memalign:
 		return tr("memalign");
 	case StatusBarCol_valloc:

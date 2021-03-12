@@ -11,6 +11,7 @@
 #include <QReadWriteLock>
 
 #include "MemoryOperation.h"
+#include "MemoryStats.h"
 #include "IMemOpRcptServerHandler.h"
 
 class QApplicationWindow;
@@ -43,6 +44,10 @@ private:
 	// List of memory operation
 	QReadWriteLock m_lockListMemoryOperation;
 	MemoryOperationList m_listMemoryOperation;
+
+	// Stats
+	QReadWriteLock m_lockGlobalStats;
+	MemoryStats m_globalStats;
 
 	// Search display
 	MemoryOperationList m_listFilterMemoryOperation;

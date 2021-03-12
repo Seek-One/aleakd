@@ -49,7 +49,7 @@ public:
 	MemoryOperationList();
 	virtual ~MemoryOperationList();
 
-	void setPtrFreed(uint64_t iFreePtr);
+	MemoryOperationSharedPtr getPtrNotFreed(uint64_t iFreePtr) const;
 };
 
 #endif //ALEAKD_MEMORYOPERATION_H
