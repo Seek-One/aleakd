@@ -10,11 +10,12 @@
 #include <QTimer>
 
 #include "MemoryOperation.h"
+#include "IMemOpRcptServerHandler.h"
 
 class QApplicationWindow;
 class QMemoryOperationModel;
 
-class QApplicationWindowController : public QObject {
+class QApplicationWindowController : public QObject, public IMemOpRcptServerHandler {
 	Q_OBJECT
 public:
 	QApplicationWindowController();
@@ -24,6 +25,10 @@ public:
 
 	void addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation);
 	void clearMemoryOperation();
+
+	// IMemOpRcptServerHandler
+	void onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation);
+	void onNewConnection();
 
 private slots:
 	void onScrollBarValueChanged(int value);

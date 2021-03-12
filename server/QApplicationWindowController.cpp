@@ -77,3 +77,13 @@ void QApplicationWindowController::onScrollBarValueChanged(int value)
 
 	qDebug("scrollTo: %d", value);
 }
+
+void QApplicationWindowController::onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation)
+{
+	addMemoryOperation(pMemoryOperation);
+}
+
+void QApplicationWindowController::onNewConnection()
+{
+	clearMemoryOperation();
+}

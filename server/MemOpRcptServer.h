@@ -7,6 +7,9 @@
 
 #include <QTcpServer>
 
+#include "MemoryOperation.h"
+#include "IMemOpRcptServerHandler.h"
+
 class QTcpSocket;
 
 class MemOpRcptServer : public QTcpServer
@@ -15,6 +18,8 @@ class MemOpRcptServer : public QTcpServer
 public:
 	MemOpRcptServer(QObject* parent = NULL);
 	virtual ~MemOpRcptServer();
+
+	void setHandler(IMemOpRcptServerHandler* pHandler);
 
 protected:
 	void incomingConnection(qintptr socketDescriptor);
@@ -27,8 +32,9 @@ private:
 	QTcpSocket* m_pClientSocket;
 
 	int m_iState;
-
 	uint8_t m_iProtocolVersion;
+
+	IMemOpRcptServerHandler* m_pHandler;
 };
 
 

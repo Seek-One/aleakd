@@ -5,7 +5,6 @@
 #include <QEvent>
 
 #include "QApplicationWindowController.h"
-#include "QMemoryOperationEvent.h"
 
 #include "QMainEventFilter.h"
 
@@ -27,16 +26,5 @@ void QMainEventFilter::setApplicationWindowController(QApplicationWindowControll
 
 bool QMainEventFilter::eventFilter(QObject *watched, QEvent *event)
 {
-	if(event->type() == MemoryOperationEvent)
-	{
-		QMemoryOperationEvent* pEvent = (QMemoryOperationEvent*)event;
-		m_pApplicationWindowController->addMemoryOperation(pEvent->m_pMemoryOperation);
-		return true;
-	}
-	if(event->type() == MemoryOperationClearEvent)
-	{
-		m_pApplicationWindowController->clearMemoryOperation();
-		return true;
-	}
 	return false;
 }

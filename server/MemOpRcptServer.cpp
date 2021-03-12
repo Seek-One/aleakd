@@ -7,8 +7,6 @@
 
 #include "../shared/server-msg.h"
 
-#include "QMemoryOperationEvent.h"
-
 #include "MemOpRcptServer.h"
 
 MemOpRcptServer::MemOpRcptServer(QObject* parent)
@@ -16,6 +14,7 @@ MemOpRcptServer::MemOpRcptServer(QObject* parent)
 {
 	m_pClientSocket = NULL;
 	m_iState = 0;
+	m_pHandler = NULL;
 }
 
 MemOpRcptServer::~MemOpRcptServer()
@@ -24,6 +23,11 @@ MemOpRcptServer::~MemOpRcptServer()
 		delete m_pClientSocket;
 		m_pClientSocket;
 	}
+}
+
+void MemOpRcptServer::setHandler(IMemOpRcptServerHandler* pHandler)
+{
+	m_pHandler = pHandler;
 }
 
 void MemOpRcptServer::incomingConnection(qintptr socketDescriptor)
@@ -61,9 +65,9 @@ void MemOpRcptServer::onSocketReadyToRead()
 			m_iProtocolVersion = iProtocolVersion;
 			qDebug("[aleakd-server] Client using protocol version %d", m_iProtocolVersion);
 
-			QMemoryOperationClearEvent* pEvent = new QMemoryOperationClearEvent();
-			QCoreApplication::postEvent(QCoreApplication::instance(), pEvent);
-
+			if(m_pHandler){
+				m_pHandler->onNewConnection();
+			}
 		}else{
 			qDebug("[aleakd-server] Unable to get version, closing connection");
 			m_pClientSocket->close();
@@ -92,8 +96,10 @@ void MemOpRcptServer::onSocketReadyToRead()
 		   		//	msg.msg_type, msg.time_sec, msg.time_usec,
 				//  msg.thread_id, msg.alloc_size);
 
-				QMemoryOperationEvent* pEvent = new QMemoryOperationEvent(QSharedPointer<MemoryOperation>(pMemoryOperation));
-				QCoreApplication::postEvent(QCoreApplication::instance(), pEvent);
+				if(m_pHandler){
+					m_pHandler->onMemoryOperationReceived(MemoryOperationSharedPtr(pMemoryOperation));
+				}
+
 			} else {
 				break;
 			}
