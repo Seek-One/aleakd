@@ -8,6 +8,7 @@
 #include <QObject>
 #include <QSharedPointer>
 #include <QTimer>
+#include <QReadWriteLock>
 
 #include "MemoryOperation.h"
 #include "IMemOpRcptServerHandler.h"
@@ -32,12 +33,17 @@ public:
 
 private slots:
 	void onSearchButtonClicked();
+	void onTimerUpdate();
 
 private:
 	QApplicationWindow* m_pApplicationWindow;
 
+	QTimer m_timerUpdate;
+
+	QReadWriteLock m_lockListMemoryOperation;
 	MemoryOperationList m_listMemoryOperation;
 
+	// Search display
 	MemoryOperationList m_listFilterMemoryOperation;
 	QMemoryOperationModel* m_pModels;
 };

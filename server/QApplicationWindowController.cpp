@@ -7,6 +7,7 @@
 #include <QScrollBar>
 #include <QLabel>
 #include <QPushButton>
+#include <QElapsedTimer>
 
 #include "QApplicationWindow.h"
 #include "QMemoryOperationModel.h"
@@ -45,25 +46,30 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 
 	connect(m_pApplicationWindow->getSearchButton(), SIGNAL(clicked()), this, SLOT(onSearchButtonClicked()));
 
+	m_timerUpdate.setInterval(1000);
+	connect(&m_timerUpdate, SIGNAL(timeout()), this, SLOT(onTimerUpdate()));
+	m_timerUpdate.start();
+
 	return true;
 }
 
 void QApplicationWindowController::addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation)
 {
+	m_lockListMemoryOperation.lockForWrite();
 	if(pMemoryOperation->m_iFreePtr){
 		m_listMemoryOperation.setPtrFreed(pMemoryOperation->m_iFreePtr);
 	}
-
 	m_listMemoryOperation.append(pMemoryOperation);
-	int iNewCount = m_listMemoryOperation.count();
-
-	QLabel* pLabel = m_pApplicationWindow->getMemoryOperationCount();
-	pLabel->setText(QString::number(iNewCount));
+	m_lockListMemoryOperation.unlock();
 }
 
 void QApplicationWindowController::clearMemoryOperation()
 {
+	m_lockListMemoryOperation.lockForWrite();
 	m_listMemoryOperation.clear();
+	m_lockListMemoryOperation.unlock();
+
+	m_listFilterMemoryOperation.clear();
 	m_pModels->clear();
 }
 
@@ -71,7 +77,12 @@ void QApplicationWindowController::onSearchButtonClicked()
 {
 	bool bNotFreed = true;
 
+	QElapsedTimer timer;
+	qDebug("[aleakd-server] Start search");
+	timer.start();
+
 	m_listFilterMemoryOperation.clear();
+	m_lockListMemoryOperation.lockForRead();
 	MemoryOperationList::const_iterator iter;
 	for(iter = m_listMemoryOperation.constBegin(); iter != m_listMemoryOperation.constEnd(); ++iter)
 	{
@@ -89,8 +100,19 @@ void QApplicationWindowController::onSearchButtonClicked()
 			m_listFilterMemoryOperation.append(*iter);
 		}
 	}
+	m_lockListMemoryOperation.unlock();
 	m_pModels->clear();
 	m_pModels->fetchTo(m_listFilterMemoryOperation.count());
+
+	qDebug("[aleakd-server] Search done in %ld ms", timer.elapsed());
+}
+
+void QApplicationWindowController::onTimerUpdate()
+{
+	int iNewCount = m_listMemoryOperation.count();
+
+	QLabel* pLabel = m_pApplicationWindow->getMemoryOperationCount();
+	pLabel->setText(QString::number(iNewCount));
 }
 
 void QApplicationWindowController::onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation)

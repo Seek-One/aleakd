@@ -3,18 +3,22 @@
 //
 
 #include <QTcpSocket>
-#include <QCoreApplication>
+#include <QTcpServer>
 
 #include "../shared/server-msg.h"
 
 #include "MemOpRcptServer.h"
 
 MemOpRcptServer::MemOpRcptServer(QObject* parent)
-	: QTcpServer(parent)
+	: QThread(parent)
 {
 	m_pClientSocket = NULL;
 	m_iState = 0;
 	m_pHandler = NULL;
+
+	m_iPort = 0;
+
+	moveToThread(this);
 }
 
 MemOpRcptServer::~MemOpRcptServer()
@@ -25,18 +29,29 @@ MemOpRcptServer::~MemOpRcptServer()
 	}
 }
 
+void MemOpRcptServer::setPort(int iPort)
+{
+	m_iPort = iPort;
+}
+
 void MemOpRcptServer::setHandler(IMemOpRcptServerHandler* pHandler)
 {
 	m_pHandler = pHandler;
 }
 
-void MemOpRcptServer::incomingConnection(qintptr socketDescriptor)
+void MemOpRcptServer::onNewConnection()
 {
-	qInfo("[aleakd-server] New connection on socket %lu", socketDescriptor);
-	QTcpSocket* pSocket = new QTcpSocket();
-	if(pSocket) {
-		pSocket->setSocketDescriptor(socketDescriptor);
+	QTcpSocket* pSocket;
+
+	if(m_pTcpServer->hasPendingConnections()){
+		pSocket = m_pTcpServer->nextPendingConnection();
 	}
+
+	if(!pSocket){
+		return;
+	}
+
+	qInfo("[aleakd-server] New connection on socket %lu", pSocket->socketDescriptor());
 	if(!m_pClientSocket) {
 		connect(pSocket, SIGNAL(readyRead()), this, SLOT(onSocketReadyToRead()));
 		connect(pSocket, SIGNAL(disconnected()), this, SLOT(onSocketDisconnected()));
@@ -113,5 +128,23 @@ void MemOpRcptServer::onSocketDisconnected()
 		qInfo("[aleakd-server] Closing the connection");
 		m_pClientSocket->close();
 		m_pClientSocket = NULL;
+	}
+}
+
+void MemOpRcptServer::run()
+{
+	bool bGoOn;
+
+	m_pTcpServer = new QTcpServer();
+	connect(m_pTcpServer, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
+
+	qCritical("[aleakd-server] Creating server on port: %d", m_iPort);
+	bGoOn = m_pTcpServer->listen(QHostAddress::Any, m_iPort);
+
+	exec();
+
+	if(m_pTcpServer){
+		delete m_pTcpServer;
+		m_pTcpServer = NULL;
 	}
 }

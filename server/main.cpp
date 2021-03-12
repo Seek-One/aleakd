@@ -25,9 +25,9 @@ int main( int argc, char **argv )
 	int iPort = 19999;
 	MemOpRcptServer leakServer;
     if(bGoOn) {
+    	leakServer.setPort(iPort);
     	leakServer.setHandler(&windowController);
-		qCritical("[aleakd-server] Creating server on port: %d", iPort);
-		bGoOn = leakServer.listen(QHostAddress::Any, iPort);
+		leakServer.start();
 		if(!bGoOn){
 			qCritical("[aleakd-server] Unable to create server");
 		}
@@ -47,6 +47,12 @@ int main( int argc, char **argv )
 		windowApp.show();
 
 		a.exec();
+	}
+
+	// Stop server
+	if(bGoOn) {
+		leakServer.quit();
+		leakServer.wait();
 	}
 
 	return 0;
