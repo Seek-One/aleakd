@@ -33,7 +33,7 @@ public:
 	void onNewConnection();
 
 private slots:
-	void onSearchButtonClicked();
+	void onFilterButtonClicked();
 	void onTimerUpdate();
 
 private:

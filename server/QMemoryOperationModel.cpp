@@ -105,13 +105,16 @@ QVariant QMemoryOperationModel::data(const QModelIndex &index, int role) const
 	if (role == Qt::BackgroundColorRole) {
 		MemoryOperationSharedPtr pMemoryOperation = m_pListMemoryOperation->value(index.row());
 		if(pMemoryOperation){
-			if(!pMemoryOperation->m_bFreed){
-				return QColor(255, 180, 180);
+			if(pMemoryOperation->m_iMemOpType == ALeakD_free) {
+				return QColor(180, 180, 180);
 			}else{
-				return QColor(180, 255, 180);
+				if (!pMemoryOperation->m_bFreed) {
+					return QColor(255, 180, 180);
+				} else {
+					return QColor(180, 255, 180);
+				}
 			}
 		}
-
 	}
 
 	return QVariant();

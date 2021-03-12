@@ -11,6 +11,7 @@ class QTreeView;
 class QScrollBar;
 class QLabel;
 class QPushButton;
+class QCheckBox;
 
 class QApplicationWindow : public QMainWindow
 {
@@ -45,25 +46,24 @@ public:
 	};
 
 public:
-	QPushButton* getSearchButton() const;
+	QCheckBox* getNotFreeOnlyCheckBox() const;
+	QPushButton* getFilterButton() const;
 
 	QTreeView* getTreeView() const;
-	QLabel* getMemoryOperationCount() const;
 
 	void setData(int iRow, int iCol, const QString& szValue);
 
 private:
-	QWidget* createSearchForm(QWidget* pParent);
+	QWidget* createFilterForm(QWidget* pParent);
 	QWidget* createStatusBar(QWidget* pParent);
 
 	static QString getColName(int iCol);
 
 private:
-	QPushButton* m_pSearchButton;
+	QCheckBox* m_pFreedOnlyCheckBox;
+	QPushButton* m_pFilterButton;
 
 	QTreeView* m_pTreeView;
-
-	QLabel* m_pMemoryOperationCountLabel;
 
 	QList<QLabel*> m_listStatusRow1;
 	QList<QLabel*> m_listStatusRow2;

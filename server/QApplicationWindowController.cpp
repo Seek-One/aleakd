@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QElapsedTimer>
+#include <QCheckBox>
 
 #include "QApplicationWindow.h"
 #include "QMemoryOperationModel.h"
@@ -44,7 +45,7 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 	pTreeView->header()->resizeSection(5, 100);
 	pTreeView->header()->resizeSection(6, 150);
 
-	connect(m_pApplicationWindow->getSearchButton(), SIGNAL(clicked()), this, SLOT(onSearchButtonClicked()));
+	connect(m_pApplicationWindow->getFilterButton(), SIGNAL(clicked()), this, SLOT(onFilterButtonClicked()));
 
 	m_timerUpdate.setInterval(1000);
 	connect(&m_timerUpdate, SIGNAL(timeout()), this, SLOT(onTimerUpdate()));
@@ -61,7 +62,7 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 	if(pMemoryOperation->m_iFreePtr){
 		pMemoryOperationFreed = m_listMemoryOperation.getPtrNotFreed(pMemoryOperation->m_iFreePtr);
 		if(pMemoryOperationFreed) {
-			pMemoryOperation->m_bFreed = true;
+			pMemoryOperationFreed->m_bFreed = true;
 		}
 	}
 	m_listMemoryOperation.append(pMemoryOperation);
@@ -114,13 +115,13 @@ void QApplicationWindowController::clearMemoryOperation()
 	m_pModels->clear();
 }
 
-void QApplicationWindowController::onSearchButtonClicked()
+void QApplicationWindowController::onFilterButtonClicked()
 {
-	bool bNotFreed = true;
-
 	QElapsedTimer timer;
 	qDebug("[aleakd-server] Start search");
 	timer.start();
+
+	bool bNotFreed = m_pApplicationWindow->getNotFreeOnlyCheckBox()->isChecked();
 
 	m_searchStats.reset();
 

@@ -9,6 +9,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QGridLayout>
+#include <QCheckBox>
 
 #include "QApplicationWindow.h"
 
@@ -25,7 +26,7 @@ QApplicationWindow::QApplicationWindow(QWidget* parent)
 	QBoxLayout* pTmpLayout;
 
 	// Add search form
-	pTmpWidget = createSearchForm(pMainWidget);
+	pTmpWidget = createFilterForm(pMainWidget);
 	pMainLayout->addWidget(pTmpWidget);
 
 	{
@@ -46,7 +47,7 @@ QApplicationWindow::~QApplicationWindow()
 
 }
 
-QWidget* QApplicationWindow::createSearchForm(QWidget* pParent)
+QWidget* QApplicationWindow::createFilterForm(QWidget* pParent)
 {
 	QWidget* pMainWidget = new QWidget(pParent);
 	pMainWidget->setContentsMargins(0, 0, 0, 0);
@@ -56,10 +57,12 @@ QWidget* QApplicationWindow::createSearchForm(QWidget* pParent)
 	pMainLayout->setContentsMargins(0, 0, 0, 0);
 	pMainWidget->setLayout(pMainLayout);
 
-	pMainLayout->addWidget(new QLabel("Recherche:"));
+	pMainLayout->addWidget(new QLabel(tr("Not freed only:")));
+	m_pFreedOnlyCheckBox = new QCheckBox();
+	pMainLayout->addWidget(m_pFreedOnlyCheckBox);
 
-	m_pSearchButton = new QPushButton(tr("Search"));
-	pMainLayout->addWidget(m_pSearchButton);
+	m_pFilterButton = new QPushButton(tr("Filter"));
+	pMainLayout->addWidget(m_pFilterButton);
 
 	pMainLayout->addStretch();
 
@@ -157,19 +160,19 @@ QString QApplicationWindow::getColName(int iCol)
 	return QString();
 }
 
-QPushButton* QApplicationWindow::getSearchButton() const
+QCheckBox* QApplicationWindow::getNotFreeOnlyCheckBox() const
 {
-	return m_pSearchButton;
+	return m_pFreedOnlyCheckBox;
+}
+
+QPushButton* QApplicationWindow::getFilterButton() const
+{
+	return m_pFilterButton;
 }
 
 QTreeView* QApplicationWindow::getTreeView() const
 {
 	return m_pTreeView;
-}
-
-QLabel* QApplicationWindow::getMemoryOperationCount() const
-{
-	return m_pMemoryOperationCountLabel;
 }
 
 void QApplicationWindow::setData(int iRow, int iCol, const QString& szValue)

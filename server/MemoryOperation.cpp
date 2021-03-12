@@ -38,14 +38,14 @@ MemoryOperationList::~MemoryOperationList()
 
 }
 
-MemoryOperationSharedPtr MemoryOperationList::getPtrNotFreed(uint64_t iFreePtr) const
+MemoryOperationSharedPtr MemoryOperationList::getPtrNotFreed(uint64_t iPtrAddr) const
 {
 	MemoryOperationList::const_iterator iter;
 	iter = constBegin();
 	while(iter != constEnd())
 	{
 		const MemoryOperationSharedPtr& pMemoryOperation = (*iter);
-		if(pMemoryOperation->m_iFreePtr == iFreePtr && !pMemoryOperation->m_bFreed)
+		if(pMemoryOperation->m_iAllocPtr == iPtrAddr && !pMemoryOperation->m_bFreed)
 		{
 			return pMemoryOperation;
 		}
