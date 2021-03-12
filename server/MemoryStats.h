@@ -17,19 +17,25 @@ public:
 
 public:
 	int m_iOpCount;
-	uint64_t m_iAllocSize;
-	uint64_t m_iFreeSize;
-	uint64_t m_iRemaingSize;
+
+	int m_iTotalAllocCount;
+	uint64_t m_iTotalAllocSize;
+
+	int m_iTotalFreeCount;
+	uint64_t m_iTotalFreeSize;
+
+	int m_iTotalRemainingCount;
+	uint64_t m_iTotalRemainingSize;
 
 	int m_iMallocCount;
 	int m_iReallocCount;
 	int m_iCallocCount;
-	int m_iFreeCount;
 	int m_iPosixMemalignCount;
 	int m_iAlignedAllocCount;
 	int m_iMemAlignCount;
 	int m_iVAllocCount;
 	int m_iPVAllocCount;
+	int m_iFreeCount;
 };
 
 

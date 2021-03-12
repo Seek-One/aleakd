@@ -28,10 +28,13 @@ public:
 	enum StatusBarCols {
 		StatusBarCol_Title,
 		StatusBarCol_OpCount,
-		// Global size
-		StatusBarCol_AllocSize,
-		StatusBarCol_FreeSize,
-		StatusBarCol_RemainingSize,
+		// Global
+		StatusBarCol_TotalAllocCount,
+		StatusBarCol_TotalAllocSize,
+		StatusBarCol_TotalFreeCount,
+		StatusBarCol_TotalFreeSize,
+		StatusBarCol_TotalRemainingCount,
+		StatusBarCol_TotalRemainingSize,
 		// Alloc operation
 		StatusBarCol_malloc,
 		StatusBarCol_calloc,

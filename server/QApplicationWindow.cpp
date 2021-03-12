@@ -129,12 +129,18 @@ QString QApplicationWindow::getColName(int iCol)
 	{
 	case StatusBarCol_OpCount:
 		return tr("Op count");
-	case StatusBarCol_AllocSize:
-		return tr("Alloc size");
-	case StatusBarCol_FreeSize:
-		return tr("Free size");
-	case StatusBarCol_RemainingSize:
-		return tr("Remaining size");
+	case StatusBarCol_TotalAllocCount:
+		return tr("Alloc total count");
+	case StatusBarCol_TotalAllocSize:
+		return tr("Alloc total size");
+	case StatusBarCol_TotalFreeCount:
+		return tr("Free total count");
+	case StatusBarCol_TotalFreeSize:
+		return tr("Free total size");
+	case StatusBarCol_TotalRemainingCount:
+		return tr("Remaining total count");
+	case StatusBarCol_TotalRemainingSize:
+		return tr("Remaining total size");
 	case StatusBarCol_malloc:
 		return tr("malloc");
 	case StatusBarCol_calloc:
