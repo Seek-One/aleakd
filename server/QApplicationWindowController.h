@@ -7,11 +7,12 @@
 
 #include <QObject>
 #include <QSharedPointer>
-#include <QStandardItemModel>
+#include <QTimer>
 
 #include "MemoryOperation.h"
 
 class QApplicationWindow;
+class QMemoryOperationModel;
 
 class QApplicationWindowController : public QObject {
 	Q_OBJECT
@@ -24,10 +25,14 @@ public:
 	void addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation);
 	void clearMemoryOperation();
 
+private slots:
+	void onScrollBarValueChanged(int value);
+
 private:
 	QApplicationWindow* m_pApplicationWindow;
 
-	QStandardItemModel* m_pModels;
+	QList< QSharedPointer<MemoryOperation> > m_listMemoryOperation;
+	QMemoryOperationModel* m_pModels;
 };
 
 

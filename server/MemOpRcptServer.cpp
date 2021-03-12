@@ -88,9 +88,9 @@ void MemOpRcptServer::onSocketReadyToRead()
 				pMemoryOperation->m_iAllocNum = msg.alloc_num;
 				pMemoryOperation->m_iFreePtr = msg.free_ptr;
 
-				qDebug("[aleakd-server] msg received: type=%d, time=%lu,%lu, thread=%lu, size=%lu",
-		   			msg.msg_type, msg.time_sec, msg.time_usec,
-				   msg.thread_id, msg.alloc_size);
+				//qDebug("[aleakd-server] msg received: type=%d, time=%lu,%lu, thread=%lu, size=%lu",
+		   		//	msg.msg_type, msg.time_sec, msg.time_usec,
+				//  msg.thread_id, msg.alloc_size);
 
 				QMemoryOperationEvent* pEvent = new QMemoryOperationEvent(QSharedPointer<MemoryOperation>(pMemoryOperation));
 				QCoreApplication::postEvent(QCoreApplication::instance(), pEvent);

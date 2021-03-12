@@ -8,9 +8,16 @@
 #include <stdint.h>
 #include <time.h>
 
+#include <QSharedPointer>
+#include <QList>
+
 extern "C" {
 #include "../shared/global-const.h"
 };
+
+class MemoryOperation;
+typedef QSharedPointer<MemoryOperation> MemoryOperationSharedPtr;
+typedef QList<MemoryOperationSharedPtr> MemoryOperationList;
 
 class MemoryOperation
 {

@@ -4,8 +4,11 @@
 
 #include <QTreeView>
 #include <QHeaderView>
+#include <QScrollBar>
+#include <QLabel>
 
 #include "QApplicationWindow.h"
+#include "QMemoryOperationModel.h"
 
 #include "QApplicationWindowController.h"
 
@@ -24,20 +27,12 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 {
 	m_pApplicationWindow = pApplicationWindow;
 
-	m_pModels = new QStandardItemModel();
+	m_pModels = new QMemoryOperationModel();
+	m_pModels->setMemoryOperationList(&m_listMemoryOperation);
 
 	QTreeView* pTreeView = m_pApplicationWindow->getTreeView();
 	pTreeView->setModel(m_pModels);
-
-	QList<QString> listLabel;
-	listLabel.append(tr("Timestamp"));
-	listLabel.append(tr("Thread"));
-	listLabel.append(tr("Operation"));
-	listLabel.append(tr("Alloc size"));
-	listLabel.append(tr("Alloc ptr"));
-	listLabel.append(tr("Alloc num"));
-	listLabel.append(tr("Free ptr"));
-	m_pModels->setHorizontalHeaderLabels(listLabel);
+	pTreeView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
 	pTreeView->header()->resizeSection(0, 200);
 	pTreeView->header()->resizeSection(1, 150);
@@ -47,78 +42,38 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 	pTreeView->header()->resizeSection(5, 100);
 	pTreeView->header()->resizeSection(6, 150);
 
+	QScrollBar* pScrollBar = m_pApplicationWindow->getScrollBar();
+	pScrollBar->setMinimum(0);
+	pScrollBar->setMaximum(0);
+	connect(pScrollBar, SIGNAL(valueChanged(int)), this, SLOT(onScrollBarValueChanged(int)));
+
 	return true;
 }
 
 void QApplicationWindowController::addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation)
 {
-	QList<QStandardItem*> listCols;
-	QString szTmp;
+	m_listMemoryOperation.append(pMemoryOperation);
+	int iNewCount = m_listMemoryOperation.count();
+	m_pApplicationWindow->getScrollBar()->setMaximum(iNewCount);
 
-	QStandardItem* pItem;
-
-	// Timestamp
-	pItem = new QStandardItem();
-	szTmp = QString("%0,%1").arg(pMemoryOperation->m_tvOperation.tv_sec).arg(pMemoryOperation->m_tvOperation.tv_usec, 6, 10, QChar('0'));
-	pItem->setText(szTmp);
-	listCols.append(pItem);
-
-	// Thread ID
-	pItem = new QStandardItem();
-	szTmp = QString::number(pMemoryOperation->m_iThreadId);
-	pItem->setText(szTmp);
-	listCols.append(pItem);
-
-	// Operation type
-	pItem = new QStandardItem();
-	szTmp = ALeakD_TypeName(pMemoryOperation->m_iMemOpType);
-	pItem->setText(szTmp);
-	listCols.append(pItem);
-
-	// Alloc size
-	pItem = new QStandardItem();
-	if(pMemoryOperation->m_iAllocSize) {
-		szTmp = QString::number(pMemoryOperation->m_iAllocSize);
-	}else{
-		szTmp = "";
-	}
-	pItem->setText(szTmp);
-	listCols.append(pItem);
-
-	// Alloc ptr
-	pItem = new QStandardItem();
-	if(pMemoryOperation->m_iAllocPtr) {
-		szTmp = "0x" + QString::number(pMemoryOperation->m_iAllocPtr, 16);
-	}else{
-		szTmp = "";
-	}
-	pItem->setText(szTmp);
-	listCols.append(pItem);
-
-	// Alloc num
-	pItem = new QStandardItem();
-	if(pMemoryOperation->m_iAllocNum) {
-		szTmp = QString::number(pMemoryOperation->m_iAllocNum);
-	}else{
-		szTmp = "";
-	}
-	pItem->setText(szTmp);
-	listCols.append(pItem);
-
-	// Free
-	pItem = new QStandardItem();
-	if(pMemoryOperation->m_iFreePtr) {
-		szTmp = "0x" + QString::number(pMemoryOperation->m_iFreePtr, 16);
-	}else{
-		szTmp = "";
-	}
-	pItem->setText(szTmp);
-	listCols.append(pItem);
-
-	m_pModels->appendRow(listCols);
+	QLabel* pLabel = m_pApplicationWindow->getMemoryOperationCount();
+	pLabel->setText(QString::number(iNewCount));
 }
 
 void QApplicationWindowController::clearMemoryOperation()
 {
-	m_pModels->removeRows(0, m_pModels->rowCount());
+	m_listMemoryOperation.clear();
+	m_pModels->clear();
+}
+
+void QApplicationWindowController::onScrollBarValueChanged(int value)
+{
+	m_pModels->fetchTo(value);
+
+	QTreeView* pTreeView = m_pApplicationWindow->getTreeView();
+
+	QModelIndex modelIndex = m_pModels->index(value-1, 0);
+	pTreeView->scrollTo(modelIndex);
+
+	qDebug("scrollTo: %d", value);
 }

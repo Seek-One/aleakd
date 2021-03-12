@@ -4,6 +4,9 @@
 
 #include <QTreeView>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QScrollBar>
+#include <QLabel>
 
 #include "QApplicationWindow.h"
 
@@ -16,8 +19,30 @@ QApplicationWindow::QApplicationWindow(QWidget* parent)
 	QBoxLayout* pMainLayout = new QVBoxLayout();
 	pMainWidget->setLayout(pMainLayout);
 
-	m_pTreeView = new QTreeView(pMainWidget);
-	pMainLayout->addWidget(m_pTreeView);
+	QBoxLayout* pTmpLayout;
+
+	{
+		pTmpLayout = new QHBoxLayout();
+		pMainLayout->addLayout(pTmpLayout);
+
+		m_pTreeView = new QTreeView(pMainWidget);
+		pTmpLayout->addWidget(m_pTreeView);
+
+		m_pScrollBar = new QScrollBar();
+		pTmpLayout->addWidget(m_pScrollBar);
+	}
+
+	{
+		pTmpLayout = new QHBoxLayout();
+		pMainLayout->addLayout(pTmpLayout);
+
+		pTmpLayout->addWidget(new QLabel(tr("Alloc count:")));
+
+		m_pMemoryOperationCountLabel = new QLabel("0");
+		pTmpLayout->addWidget(m_pMemoryOperationCountLabel);
+
+		pTmpLayout->addStretch();
+	}
 }
 
 QApplicationWindow::~QApplicationWindow()
@@ -28,4 +53,14 @@ QApplicationWindow::~QApplicationWindow()
 QTreeView* QApplicationWindow::getTreeView() const
 {
 	return m_pTreeView;
+}
+
+QScrollBar* QApplicationWindow::getScrollBar() const
+{
+	return m_pScrollBar;
+}
+
+QLabel* QApplicationWindow::getMemoryOperationCount() const
+{
+	return m_pMemoryOperationCountLabel;
 }

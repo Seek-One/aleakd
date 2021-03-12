@@ -110,7 +110,7 @@ void servercomm_msg_init_v1(struct ServerMemoryMsgV1* pServerMemoryMsg)
 int servercomm_msg_send_v1(struct ServerMemoryMsgV1* pServerMemoryMsg)
 {
 	if(g_socket != -1) {
-		fprintf(stderr, "[aleakd] msg: %d\n", pServerMemoryMsg->msg_type);
+		//fprintf(stderr, "[aleakd] msg: %d\n", pServerMemoryMsg->msg_type);
 		return servercomm_send((void *) pServerMemoryMsg, sizeof(struct ServerMemoryMsgV1));
 	}else{
 		char* szBuffStart = ((char*)g_preInitBuffer)+g_preInitPop;

@@ -8,6 +8,8 @@
 #include <QMainWindow>
 
 class QTreeView;
+class QScrollBar;
+class QLabel;
 
 class QApplicationWindow : public QMainWindow
 {
@@ -17,10 +19,14 @@ public:
 
 public:
 	QTreeView* getTreeView() const;
+	QScrollBar* getScrollBar() const;
+	QLabel* getMemoryOperationCount() const;
 
 private:
 	QTreeView* m_pTreeView;
+	QScrollBar* m_pScrollBar;
 
+	QLabel* m_pMemoryOperationCountLabel;
 };
 
 
