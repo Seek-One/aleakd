@@ -2,6 +2,8 @@
 // Created by ebeuque on 11/03/2021.
 //
 
+#include <QColor>
+
 #include "QMemoryOperationModel.h"
 
 QMemoryOperationModel::QMemoryOperationModel()
@@ -62,42 +64,54 @@ QVariant QMemoryOperationModel::data(const QModelIndex &index, int role) const
 		return QVariant();
 	}
 
-	if (role != Qt::DisplayRole) {
+
+	if (role == Qt::DisplayRole) {
+		MemoryOperationSharedPtr pMemoryOperation = m_pListMemoryOperation->value(index.row());
+		if(!pMemoryOperation){
+			return QString();
+		}
+
+		switch(index.column()) {
+		case TimeStampColumn:
+			return QString("%0,%1").arg(pMemoryOperation->m_tvOperation.tv_sec).arg(pMemoryOperation->m_tvOperation.tv_usec, 6, 10, QChar('0'));
+		case ThreadColumn:
+			return QString::number(pMemoryOperation->m_iThreadId);
+		case OperationColumn:
+			return ALeakD_TypeName(pMemoryOperation->m_iMemOpType);
+		case AllocSizeColumn:
+			if(pMemoryOperation->m_iAllocSize) {
+				return QString::number(pMemoryOperation->m_iAllocSize);
+			}
+			return QString();
+		case AllocPtrColumn:
+			if(pMemoryOperation->m_iAllocPtr) {
+				return "0x" + QString::number(pMemoryOperation->m_iAllocPtr, 16);
+			}
+			return QString();
+		case AllocNumColumn:
+			if(pMemoryOperation->m_iAllocNum) {
+				return QString::number(pMemoryOperation->m_iAllocNum);
+			}
+			return QString();
+		case FreePtrColumn:
+			if(pMemoryOperation->m_iFreePtr) {
+				return "0x" + QString::number(pMemoryOperation->m_iFreePtr, 16);
+			}
+			return QString();
+		}
 		return QVariant();
 	}
 
-	MemoryOperationSharedPtr pMemoryOperation = m_pListMemoryOperation->value(index.row());
-	if(!pMemoryOperation){
-		return QString();
-	}
+	if (role == Qt::BackgroundColorRole) {
+		MemoryOperationSharedPtr pMemoryOperation = m_pListMemoryOperation->value(index.row());
+		if(pMemoryOperation){
+			if(!pMemoryOperation->m_bFreed){
+				return QColor(255, 180, 180);
+			}else{
+				return QColor(180, 255, 180);
+			}
+		}
 
-	switch(index.column()) {
-	case TimeStampColumn:
-		return QString("%0,%1").arg(pMemoryOperation->m_tvOperation.tv_sec).arg(pMemoryOperation->m_tvOperation.tv_usec, 6, 10, QChar('0'));
-	case ThreadColumn:
-		return QString::number(pMemoryOperation->m_iThreadId);
-	case OperationColumn:
-		return ALeakD_TypeName(pMemoryOperation->m_iMemOpType);
-	case AllocSizeColumn:
-		if(pMemoryOperation->m_iAllocSize) {
-			return QString::number(pMemoryOperation->m_iAllocSize);
-		}
-		return QString();
-	case AllocPtrColumn:
-		if(pMemoryOperation->m_iAllocPtr) {
-			return "0x" + QString::number(pMemoryOperation->m_iAllocPtr, 16);
-		}
-		return QString();
-	case AllocNumColumn:
-		if(pMemoryOperation->m_iAllocNum) {
-			return QString::number(pMemoryOperation->m_iAllocNum);
-		}
-		return QString();
-	case FreePtrColumn:
-		if(pMemoryOperation->m_iFreePtr) {
-			return "0x" + QString::number(pMemoryOperation->m_iFreePtr, 16);
-		}
-		return QString();
 	}
 
 	return QVariant();

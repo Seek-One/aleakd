@@ -50,6 +50,7 @@ private:
 	MemoryStats m_globalStats;
 
 	// Search display
+	MemoryStats m_searchStats;
 	MemoryOperationList m_listFilterMemoryOperation;
 	QMemoryOperationModel* m_pModels;
 };
