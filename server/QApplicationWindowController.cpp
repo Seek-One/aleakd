@@ -6,6 +6,7 @@
 #include <QHeaderView>
 #include <QScrollBar>
 #include <QLabel>
+#include <QPushButton>
 
 #include "QApplicationWindow.h"
 #include "QMemoryOperationModel.h"
@@ -28,11 +29,11 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 	m_pApplicationWindow = pApplicationWindow;
 
 	m_pModels = new QMemoryOperationModel();
-	m_pModels->setMemoryOperationList(&m_listMemoryOperation);
+	m_pModels->setMemoryOperationList(&m_listFilterMemoryOperation);
 
 	QTreeView* pTreeView = m_pApplicationWindow->getTreeView();
 	pTreeView->setModel(m_pModels);
-	pTreeView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	//pTreeView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
 	pTreeView->header()->resizeSection(0, 200);
 	pTreeView->header()->resizeSection(1, 150);
@@ -42,19 +43,19 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 	pTreeView->header()->resizeSection(5, 100);
 	pTreeView->header()->resizeSection(6, 150);
 
-	QScrollBar* pScrollBar = m_pApplicationWindow->getScrollBar();
-	pScrollBar->setMinimum(0);
-	pScrollBar->setMaximum(0);
-	connect(pScrollBar, SIGNAL(valueChanged(int)), this, SLOT(onScrollBarValueChanged(int)));
+	connect(m_pApplicationWindow->getSearchButton(), SIGNAL(clicked()), this, SLOT(onSearchButtonClicked()));
 
 	return true;
 }
 
 void QApplicationWindowController::addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation)
 {
+	if(pMemoryOperation->m_iFreePtr){
+		m_listMemoryOperation.setPtrFreed(pMemoryOperation->m_iFreePtr);
+	}
+
 	m_listMemoryOperation.append(pMemoryOperation);
 	int iNewCount = m_listMemoryOperation.count();
-	m_pApplicationWindow->getScrollBar()->setMaximum(iNewCount);
 
 	QLabel* pLabel = m_pApplicationWindow->getMemoryOperationCount();
 	pLabel->setText(QString::number(iNewCount));
@@ -66,16 +67,30 @@ void QApplicationWindowController::clearMemoryOperation()
 	m_pModels->clear();
 }
 
-void QApplicationWindowController::onScrollBarValueChanged(int value)
+void QApplicationWindowController::onSearchButtonClicked()
 {
-	m_pModels->fetchTo(value);
+	bool bNotFreed = true;
 
-	QTreeView* pTreeView = m_pApplicationWindow->getTreeView();
-
-	QModelIndex modelIndex = m_pModels->index(value-1, 0);
-	pTreeView->scrollTo(modelIndex);
-
-	qDebug("scrollTo: %d", value);
+	m_listFilterMemoryOperation.clear();
+	MemoryOperationList::const_iterator iter;
+	for(iter = m_listMemoryOperation.constBegin(); iter != m_listMemoryOperation.constEnd(); ++iter)
+	{
+		bool bAccept = true;
+		MemoryOperationSharedPtr pMemoryOperation = (*iter);
+		if(bNotFreed){
+			if(pMemoryOperation->m_iMemOpType == ALeakD_free){
+				bAccept = false;
+			}
+			if(pMemoryOperation->m_bFreed){
+				bAccept = false;
+			}
+		}
+		if(bAccept) {
+			m_listFilterMemoryOperation.append(*iter);
+		}
+	}
+	m_pModels->clear();
+	m_pModels->fetchTo(m_listFilterMemoryOperation.count());
 }
 
 void QApplicationWindowController::onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation)

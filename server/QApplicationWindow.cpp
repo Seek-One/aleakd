@@ -7,6 +7,7 @@
 #include <QHBoxLayout>
 #include <QScrollBar>
 #include <QLabel>
+#include <QPushButton>
 
 #include "QApplicationWindow.h"
 
@@ -19,7 +20,12 @@ QApplicationWindow::QApplicationWindow(QWidget* parent)
 	QBoxLayout* pMainLayout = new QVBoxLayout();
 	pMainWidget->setLayout(pMainLayout);
 
+	QWidget* pTmpWidget;
 	QBoxLayout* pTmpLayout;
+
+	// Add search form
+	pTmpWidget = createSearchForm(pMainWidget);
+	pMainLayout->addWidget(pTmpWidget);
 
 	{
 		pTmpLayout = new QHBoxLayout();
@@ -27,9 +33,6 @@ QApplicationWindow::QApplicationWindow(QWidget* parent)
 
 		m_pTreeView = new QTreeView(pMainWidget);
 		pTmpLayout->addWidget(m_pTreeView);
-
-		m_pScrollBar = new QScrollBar();
-		pTmpLayout->addWidget(m_pScrollBar);
 	}
 
 	{
@@ -50,14 +53,34 @@ QApplicationWindow::~QApplicationWindow()
 
 }
 
+QWidget* QApplicationWindow::createSearchForm(QWidget* pParent)
+{
+	QWidget* pMainWidget = new QWidget(pParent);
+	pMainWidget->setContentsMargins(0, 0, 0, 0);
+
+	QBoxLayout* pMainLayout;
+	pMainLayout = new QHBoxLayout();
+	pMainLayout->setContentsMargins(0, 0, 0, 0);
+	pMainWidget->setLayout(pMainLayout);
+
+	pMainLayout->addWidget(new QLabel("Recherche:"));
+
+	m_pSearchButton = new QPushButton(tr("Search"));
+	pMainLayout->addWidget(m_pSearchButton);
+
+	pMainLayout->addStretch();
+
+	return pMainWidget;
+}
+
+QPushButton* QApplicationWindow::getSearchButton() const
+{
+	return m_pSearchButton;
+}
+
 QTreeView* QApplicationWindow::getTreeView() const
 {
 	return m_pTreeView;
-}
-
-QScrollBar* QApplicationWindow::getScrollBar() const
-{
-	return m_pScrollBar;
 }
 
 QLabel* QApplicationWindow::getMemoryOperationCount() const

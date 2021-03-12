@@ -9,6 +9,7 @@
 #define ALEAKD_MSG_VERSION 1
 
 enum ALeakD_AllocType {
+	ALeakD_unknown = 0,
 	ALeakD_malloc = 1,
 	ALeakD_free = 2,
 	ALeakD_calloc = 3,

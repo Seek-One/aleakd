@@ -10,6 +10,7 @@
 class QTreeView;
 class QScrollBar;
 class QLabel;
+class QPushButton;
 
 class QApplicationWindow : public QMainWindow
 {
@@ -18,13 +19,18 @@ public:
 	virtual ~QApplicationWindow();
 
 public:
+	QPushButton* getSearchButton() const;
+
 	QTreeView* getTreeView() const;
-	QScrollBar* getScrollBar() const;
 	QLabel* getMemoryOperationCount() const;
 
 private:
+	QWidget* createSearchForm(QWidget* parent);
+
+private:
+	QPushButton* m_pSearchButton;
+
 	QTreeView* m_pTreeView;
-	QScrollBar* m_pScrollBar;
 
 	QLabel* m_pMemoryOperationCountLabel;
 };

@@ -31,12 +31,14 @@ public:
 	void onNewConnection();
 
 private slots:
-	void onScrollBarValueChanged(int value);
+	void onSearchButtonClicked();
 
 private:
 	QApplicationWindow* m_pApplicationWindow;
 
-	QList< QSharedPointer<MemoryOperation> > m_listMemoryOperation;
+	MemoryOperationList m_listMemoryOperation;
+
+	MemoryOperationList m_listFilterMemoryOperation;
 	QMemoryOperationModel* m_pModels;
 };
 

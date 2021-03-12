@@ -17,7 +17,6 @@ extern "C" {
 
 class MemoryOperation;
 typedef QSharedPointer<MemoryOperation> MemoryOperationSharedPtr;
-typedef QList<MemoryOperationSharedPtr> MemoryOperationList;
 
 class MemoryOperation
 {
@@ -41,7 +40,16 @@ public:
 
 	// Free infos
 	uint64_t m_iFreePtr;
+	bool m_bFreed;
 };
 
+class MemoryOperationList : public QList<MemoryOperationSharedPtr>
+{
+public:
+	MemoryOperationList();
+	virtual ~MemoryOperationList();
+
+	void setPtrFreed(uint64_t iFreePtr);
+};
 
 #endif //ALEAKD_MEMORYOPERATION_H
