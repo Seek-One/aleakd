@@ -40,6 +40,7 @@ private:
 
 	QTimer m_timerUpdate;
 
+	// List of memory operation
 	QReadWriteLock m_lockListMemoryOperation;
 	MemoryOperationList m_listMemoryOperation;
 

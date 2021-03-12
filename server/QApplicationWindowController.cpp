@@ -111,8 +111,7 @@ void QApplicationWindowController::onTimerUpdate()
 {
 	int iNewCount = m_listMemoryOperation.count();
 
-	QLabel* pLabel = m_pApplicationWindow->getMemoryOperationCount();
-	pLabel->setText(QString::number(iNewCount));
+	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_OpCount, QString::number(iNewCount));
 }
 
 void QApplicationWindowController::onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation)
