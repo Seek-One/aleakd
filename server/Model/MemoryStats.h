@@ -17,6 +17,7 @@ public:
 
 public:
 	int m_iOpCount;
+	uint64_t m_iOperationSize;
 
 	int m_iTotalAllocCount;
 	uint64_t m_iTotalAllocSize;

@@ -10,6 +10,7 @@
 #include <QPushButton>
 #include <QGridLayout>
 #include <QCheckBox>
+#include <QStatusBar>
 
 #include "QApplicationWindow.h"
 
@@ -38,8 +39,11 @@ QApplicationWindow::QApplicationWindow(QWidget* parent)
 	}
 
 	// Add status bar
-	pTmpWidget = createStatusBar(pMainWidget);
+	pTmpWidget = createStatisticsBar(pMainWidget);
 	pMainLayout->addWidget(pTmpWidget);
+
+	QStatusBar* pStatusBar = createStatusBar(pMainWidget);
+	setStatusBar(pStatusBar);
 }
 
 QApplicationWindow::~QApplicationWindow()
@@ -69,7 +73,7 @@ QWidget* QApplicationWindow::createFilterForm(QWidget* pParent)
 	return pMainWidget;
 }
 
-QWidget* QApplicationWindow::createStatusBar(QWidget* pParent)
+QWidget* QApplicationWindow::createStatisticsBar(QWidget* pParent)
 {
 	QWidget* pMainWidget = new QWidget(pParent);
 	pMainWidget->setContentsMargins(0, 0, 0, 0);
@@ -99,7 +103,7 @@ QWidget* QApplicationWindow::createStatusBar(QWidget* pParent)
 			// Search row
 			pTmpLabel = new QLabel();
 			if(i == StatusBarCol_Title) {
-				pTmpLabel->setText(tr("Search:"));
+				pTmpLabel->setText(tr("Filter:"));
 			}else{
 				pTmpLabel->setText("0");
 				pTmpLabel->setAlignment(Qt::AlignCenter);
@@ -119,6 +123,21 @@ QWidget* QApplicationWindow::createStatusBar(QWidget* pParent)
 			pGridLayout->addWidget(pTmpLabel, 2, i);
 		}
 	}
+
+	return pMainWidget;
+}
+
+QStatusBar* QApplicationWindow::createStatusBar(QWidget* pParent)
+{
+	QStatusBar* pMainWidget = new QStatusBar(pParent);
+
+	m_pCaptureMemoryOperationCountLabel = new QLabel();
+	pMainWidget->addPermanentWidget(m_pCaptureMemoryOperationCountLabel);
+	setCaptureMemoryOperationCount("0");
+
+	m_pCaptureMemorySizeUsedLabel = new QLabel();
+	pMainWidget->addPermanentWidget(m_pCaptureMemorySizeUsedLabel);
+	setCaptureMemorySizeUsed("0");
 
 	return pMainWidget;
 }
@@ -189,4 +208,16 @@ void QApplicationWindow::setData(int iRow, int iCol, const QString& szValue)
 	if(iRow == StatusBarRow_Global){
 		m_listStatusRow2.value(iCol)->setText(szValue);
 	}
+}
+
+void QApplicationWindow::setCaptureMemoryOperationCount(const QString& szValue)
+{
+	QString szTmp = QString("Capture operation count: %0").arg(szValue);
+	m_pCaptureMemoryOperationCountLabel->setText(szTmp);
+}
+
+void QApplicationWindow::setCaptureMemorySizeUsed(const QString& szValue)
+{
+	QString szTmp = QString("Capture memory usage: %0 bytes").arg(szValue);
+	m_pCaptureMemorySizeUsedLabel->setText(szTmp);
 }

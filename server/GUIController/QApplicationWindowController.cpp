@@ -70,6 +70,7 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 
 	m_lockGlobalStats.lockForWrite();
 	m_globalStats.m_iOpCount++;
+	m_globalStats.m_iOperationSize += sizeof(MemoryOperation);
 	m_globalStats.m_iTotalAllocSize += pMemoryOperation->m_iAllocSize;
 	m_globalStats.m_iTotalRemainingSize += pMemoryOperation->m_iAllocSize;
 	if(pMemoryOperationFreed){
@@ -257,6 +258,9 @@ void QApplicationWindowController::onTimerUpdate()
 	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_memalign, QString::number(m_globalStats.m_iMemAlignCount));
 	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_valloc, QString::number(m_globalStats.m_iVAllocCount));
 	m_pApplicationWindow->setData(QApplicationWindow::StatusBarRow_Global, QApplicationWindow::StatusBarCol_pvalloc, QString::number(m_globalStats.m_iPVAllocCount));
+
+	m_pApplicationWindow->setCaptureMemoryOperationCount(QString::number(m_globalStats.m_iOpCount));
+	m_pApplicationWindow->setCaptureMemorySizeUsed(QString::number(m_globalStats.m_iOperationSize));
 
 	m_lockGlobalStats.unlock();
 }

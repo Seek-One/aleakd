@@ -56,9 +56,13 @@ public:
 
 	void setData(int iRow, int iCol, const QString& szValue);
 
+	void setCaptureMemoryOperationCount(const QString& szValue);
+	void setCaptureMemorySizeUsed(const QString& szValue);
+
 private:
 	QWidget* createFilterForm(QWidget* pParent);
-	QWidget* createStatusBar(QWidget* pParent);
+	QWidget* createStatisticsBar(QWidget* pParent);
+	QStatusBar* createStatusBar(QWidget* pParent);
 
 	static QString getColName(int iCol);
 
@@ -68,8 +72,14 @@ private:
 
 	QTreeView* m_pTreeView;
 
+	// Statistics
 	QList<QLabel*> m_listStatusRow1;
 	QList<QLabel*> m_listStatusRow2;
+
+	// Status bar
+	QStatusBar* m_pStatusBar;
+	QLabel* m_pCaptureMemoryOperationCountLabel;
+	QLabel* m_pCaptureMemorySizeUsedLabel;
 };
 
 
