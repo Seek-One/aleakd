@@ -14,10 +14,17 @@
 #include "server-comm.h"
 
 static int g_bIsInitializing = 0;
+
 static void* (*real_malloc)(size_t) = NULL;
 static void* (*real_calloc)(size_t, size_t) = NULL;
-static void (*real_free)(void*) = NULL;
+static void  (*real_free)(void*) = NULL;
 static void* (*real_realloc)(void*, size_t) = NULL;
+static int   (*real_posix_memalign)(void** memptr, size_t alignment, size_t size);
+static void* (*real_aligned_alloc )(size_t alignment, size_t size);
+static void* (*real_memalign)(size_t alignment, size_t size);
+static void* (*real_valloc)(size_t size);
+static void* (*real_pvalloc)(size_t size);
+
 
 // Dummy buffer to wrap initialization because dlsym can call malloc function
 char tmpbuf[4096];
@@ -84,6 +91,31 @@ void wrapper_init()
 
 		real_realloc = dlsym(RTLD_NEXT, "realloc");
 		if (NULL == real_realloc) {
+			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
+		}
+
+		real_posix_memalign = dlsym(RTLD_NEXT, "posix_memalign");
+		if (NULL == real_posix_memalign) {
+			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
+		}
+
+		real_aligned_alloc = dlsym(RTLD_NEXT, "aligned_alloc");
+		if (NULL == real_aligned_alloc) {
+			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
+		}
+
+		real_memalign = dlsym(RTLD_NEXT, "memalign");
+		if (NULL == real_memalign) {
+			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
+		}
+
+		real_valloc = dlsym(RTLD_NEXT, "valloc");
+		if (NULL == real_valloc) {
+			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
+		}
+
+		real_pvalloc = dlsym(RTLD_NEXT, "pvalloc");
+		if (NULL == real_pvalloc) {
 			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
 		}
 
@@ -315,7 +347,6 @@ void *calloc(size_t num, size_t size)
 	return p;
 }
 
-
 void *realloc(void* ptr, size_t size)
 {
 	if(!real_realloc){
@@ -373,6 +404,147 @@ void free(void *ptr)
 	}else{
 		dummy_free(ptr);
 	}
+}
+
+
+int posix_memalign(void** memptr, size_t alignment, size_t size)
+{
+	if(!real_posix_memalign){
+		wrapper_init();
+	}
+
+	aleakd_data_incr_alloc_number();
+	int alloc_num = aleakd_data_get_alloc_number();
+
+	int ret;
+	ret = real_posix_memalign(memptr, alignment, size);
+
+	if(ret == 0){
+		if(g_bUseSocket) {
+			struct ServerMemoryMsgV1 msg;
+			servercomm_msg_init_v1(&msg);
+			msg.msg_type = ALeakD_posix_memalign;
+			msg.alloc_num = (int64_t)alloc_num;
+			msg.alloc_ptr = (int64_t)*memptr;
+			msg.alloc_size = (int64_t)size;
+			msg.free_ptr = (int64_t)NULL;
+			servercomm_msg_send_v1(&msg);
+		}
+	}
+
+	return ret;
+}
+
+void* aligned_alloc(size_t alignment, size_t size)
+{
+	if(!real_aligned_alloc){
+		wrapper_init();
+	}
+
+	aleakd_data_incr_alloc_number();
+	int alloc_num = aleakd_data_get_alloc_number();
+
+	void *p = NULL;
+	p = real_aligned_alloc(alignment, size);
+
+	if(p){
+		if(g_bUseSocket) {
+			struct ServerMemoryMsgV1 msg;
+			servercomm_msg_init_v1(&msg);
+			msg.msg_type = ALeakD_aligned_alloc;
+			msg.alloc_num = (int64_t)alloc_num;
+			msg.alloc_ptr = (int64_t)p;
+			msg.alloc_size = (int64_t)size;
+			msg.free_ptr = (int64_t)NULL;
+			servercomm_msg_send_v1(&msg);
+		}
+	}
+
+	return p;
+}
+
+void* memalign(size_t alignment, size_t size)
+{
+	if(!real_memalign){
+		wrapper_init();
+	}
+
+	aleakd_data_incr_alloc_number();
+	int alloc_num = aleakd_data_get_alloc_number();
+
+	void *p = NULL;
+	p = real_memalign(alignment, size);
+
+	if(p){
+		if(g_bUseSocket) {
+			struct ServerMemoryMsgV1 msg;
+			servercomm_msg_init_v1(&msg);
+			msg.msg_type = ALeakD_memalign;
+			msg.alloc_num = (int64_t)alloc_num;
+			msg.alloc_ptr = (int64_t)p;
+			msg.alloc_size = (int64_t)size;
+			msg.free_ptr = (int64_t)NULL;
+			servercomm_msg_send_v1(&msg);
+		}
+	}
+
+	return p;
+}
+
+void* valloc(size_t size)
+{
+	if(!real_valloc){
+		wrapper_init();
+	}
+
+	aleakd_data_incr_alloc_number();
+	int alloc_num = aleakd_data_get_alloc_number();
+
+	void *p = NULL;
+	p = real_valloc(size);
+
+	if(p){
+		if(g_bUseSocket) {
+			struct ServerMemoryMsgV1 msg;
+			servercomm_msg_init_v1(&msg);
+			msg.msg_type = ALeakD_valloc;
+			msg.alloc_num = (int64_t)alloc_num;
+			msg.alloc_ptr = (int64_t)p;
+			msg.alloc_size = (int64_t)size;
+			msg.free_ptr = (int64_t)NULL;
+			servercomm_msg_send_v1(&msg);
+		}
+	}
+
+	return p;
+}
+
+void* pvalloc(size_t size)
+{
+	if(!real_pvalloc){
+		wrapper_init();
+	}
+
+	aleakd_data_incr_alloc_number();
+	int alloc_num = aleakd_data_get_alloc_number();
+
+	void *p = NULL;
+	p = real_pvalloc(size);
+
+	if(p){
+		if(g_bUseSocket) {
+			struct ServerMemoryMsgV1 msg;
+			servercomm_msg_init_v1(&msg);
+			msg.msg_type = ALeakD_pvalloc;
+			msg.alloc_num = (int64_t)alloc_num;
+			msg.alloc_ptr = (int64_t)p;
+			msg.alloc_size = (int64_t)size;
+			msg.free_ptr = (int64_t)NULL;
+			servercomm_msg_send_v1(&msg);
+		}
+	}
+
+	return p;
 }
 
 /*
