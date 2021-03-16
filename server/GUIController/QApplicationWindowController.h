@@ -10,9 +10,10 @@
 #include <QTimer>
 #include <QReadWriteLock>
 
-#include "MemoryOperation.h"
-#include "MemoryStats.h"
-#include "IMemOpRcptServerHandler.h"
+#include "Model/MemoryOperation.h"
+#include "Model/MemoryStats.h"
+
+#include "Server/IMemOpRcptServerHandler.h"
 
 class QApplicationWindow;
 class QMemoryOperationModel;

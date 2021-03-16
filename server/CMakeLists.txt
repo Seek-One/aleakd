@@ -13,24 +13,26 @@ find_package(Qt5 COMPONENTS Core Gui Widgets Network REQUIRED)
 
 SET (ALEAKD_SERVER_SRC
 	main.cpp
-	IMemOpRcptServerHandler.cpp
-	IMemOpRcptServerHandler.h
-	MemoryOperation.cpp
-	MemoryOperation.h
-	MemoryStats.cpp
-	MemoryStats.h
-	MemOpRcptServer.cpp
-	MemOpRcptServer.h
 	QMainEventFilter.cpp
 	QMainEventFilter.h
-	QMemoryOperationModel.cpp
-	QMemoryOperationModel.h
-	QApplicationWindow.cpp
-	QApplicationWindow.h
-	QApplicationWindowController.cpp
-	QApplicationWindowController.h
+	GUI/QApplicationWindow.cpp
+	GUI/QApplicationWindow.h
+	GUIController/QApplicationWindowController.cpp
+	GUIController/QApplicationWindowController.h
+	GUIModel/QMemoryOperationModel.cpp
+	GUIModel/QMemoryOperationModel.h
+	Model/MemoryOperation.cpp
+	Model/MemoryOperation.h
+	Model/MemoryStats.cpp
+	Model/MemoryStats.h
+	Server/IMemOpRcptServerHandler.cpp
+	Server/IMemOpRcptServerHandler.h
+	Server/MemOpRcptServer.cpp
+	Server/MemOpRcptServer.h
 	../shared/common.c
 )
+
+include_directories(".")
 
 ####################
 # Create executable

@@ -4,7 +4,7 @@
 
 #include <QEvent>
 
-#include "QApplicationWindowController.h"
+#include "GUIController/QApplicationWindowController.h"
 
 #include "QMainEventFilter.h"
 

@@ -9,7 +9,7 @@
 #include <QHash>
 #include <QSharedPointer>
 
-#include "MemoryOperation.h"
+#include "Model/MemoryOperation.h"
 
 class QMemoryOperationModel : public QAbstractItemModel
 {

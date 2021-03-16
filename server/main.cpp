@@ -1,10 +1,11 @@
 #include <QApplication>
 
-#include "QMainEventFilter.h"
-#include "QApplicationWindow.h"
-#include "QApplicationWindowController.h"
+#include "Server/MemOpRcptServer.h"
 
-#include "MemOpRcptServer.h"
+#include "QMainEventFilter.h"
+
+#include "GUI/QApplicationWindow.h"
+#include "GUIController/QApplicationWindowController.h"
 
 int main( int argc, char **argv )
 {

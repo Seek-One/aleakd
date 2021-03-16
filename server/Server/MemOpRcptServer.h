@@ -7,8 +7,9 @@
 
 #include <QThread>
 
-#include "MemoryOperation.h"
-#include "IMemOpRcptServerHandler.h"
+#include "Model/MemoryOperation.h"
+
+#include "Server/IMemOpRcptServerHandler.h"
 
 class QTcpServer;
 class QTcpSocket;

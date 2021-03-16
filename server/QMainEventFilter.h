@@ -8,7 +8,7 @@
 #include <QObject>
 #include <QSharedPointer>
 
-#include "MemoryOperation.h"
+#include "Model/MemoryOperation.h"
 
 class QApplicationWindowController;
 

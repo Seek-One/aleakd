@@ -10,10 +10,11 @@
 #include <QElapsedTimer>
 #include <QCheckBox>
 
-#include "QApplicationWindow.h"
-#include "QMemoryOperationModel.h"
+#include "GUI/QApplicationWindow.h"
 
-#include "QApplicationWindowController.h"
+#include "GUIModel/QMemoryOperationModel.h"
+
+#include "GUIController/QApplicationWindowController.h"
 
 QApplicationWindowController::QApplicationWindowController()
 {

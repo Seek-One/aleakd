@@ -5,7 +5,7 @@
 #ifndef ALEAKD_IMEMOPRCPTSERVERHANDLER_H
 #define ALEAKD_IMEMOPRCPTSERVERHANDLER_H
 
-#include "MemoryOperation.h"
+#include "Model/MemoryOperation.h"
 
 class IMemOpRcptServerHandler
 {
