@@ -19,6 +19,8 @@
 class QApplicationWindow;
 class QMemoryOperationView;
 class QMemoryOperationModel;
+class QThreadInfosView;
+class QThreadInfosModel;
 
 class QApplicationWindowController : public QObject, public IMemOpRcptServerHandler {
 	Q_OBJECT
@@ -48,6 +50,7 @@ private:
 
 private:
 	QApplicationWindow* m_pApplicationWindow;
+	QThreadInfosView* m_pThreadInfosView;
 	QMemoryOperationView* m_pMemoryOperationView;
 
 	QTimer m_timerUpdate;
@@ -55,16 +58,20 @@ private:
 	// List of memory operation
 	QReadWriteLock m_lockListMemoryOperation;
 	MemoryOperationList m_listMemoryOperation;
+	ThreadInfosList m_listThreadInfos;
 
-	// Stats
+	// Global infos
 	QReadWriteLock m_lockGlobalStats;
 	MemoryStats m_globalStats;
-	ThreadInfosList m_listThreadInfos;
+
+	// Thread tab
+	QThreadInfosModel* m_pModelThreadInfos;
+	ThreadInfosList m_listFilterThreadInfos;
 
 	// Search display
 	MemoryStats m_searchStats;
 	MemoryOperationList m_listFilterMemoryOperation;
-	QMemoryOperationModel* m_pModels;
+	QMemoryOperationModel* m_pModelMemoryOperation;
 };
 
 

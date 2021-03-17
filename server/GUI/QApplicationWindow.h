@@ -9,6 +9,7 @@
 
 class QLabel;
 
+class QThreadInfosView;
 class QMemoryOperationView;
 
 class QApplicationWindow : public QMainWindow
@@ -18,6 +19,7 @@ public:
 	virtual ~QApplicationWindow();
 
 public:
+	QThreadInfosView* getThreadInfosView() const;
 	QMemoryOperationView* getMemoryOperationView() const;
 
 	// Status bar
@@ -32,6 +34,7 @@ private:
 private:
 	// Tabs
 	QTabWidget* m_pTabWidget;
+	QThreadInfosView* m_pThreadInfosView;
 	QMemoryOperationView* m_pMemoryOperationView;
 
 	// Status bar

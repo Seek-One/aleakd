@@ -19,10 +19,14 @@ SET (ALEAKD_SERVER_SRC
 	GUI/QApplicationWindow.h
 	GUI/QMemoryOperationView.cpp
 	GUI/QMemoryOperationView.h
+	GUI/QThreadInfosView.cpp
+	GUI/QThreadInfosView.h
 	GUIController/QApplicationWindowController.cpp
 	GUIController/QApplicationWindowController.h
 	GUIModel/QMemoryOperationModel.cpp
 	GUIModel/QMemoryOperationModel.h
+	GUIModel/QThreadInfosModel.cpp
+	GUIModel/QThreadInfosModel.h
 	Model/MemoryOperation.cpp
 	Model/MemoryOperation.h
 	Model/MemoryStats.cpp

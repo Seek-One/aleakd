@@ -14,6 +14,10 @@
 class QMemoryOperationModel : public QAbstractItemModel
 {
 public:
+	QMemoryOperationModel();
+	virtual ~QMemoryOperationModel();
+
+public:
 	enum Cols {
 		TimeStampColumn = 0,
 		ThreadColumn,
@@ -25,9 +29,6 @@ public:
 	};
 
 public:
-	QMemoryOperationModel();
-	virtual ~QMemoryOperationModel();
-
 	void setMemoryOperationList(MemoryOperationList* pMemoryOperationList);
 
 	void fetchTo(int iRow);

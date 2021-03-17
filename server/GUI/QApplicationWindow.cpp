@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QStatusBar>
 
+#include "GUI/QThreadInfosView.h"
 #include "GUI/QMemoryOperationView.h"
 
 #include "QApplicationWindow.h"
@@ -41,6 +42,9 @@ QWidget* QApplicationWindow::createTabs(QWidget* pParent)
 {
 	m_pTabWidget = new QTabWidget(pParent);
 
+	m_pThreadInfosView = new QThreadInfosView(m_pTabWidget);
+	m_pTabWidget->addTab(m_pThreadInfosView, tr("Threads"));
+
 	m_pMemoryOperationView = new QMemoryOperationView(m_pTabWidget);
 	m_pTabWidget->addTab(m_pMemoryOperationView, tr("Memory operation"));
 
@@ -64,6 +68,11 @@ QStatusBar* QApplicationWindow::createStatusBar(QWidget* pParent)
 	setCaptureThreadCount("0");
 
 	return pMainWidget;
+}
+
+QThreadInfosView* QApplicationWindow::getThreadInfosView() const
+{
+	return m_pThreadInfosView;
 }
 
 QMemoryOperationView* QApplicationWindow::getMemoryOperationView() const

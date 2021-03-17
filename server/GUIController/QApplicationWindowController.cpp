@@ -12,43 +12,67 @@
 
 #include "GUI/QApplicationWindow.h"
 #include "GUI/QMemoryOperationView.h"
+#include "GUI/QThreadInfosView.h"
 
 #include "GUIModel/QMemoryOperationModel.h"
+#include "GUIModel/QThreadInfosModel.h"
 
 #include "GUIController/QApplicationWindowController.h"
 
 QApplicationWindowController::QApplicationWindowController()
 {
 	m_pApplicationWindow = NULL;
-	m_pModels = NULL;
+	m_pModelMemoryOperation = NULL;
+	m_pModelThreadInfos = NULL;
 }
 
 QApplicationWindowController::~QApplicationWindowController()
 {
-
+	if(m_pModelMemoryOperation){
+		delete m_pModelMemoryOperation;
+		m_pModelMemoryOperation = NULL;
+	}
+	if(m_pModelThreadInfos){
+		delete m_pModelThreadInfos;
+		m_pModelThreadInfos = NULL;
+	}
 }
 
 bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 {
 	m_pApplicationWindow = pApplicationWindow;
-	m_pMemoryOperationView = pApplicationWindow->getMemoryOperationView();
 
-	m_pModels = new QMemoryOperationModel();
-	m_pModels->setMemoryOperationList(&m_listFilterMemoryOperation);
+	// Thread infos tab
+	{
+		m_pThreadInfosView = pApplicationWindow->getThreadInfosView();
 
-	QTreeView* pTreeView = m_pMemoryOperationView->getTreeView();
-	pTreeView->setModel(m_pModels);
-	//pTreeView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		m_pModelThreadInfos = new QThreadInfosModel();
+		m_pModelThreadInfos->setThreadInfosList(&m_listFilterThreadInfos);
 
-	pTreeView->header()->resizeSection(0, 200);
-	pTreeView->header()->resizeSection(1, 150);
-	pTreeView->header()->resizeSection(2, 100);
-	pTreeView->header()->resizeSection(3, 100);
-	pTreeView->header()->resizeSection(4, 150);
-	pTreeView->header()->resizeSection(5, 100);
-	pTreeView->header()->resizeSection(6, 150);
+		QTreeView *pTreeView = m_pThreadInfosView->getTreeView();
+		pTreeView->setModel(m_pModelThreadInfos);
+	}
 
-	connect(m_pMemoryOperationView->getFilterButton(), SIGNAL(clicked()), this, SLOT(onFilterButtonClicked()));
+	// Memory infos tab
+	{
+		m_pMemoryOperationView = pApplicationWindow->getMemoryOperationView();
+
+		m_pModelMemoryOperation = new QMemoryOperationModel();
+		m_pModelMemoryOperation->setMemoryOperationList(&m_listFilterMemoryOperation);
+
+		QTreeView *pTreeView = m_pMemoryOperationView->getTreeView();
+		pTreeView->setModel(m_pModelMemoryOperation);
+
+		pTreeView->header()->resizeSection(0, 200);
+		pTreeView->header()->resizeSection(1, 150);
+		pTreeView->header()->resizeSection(2, 100);
+		pTreeView->header()->resizeSection(3, 100);
+		pTreeView->header()->resizeSection(4, 150);
+		pTreeView->header()->resizeSection(5, 100);
+		pTreeView->header()->resizeSection(6, 150);
+
+		connect(m_pMemoryOperationView->getFilterButton(), SIGNAL(clicked()), this, SLOT(onFilterButtonClicked()));
+	}
 
 	m_timerUpdate.setInterval(1000);
 	connect(&m_timerUpdate, SIGNAL(timeout()), this, SLOT(onTimerUpdate()));
@@ -70,7 +94,8 @@ void QApplicationWindowController::clearData()
 	m_lockGlobalStats.unlock();
 
 	m_listFilterMemoryOperation.clear();
-	m_pModels->clear();
+	m_pModelMemoryOperation->clear();
+	m_pModelThreadInfos->clear();
 }
 
 void QApplicationWindowController::addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation)
@@ -270,8 +295,8 @@ void QApplicationWindowController::onFilterButtonClicked()
 		}
 	}
 	m_lockListMemoryOperation.unlock();
-	m_pModels->clear();
-	m_pModels->fetchTo(m_listFilterMemoryOperation.count());
+	m_pModelMemoryOperation->clear();
+	m_pModelMemoryOperation->fetchTo(m_listFilterMemoryOperation.count());
 
 	qDebug("[aleakd-server] Search done in %ld ms", timer.elapsed());
 }
@@ -318,6 +343,13 @@ void QApplicationWindowController::onTimerUpdate()
 	m_pApplicationWindow->setCaptureMemorySizeUsed(QString::number(m_globalStats.m_iOperationSize));
 	m_pApplicationWindow->setCaptureThreadCount(QString::number(m_listThreadInfos.count()));
 
+	m_listFilterThreadInfos.clear();
+	ThreadInfosList::const_iterator iter;
+	for(iter = m_listThreadInfos.constBegin(); iter != m_listThreadInfos.constEnd(); ++iter)
+	{
+		m_listFilterThreadInfos.append(*iter);
+	}
+	m_pModelThreadInfos->refresh();
 	m_lockGlobalStats.unlock();
 }
 
