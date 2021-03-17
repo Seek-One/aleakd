@@ -578,10 +578,11 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)
 
 	if(thread){
 		if(g_bUseSocket) {
-			struct ServerMsgMemoryV1 msg;
-			servercomm_msg_memory_init_v1(&msg);
-			msg.header.msg_code = ALeakD_MsgCode_pthread_create;
-			servercomm_msg_memory_send_v1(&msg);
+			struct ServerMsgThreadV1 msg;
+			servercomm_msg_thread_init_v1(&msg);
+			msg.header.msg_code = ALeakD_MsgCode_pthread_set_name;
+			msg.data.thread_id = (uint64_t)thread;
+			servercomm_msg_thread_send_v1(&msg);
 		}
 	}
 
@@ -600,10 +601,16 @@ int pthread_setname_np(pthread_t thread, const char *name)
 
 	if(thread){
 		if(g_bUseSocket) {
-			struct ServerMsgMemoryV1 msg;
-			servercomm_msg_memory_init_v1(&msg);
-			msg.header.msg_code = ALeakD_MsgCode_pthread_create;
-			servercomm_msg_memory_send_v1(&msg);
+			struct ServerMsgThreadV1 msg;
+			servercomm_msg_thread_init_v1(&msg);
+			msg.header.msg_code = ALeakD_MsgCode_pthread_set_name;
+			msg.data.thread_id = (uint64_t)thread;
+			size_t iMaxLen = strlen(name);
+			if(iMaxLen > sizeof (msg.data.thread_name)){
+				iMaxLen = sizeof (msg.data.thread_name);
+			}
+			strncpy(msg.data.thread_name, name, iMaxLen);
+			servercomm_msg_thread_send_v1(&msg);
 		}
 	}
 

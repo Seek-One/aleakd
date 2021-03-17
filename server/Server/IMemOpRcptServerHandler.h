@@ -14,6 +14,7 @@ public:
 	IMemOpRcptServerHandler();
 	virtual ~IMemOpRcptServerHandler();
 
+public:
 	virtual void onNewConnection();
 	virtual void onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation);
 	virtual void onThreadOperationReceived(const ThreadOperationSharedPtr& pThreadOperation);

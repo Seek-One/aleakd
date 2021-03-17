@@ -24,6 +24,9 @@ public:
 	MemoryOperation();
 	virtual ~MemoryOperation();
 
+	bool hasAllocOperation() const;
+	bool hasFreeOperation() const;
+
 public:
 	struct timeval m_tvOperation;
 	// Msg type

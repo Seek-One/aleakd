@@ -28,6 +28,37 @@ MemoryOperation::~MemoryOperation()
 
 }
 
+bool MemoryOperation::hasAllocOperation() const
+{
+	switch (m_iMsgCode) {
+	case ALeakD_MsgCode_malloc:
+	case ALeakD_MsgCode_calloc:
+	case ALeakD_MsgCode_realloc:
+	case ALeakD_MsgCode_free:
+	case ALeakD_MsgCode_posix_memalign:
+	case ALeakD_MsgCode_aligned_alloc:
+	case ALeakD_MsgCode_memalign:
+	case ALeakD_MsgCode_valloc:
+	case ALeakD_MsgCode_pvalloc:
+		return true;
+	default:
+		break;
+	}
+	return false;
+}
+
+bool MemoryOperation::hasFreeOperation() const
+{
+	switch (m_iMsgCode) {
+	case ALeakD_MsgCode_realloc:
+	case ALeakD_MsgCode_free:
+		return true;
+	default:
+		break;
+	}
+	return false;
+}
+
 MemoryOperationList::MemoryOperationList()
 {
 

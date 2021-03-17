@@ -55,6 +55,22 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 	return true;
 }
 
+void QApplicationWindowController::clearData()
+{
+	m_lockListMemoryOperation.lockForWrite();
+	m_listMemoryOperation.clear();
+	m_lockListMemoryOperation.unlock();
+
+	m_searchStats.reset();
+	m_lockGlobalStats.lockForWrite();
+	m_globalStats.reset();
+	m_listThreadInfos.clear();
+	m_lockGlobalStats.unlock();
+
+	m_listFilterMemoryOperation.clear();
+	m_pModels->clear();
+}
+
 void QApplicationWindowController::addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation)
 {
 	MemoryOperationSharedPtr pMemoryOperationFreed;
@@ -76,6 +92,10 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 	if(pMemoryOperationFreed){
 		m_globalStats.m_iTotalFreeSize += pMemoryOperationFreed->m_iAllocSize;
 		m_globalStats.m_iTotalRemainingSize -= pMemoryOperationFreed->m_iAllocSize;
+		updateThreadInfosAddFree(pMemoryOperationFreed->m_iCallerThreadId, pMemoryOperationFreed->m_iAllocSize);
+	}
+	if(pMemoryOperation->m_iAllocPtr) {
+		updateThreadInfosAddAlloc(pMemoryOperation->m_iCallerThreadId, pMemoryOperation->m_iAllocSize);
 	}
 	switch (pMemoryOperation->m_iMsgCode) {
 	case ALeakD_MsgCode_malloc:
@@ -122,19 +142,51 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 	m_lockListMemoryOperation.unlock();
 }
 
-void QApplicationWindowController::clearMemoryOperation()
+void QApplicationWindowController::updateThreadInfos(const ThreadOperationSharedPtr& pThreadOperation)
 {
-	m_lockListMemoryOperation.lockForWrite();
-	m_listMemoryOperation.clear();
-	m_lockListMemoryOperation.unlock();
-
-	m_searchStats.reset();
 	m_lockGlobalStats.lockForWrite();
-	m_globalStats.reset();
+	ThreadInfosSharedPtr pThreadInfos = getThreadInfos(pThreadOperation->m_iThreadId);
+	if (pThreadOperation->m_iMsgCode == ALeakD_MsgCode_pthread_set_name) {
+		if(pThreadInfos) {
+			pThreadInfos->m_szThreadName = pThreadOperation->m_szThreadName;
+		}
+	}
 	m_lockGlobalStats.unlock();
+}
 
-	m_listFilterMemoryOperation.clear();
-	m_pModels->clear();
+void QApplicationWindowController::updateThreadInfosAddAlloc(uint64_t iThreadId, uint64_t iSize)
+{
+	ThreadInfosSharedPtr pThreadInfos = getThreadInfos(iThreadId);
+	if(pThreadInfos){
+		pThreadInfos->m_iCurrentSize += iSize;
+		if(pThreadInfos->m_iCurrentSize > pThreadInfos->m_iPeakSize){
+			pThreadInfos->m_iPeakSize = pThreadInfos->m_iCurrentSize;
+		}
+	}
+}
+
+void QApplicationWindowController::updateThreadInfosAddFree(uint64_t iThreadId, uint64_t iSize)
+{
+	ThreadInfosSharedPtr pThreadInfos = getThreadInfos(iThreadId);
+	if(pThreadInfos){
+		pThreadInfos->m_iCurrentSize -= iSize;
+	}
+}
+
+ThreadInfosSharedPtr QApplicationWindowController::getThreadInfos(uint64_t iThreadId)
+{
+	// Assume m_listThreadInfos has been protected by caller
+	ThreadInfosSharedPtr pThreadInfos;
+	pThreadInfos = m_listThreadInfos.getById(iThreadId);
+	if(!pThreadInfos){
+		pThreadInfos = ThreadInfosSharedPtr(new ThreadInfos());
+		if(m_listThreadInfos.isEmpty()){
+			pThreadInfos->m_szThreadName = "main";
+		}
+		m_listThreadInfos.append(pThreadInfos);
+	}
+
+	return pThreadInfos;
 }
 
 void QApplicationWindowController::onFilterButtonClicked()
@@ -265,12 +317,17 @@ void QApplicationWindowController::onTimerUpdate()
 	m_lockGlobalStats.unlock();
 }
 
+void QApplicationWindowController::onNewConnection()
+{
+	clearData();
+}
+
 void QApplicationWindowController::onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation)
 {
 	addMemoryOperation(pMemoryOperation);
 }
 
-void QApplicationWindowController::onNewConnection()
+void QApplicationWindowController::onThreadOperationReceived(const ThreadOperationSharedPtr& pThreadOperation)
 {
-	clearMemoryOperation();
+	updateThreadInfos(pThreadOperation);
 }

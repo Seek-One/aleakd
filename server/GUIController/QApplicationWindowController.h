@@ -12,6 +12,7 @@
 
 #include "Model/MemoryOperation.h"
 #include "Model/MemoryStats.h"
+#include "Model/ThreadInfos.h"
 
 #include "Server/IMemOpRcptServerHandler.h"
 
@@ -26,16 +27,23 @@ public:
 
 	bool init(QApplicationWindow* pApplicationWindow);
 
-	void addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation);
-	void clearMemoryOperation();
-
+public:
 	// IMemOpRcptServerHandler
-	void onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation);
 	void onNewConnection();
+	void onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation);
+	void onThreadOperationReceived(const ThreadOperationSharedPtr& pThreadOperation);
 
 private slots:
 	void onFilterButtonClicked();
 	void onTimerUpdate();
+
+private:
+	void clearData();
+	void addMemoryOperation(const MemoryOperationSharedPtr& pMemoryOperation);
+	void updateThreadInfos(const ThreadOperationSharedPtr& pThreadOperation);
+	void updateThreadInfosAddAlloc(uint64_t iThreadId, uint64_t iSize);
+	void updateThreadInfosAddFree(uint64_t iThreadId, uint64_t iSize);
+	ThreadInfosSharedPtr getThreadInfos(uint64_t iThreadId);
 
 private:
 	QApplicationWindow* m_pApplicationWindow;
@@ -49,6 +57,7 @@ private:
 	// Stats
 	QReadWriteLock m_lockGlobalStats;
 	MemoryStats m_globalStats;
+	ThreadInfosList m_listThreadInfos;
 
 	// Search display
 	MemoryStats m_searchStats;
