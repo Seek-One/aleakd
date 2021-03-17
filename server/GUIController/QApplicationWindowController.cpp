@@ -10,6 +10,8 @@
 #include <QElapsedTimer>
 #include <QCheckBox>
 
+#include "Global/Utils.h"
+
 #include "GUI/QApplicationWindow.h"
 #include "GUI/QMemoryOperationView.h"
 #include "GUI/QThreadInfosView.h"
@@ -51,6 +53,11 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 
 		QTreeView *pTreeView = m_pThreadInfosView->getTreeView();
 		pTreeView->setModel(m_pModelThreadInfos);
+
+		pTreeView->header()->resizeSection(0, 200);
+		pTreeView->header()->resizeSection(1, 200);
+		pTreeView->header()->resizeSection(2, 150);
+		pTreeView->header()->resizeSection(3, 150);
 	}
 
 	// Memory infos tab
@@ -95,6 +102,7 @@ void QApplicationWindowController::clearData()
 
 	m_listFilterMemoryOperation.clear();
 	m_pModelMemoryOperation->clear();
+	m_listFilterThreadInfos.clear();
 	m_pModelThreadInfos->clear();
 }
 
@@ -340,7 +348,7 @@ void QApplicationWindowController::onTimerUpdate()
 	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Global, QMemoryOperationView::StatusBarCol_pvalloc, QString::number(m_globalStats.m_iPVAllocCount));
 
 	m_pApplicationWindow->setCaptureMemoryOperationCount(QString::number(m_globalStats.m_iOpCount));
-	m_pApplicationWindow->setCaptureMemorySizeUsed(QString::number(m_globalStats.m_iOperationSize));
+	m_pApplicationWindow->setCaptureMemorySizeUsed(Utils::getBeautifulNumberString(QString::number(m_globalStats.m_iOperationSize)));
 	m_pApplicationWindow->setCaptureThreadCount(QString::number(m_listThreadInfos.count()));
 
 	m_listFilterThreadInfos.clear();

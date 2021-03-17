@@ -298,7 +298,7 @@ void *malloc(size_t size)
 	}
 
 	if(p){
-		addEntry(p, size, "malloc", alloc_num);
+		//addEntry(p, size, "malloc", alloc_num);
 
 		if(g_bUseSocket) {
 			struct ServerMsgMemoryV1 msg;
@@ -331,7 +331,7 @@ void *calloc(size_t num, size_t size)
 	}
 
 	if(p){
-		addEntry(p, size*num, "calloc", alloc_num);
+		//addEntry(p, size*num, "calloc", alloc_num);
 
 		if(g_bUseSocket) {
 			struct ServerMsgMemoryV1 msg;
@@ -357,14 +357,14 @@ void *realloc(void* ptr, size_t size)
 	int alloc_num = aleakd_data_get_alloc_number();
 
 	if(ptr){	
-		removeEntry(ptr, "realloc::free");
+		//removeEntry(ptr, "realloc::free");
 	}
 
 	void *p = NULL;
 	p = real_realloc(ptr, size);
 	
 	if(p){
-		addEntry(p, size, "realloc", alloc_num);
+		//addEntry(p, size, "realloc", alloc_num);
 
 		if(g_bUseSocket) {
 			struct ServerMsgMemoryV1 msg;
@@ -388,7 +388,7 @@ void free(void *ptr)
 	}
 
 	if(ptr != NULL) {
-		removeEntry(ptr, "free");
+		//removeEntry(ptr, "free");
 
 		if(g_bUseSocket) {
 			struct ServerMsgMemoryV1 msg;

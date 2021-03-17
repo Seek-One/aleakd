@@ -4,6 +4,8 @@
 
 #include "Model/ThreadInfos.h"
 
+#include "Global/Utils.h"
+
 #include "QThreadInfosModel.h"
 
 QThreadInfosModel::QThreadInfosModel()
@@ -75,9 +77,9 @@ QVariant QThreadInfosModel::data(const QModelIndex &index, int role) const
 		case ThreadNameColumn:
 			return pThreadInfos->m_szThreadName;
 		case CurrentSizeColumn:
-			return QString::number(pThreadInfos->m_iCurrentSize);
+			return Utils::getBeautifulNumberString(QString::number(pThreadInfos->m_iCurrentSize));
 		case PeakSizeColumn:
-			return QString::number(pThreadInfos->m_iPeakSize);
+			return Utils::getBeautifulNumberString(QString::number(pThreadInfos->m_iPeakSize));
 		}
 		return QVariant();
 	}

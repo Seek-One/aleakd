@@ -36,6 +36,7 @@ MemoryStats::~MemoryStats(){
 void MemoryStats::reset()
 {
 	m_iOpCount = 0;
+	m_iOperationSize = 0;
 
 	m_iTotalAllocCount = 0;
 	m_iTotalAllocSize = 0;

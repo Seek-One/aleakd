@@ -4,6 +4,8 @@
 
 #include <QColor>
 
+#include "Global/Utils.h"
+
 #include "QMemoryOperationModel.h"
 
 QMemoryOperationModel::QMemoryOperationModel()
@@ -80,7 +82,7 @@ QVariant QMemoryOperationModel::data(const QModelIndex &index, int role) const
 			return ALeakD_MsgLabel(pMemoryOperation->m_iMsgCode);
 		case AllocSizeColumn:
 			if(pMemoryOperation->m_iAllocSize) {
-				return QString::number(pMemoryOperation->m_iAllocSize);
+				return Utils::getBeautifulNumberString(QString::number(pMemoryOperation->m_iAllocSize));
 			}
 			return QString();
 		case AllocPtrColumn:
