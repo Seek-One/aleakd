@@ -139,6 +139,10 @@ QStatusBar* QApplicationWindow::createStatusBar(QWidget* pParent)
 	pMainWidget->addPermanentWidget(m_pCaptureMemorySizeUsedLabel);
 	setCaptureMemorySizeUsed("0");
 
+	m_pCaptureThreadCountLabel = new QLabel();
+	pMainWidget->addPermanentWidget(m_pCaptureThreadCountLabel);
+	setCaptureThreadCount("0");
+
 	return pMainWidget;
 }
 
@@ -212,12 +216,18 @@ void QApplicationWindow::setData(int iRow, int iCol, const QString& szValue)
 
 void QApplicationWindow::setCaptureMemoryOperationCount(const QString& szValue)
 {
-	QString szTmp = QString("Capture operation count: %0").arg(szValue);
+	QString szTmp = QString("Operation count: %0").arg(szValue);
 	m_pCaptureMemoryOperationCountLabel->setText(szTmp);
 }
 
 void QApplicationWindow::setCaptureMemorySizeUsed(const QString& szValue)
 {
-	QString szTmp = QString("Capture memory usage: %0 bytes").arg(szValue);
+	QString szTmp = QString("Memory usage: %0 bytes").arg(szValue);
 	m_pCaptureMemorySizeUsedLabel->setText(szTmp);
+}
+
+void QApplicationWindow::setCaptureThreadCount(const QString& szValue)
+{
+	QString szTmp = QString("Threads: %0").arg(szValue);
+	m_pCaptureThreadCountLabel->setText(szTmp);
 }

@@ -6,7 +6,10 @@
 
 ThreadInfos::ThreadInfos()
 {
+	m_iThreadId = 0;
 
+	m_iCurrentSize = 0;
+	m_iPeakSize = 0;
 }
 
 ThreadInfos::~ThreadInfos()

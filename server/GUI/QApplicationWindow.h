@@ -58,6 +58,7 @@ public:
 
 	void setCaptureMemoryOperationCount(const QString& szValue);
 	void setCaptureMemorySizeUsed(const QString& szValue);
+	void setCaptureThreadCount(const QString& szValue);
 
 private:
 	QWidget* createFilterForm(QWidget* pParent);
@@ -80,6 +81,7 @@ private:
 	QStatusBar* m_pStatusBar;
 	QLabel* m_pCaptureMemoryOperationCountLabel;
 	QLabel* m_pCaptureMemorySizeUsedLabel;
+	QLabel* m_pCaptureThreadCountLabel;
 };
 
 

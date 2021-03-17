@@ -180,6 +180,7 @@ ThreadInfosSharedPtr QApplicationWindowController::getThreadInfos(uint64_t iThre
 	pThreadInfos = m_listThreadInfos.getById(iThreadId);
 	if(!pThreadInfos){
 		pThreadInfos = ThreadInfosSharedPtr(new ThreadInfos());
+		pThreadInfos->m_iThreadId = iThreadId;
 		if(m_listThreadInfos.isEmpty()){
 			pThreadInfos->m_szThreadName = "main";
 		}
@@ -313,6 +314,7 @@ void QApplicationWindowController::onTimerUpdate()
 
 	m_pApplicationWindow->setCaptureMemoryOperationCount(QString::number(m_globalStats.m_iOpCount));
 	m_pApplicationWindow->setCaptureMemorySizeUsed(QString::number(m_globalStats.m_iOperationSize));
+	m_pApplicationWindow->setCaptureThreadCount(QString::number(m_listThreadInfos.count()));
 
 	m_lockGlobalStats.unlock();
 }
