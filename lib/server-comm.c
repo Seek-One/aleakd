@@ -92,10 +92,10 @@ int servercomm_send_safe(const void* buff, size_t size)
 {
 	// Store send data if init is not done
 	if(g_socket != -1) {
-		fprintf(stderr, "[aleakd] -- send: %d\n", size);
+		//fprintf(stderr, "[aleakd] -- send: %d\n", size);
 		return servercomm_send(buff, size);
 	}else{
-		fprintf(stderr, "[aleakd] -- presend: %d\n", size);
+		//fprintf(stderr, "[aleakd] -- presend: %d\n", size);
 		char* szBuffStart = ((char*)g_preInitBuffer)+g_preInitPos;
 		memcpy(szBuffStart, buff, size);
 		g_preInitPos += sizeof(struct ServerMsgMemoryV1);
@@ -129,7 +129,7 @@ void servercomm_msg_memory_init_v1(struct ServerMsgMemoryV1* pServerMemoryMsg)
 
 int servercomm_msg_memory_send_v1(struct ServerMsgMemoryV1* pServerMemoryMsg)
 {
-	fprintf(stderr, "[aleakd] memory msg: %d\n", pServerMemoryMsg->header.msg_code);
+	//fprintf(stderr, "[aleakd] memory msg: %d\n", pServerMemoryMsg->header.msg_code);
 	return servercomm_send_safe(pServerMemoryMsg, sizeof(struct ServerMsgMemoryV1));
 }
 
@@ -148,6 +148,6 @@ void servercomm_msg_thread_init_v1(struct ServerMsgThreadV1* pServerMsgThread)
 
 int servercomm_msg_thread_send_v1(struct ServerMsgThreadV1* pServerMsgThread)
 {
-	fprintf(stderr, "[aleakd] thread msg: %d\n", pServerMsgThread->header.msg_code);
+	//fprintf(stderr, "[aleakd] thread msg: %d\n", pServerMsgThread->header.msg_code);
 	return servercomm_send_safe(pServerMsgThread, sizeof(struct ServerMsgThreadV1));
 }
