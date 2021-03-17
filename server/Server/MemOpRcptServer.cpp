@@ -5,6 +5,9 @@
 #include <QTcpSocket>
 #include <QTcpServer>
 
+#include "Model/MemoryOperation.h"
+#include "Model/ThreadOperation.h"
+
 #include "../shared/server-msg.h"
 
 #include "MemOpRcptServer.h"
@@ -73,8 +76,8 @@ void MemOpRcptServer::onSocketReadyToRead()
 	// Read protocol version
 	if(m_iState == 0)
 	{
-		uint8_t iProtocolVersion;
-		qint64 byteRead = m_pClientSocket->read((char *) &iProtocolVersion, sizeof(uint8_t));
+		servermsg_version_t iProtocolVersion;
+		qint64 byteRead = m_pClientSocket->read((char *) &iProtocolVersion, sizeof(iProtocolVersion));
 		if(byteRead > 0){
 			m_iState = 1;
 			m_iProtocolVersion = iProtocolVersion;
@@ -92,34 +95,82 @@ void MemOpRcptServer::onSocketReadyToRead()
 	// Read message
 	if(m_iState == 1)
 	{
-		ServerMemoryMsgV1 msg;
+		servermsg_version_t iMsgVersion;
 		do {
-			qint64 byteRead = m_pClientSocket->read((char *) &msg, sizeof(msg));
-			if (byteRead > 0) {
-				MemoryOperation* pMemoryOperation = new MemoryOperation();
-
-				pMemoryOperation->m_tvOperation.tv_sec = msg.time_sec;
-				pMemoryOperation->m_tvOperation.tv_usec = msg.time_usec;
-				pMemoryOperation->m_iMemOpType = (ALeakD_AllocType)msg.msg_type;
-				pMemoryOperation->m_iThreadId = msg.thread_id;
-				pMemoryOperation->m_iAllocSize = msg.alloc_size;
-				pMemoryOperation->m_iAllocPtr = msg.alloc_ptr;
-				pMemoryOperation->m_iAllocNum = msg.alloc_num;
-				pMemoryOperation->m_iFreePtr = msg.free_ptr;
-
-				//qDebug("[aleakd-server] msg received: type=%d, time=%lu,%lu, thread=%lu, size=%lu",
-		   		//	msg.msg_type, msg.time_sec, msg.time_usec,
-				//  msg.thread_id, msg.alloc_size);
-
-				if(m_pHandler){
-					m_pHandler->onMemoryOperationReceived(MemoryOperationSharedPtr(pMemoryOperation));
+			qint64 byteRead = m_pClientSocket->read((char *) &iMsgVersion, sizeof(iMsgVersion));
+			if(byteRead > 0){
+				if(iMsgVersion == 1){
+					if(!doProcessMsgV1(m_pClientSocket)){
+						break;
+					}
+				}else{
+					qCritical("[aleakd-server] Unsupported message");
+					m_pClientSocket->readAll();
+					break;
 				}
-
 			} else {
 				break;
 			}
 		} while (true);
 	}
+}
+
+bool MemOpRcptServer::doProcessMsgV1(QTcpSocket* pClientSocket)
+{
+	ServerMsgHeaderV1 header;
+	qint64 byteRead = pClientSocket->read((char *) &header, sizeof(header));
+	if (byteRead > 0) {
+
+		// Memory operation
+		if (header.msg_code >= 10 && header.msg_code < 20) {
+			ServerMsgMemoryDataV1 data;
+			qint64 byteRead = pClientSocket->read((char *) &data, sizeof(data));
+			if (byteRead > 0) {
+				MemoryOperation *pMemoryOperation = new MemoryOperation();
+				pMemoryOperation->m_tvOperation.tv_sec = header.time_sec;
+				pMemoryOperation->m_tvOperation.tv_usec = header.time_usec;
+				pMemoryOperation->m_iMsgCode = (ALeakD_MsgCode) header.msg_code;
+				pMemoryOperation->m_iCallerThreadId = header.thread_id;
+				pMemoryOperation->m_iAllocSize = data.alloc_size;
+				pMemoryOperation->m_iAllocPtr = data.alloc_ptr;
+				pMemoryOperation->m_iAllocNum = data.alloc_num;
+				pMemoryOperation->m_iFreePtr = data.free_ptr;
+
+				//qDebug("[aleakd-server] msg received: type=%d, time=%lu,%lu, thread=%lu, size=%lu",
+				//	msg.msg_type, msg.time_sec, msg.time_usec,
+				//  msg.thread_id, msg.alloc_size);
+
+				if (m_pHandler) {
+					m_pHandler->onMemoryOperationReceived(MemoryOperationSharedPtr(pMemoryOperation));
+				}
+			}
+		}
+
+		// Thread operation
+		if (header.msg_code >= 30 && header.msg_code < 40) {
+			ServerMsgThreadDataV1 data;
+			qint64 byteRead = pClientSocket->read((char *) &data, sizeof(data));
+			if (byteRead > 0) {
+				ThreadOperation *pThreadOperation = new ThreadOperation();
+				pThreadOperation->m_tvOperation.tv_sec = header.time_sec;
+				pThreadOperation->m_tvOperation.tv_usec = header.time_usec;
+				pThreadOperation->m_iMsgCode = (ALeakD_MsgCode) header.msg_code;
+				pThreadOperation->m_iCallerThreadId = header.thread_id;
+				pThreadOperation->m_iThreadId = data.thread_id;
+				pThreadOperation->m_szThreadName = data.thread_name;
+
+				//qDebug("[aleakd-server] msg received: type=%d, time=%lu,%lu, thread=%lu, size=%lu",
+				//	msg.msg_type, msg.time_sec, msg.time_usec,
+				//  msg.thread_id, msg.alloc_size);
+
+				if (m_pHandler) {
+					m_pHandler->onThreadOperationReceived(ThreadOperationSharedPtr(pThreadOperation));
+				}
+			}
+		}
+	}
+
+	return true;
 }
 
 void MemOpRcptServer::onSocketDisconnected()

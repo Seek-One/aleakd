@@ -75,9 +75,9 @@ QVariant QMemoryOperationModel::data(const QModelIndex &index, int role) const
 		case TimeStampColumn:
 			return QString("%0,%1").arg(pMemoryOperation->m_tvOperation.tv_sec).arg(pMemoryOperation->m_tvOperation.tv_usec, 6, 10, QChar('0'));
 		case ThreadColumn:
-			return QString::number(pMemoryOperation->m_iThreadId);
+			return QString::number(pMemoryOperation->m_iCallerThreadId);
 		case OperationColumn:
-			return ALeakD_TypeName(pMemoryOperation->m_iMemOpType);
+			return ALeakD_MsgLabel(pMemoryOperation->m_iMsgCode);
 		case AllocSizeColumn:
 			if(pMemoryOperation->m_iAllocSize) {
 				return QString::number(pMemoryOperation->m_iAllocSize);
@@ -105,7 +105,7 @@ QVariant QMemoryOperationModel::data(const QModelIndex &index, int role) const
 	if (role == Qt::BackgroundColorRole) {
 		MemoryOperationSharedPtr pMemoryOperation = m_pListMemoryOperation->value(index.row());
 		if(pMemoryOperation){
-			if(pMemoryOperation->m_iMemOpType == ALeakD_free) {
+			if(pMemoryOperation->m_iMsgCode == ALeakD_MsgCode_free) {
 				return QColor(180, 180, 180);
 			}else{
 				if (!pMemoryOperation->m_bFreed) {

@@ -18,7 +18,7 @@ int g_socket = -1;
 #define DEFAULT_SERVER_PORT 19999
 
 char g_preInitBuffer[4096];
-unsigned long g_preInitPop = 0;
+unsigned long g_preInitPos = 0;
 
 int servercomm_init()
 {
@@ -57,14 +57,15 @@ int servercomm_init()
 
 	// Send protocol version
 	if(res == 0) {
-		uint8_t version = ALEAKD_PROTOCOL_VERSION;
-		res = servercomm_send((void *) &version, sizeof(uint8_t));
+		servermsg_version_t version = ALEAKD_PROTOCOL_VERSION;
+		res = servercomm_send((void *) &version, sizeof(servermsg_version_t));
 	}
 
 	// Send some data
 	if(res == 0) {
-		if(g_preInitPop > 0) {
-			res = servercomm_send((void *) g_preInitBuffer, g_preInitPop);
+		if(g_preInitPos > 0) {
+			fprintf(stderr, "[aleakd] sending pre init data: %d\n", g_preInitPos);
+			res = servercomm_send((void *) g_preInitBuffer, g_preInitPos);
 		}
 	}
 
@@ -87,34 +88,66 @@ int servercomm_send(const void* buff, size_t size)
 	return 0;
 }
 
-void servercomm_msg_init_v1(struct ServerMemoryMsgV1* pServerMemoryMsg)
+int servercomm_send_safe(const void* buff, size_t size)
+{
+	// Store send data if init is not done
+	if(g_socket != -1) {
+		fprintf(stderr, "[aleakd] -- send: %d\n", size);
+		return servercomm_send(buff, size);
+	}else{
+		fprintf(stderr, "[aleakd] -- presend: %d\n", size);
+		char* szBuffStart = ((char*)g_preInitBuffer)+g_preInitPos;
+		memcpy(szBuffStart, buff, size);
+		g_preInitPos += sizeof(struct ServerMsgMemoryV1);
+	}
+	return size;
+}
+
+
+void servercomm_msg_header_init_v1(struct ServerMsgHeaderV1* pServerMsgHeader)
 {
 	struct timeval tvNow;
 	gettimeofday(&tvNow, NULL);
 
-	pServerMemoryMsg->version = ALEAKD_MSG_VERSION;
-	pServerMemoryMsg->time_sec = tvNow.tv_sec;
-	pServerMemoryMsg->time_usec = tvNow.tv_usec;
-
-	pServerMemoryMsg->msg_type = 0;
-
-	pServerMemoryMsg->thread_id = (int64_t)pthread_self();
-
-	pServerMemoryMsg->alloc_size = 0;
-	pServerMemoryMsg->alloc_ptr = 0;
-	pServerMemoryMsg->alloc_num = 0;
-
-	pServerMemoryMsg->free_ptr = 0;
+	pServerMsgHeader->time_sec = tvNow.tv_sec;
+	pServerMsgHeader->time_usec = tvNow.tv_usec;
+	pServerMsgHeader->thread_id = (int64_t)pthread_self();
+	pServerMsgHeader->msg_code = ALeakD_MsgCode_unknown;
 }
 
-int servercomm_msg_send_v1(struct ServerMemoryMsgV1* pServerMemoryMsg)
+void servercomm_msg_memory_init_v1(struct ServerMsgMemoryV1* pServerMemoryMsg)
 {
-	if(g_socket != -1) {
-		//fprintf(stderr, "[aleakd] msg: %d\n", pServerMemoryMsg->msg_type);
-		return servercomm_send((void *) pServerMemoryMsg, sizeof(struct ServerMemoryMsgV1));
-	}else{
-		char* szBuffStart = ((char*)g_preInitBuffer)+g_preInitPop;
-		memcpy(szBuffStart, pServerMemoryMsg, sizeof(struct ServerMemoryMsgV1));
-		g_preInitPop += sizeof(struct ServerMemoryMsgV1);
-	}
+	pServerMemoryMsg->msg_version = ALEAKD_MSG_VERSION;
+
+	servercomm_msg_header_init_v1(&pServerMemoryMsg->header);
+
+	pServerMemoryMsg->data.alloc_size = 0;
+	pServerMemoryMsg->data.alloc_ptr = 0;
+	pServerMemoryMsg->data.alloc_num = 0;
+	pServerMemoryMsg->data.free_ptr = 0;
+}
+
+int servercomm_msg_memory_send_v1(struct ServerMsgMemoryV1* pServerMemoryMsg)
+{
+	fprintf(stderr, "[aleakd] memory msg: %d\n", pServerMemoryMsg->header.msg_code);
+	return servercomm_send_safe(pServerMemoryMsg, sizeof(struct ServerMsgMemoryV1));
+}
+
+void servercomm_msg_thread_init_v1(struct ServerMsgThreadV1* pServerMsgThread)
+{
+	struct timeval tvNow;
+	gettimeofday(&tvNow, NULL);
+
+	pServerMsgThread->msg_version = ALEAKD_MSG_VERSION;
+
+	servercomm_msg_header_init_v1(&pServerMsgThread->header);
+
+	pServerMsgThread->data.thread_id = 0;
+	memset(pServerMsgThread->data.thread_name, 0, sizeof(pServerMsgThread->data.thread_name));
+}
+
+int servercomm_msg_thread_send_v1(struct ServerMsgThreadV1* pServerMsgThread)
+{
+	fprintf(stderr, "[aleakd] thread msg: %d\n", pServerMsgThread->header.msg_code);
+	return servercomm_send_safe(pServerMsgThread, sizeof(struct ServerMsgThreadV1));
 }

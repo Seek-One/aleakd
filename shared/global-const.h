@@ -8,19 +8,25 @@
 #define ALEAKD_PROTOCOL_VERSION 1
 #define ALEAKD_MSG_VERSION 1
 
-enum ALeakD_AllocType {
-	ALeakD_unknown = 0,
-	ALeakD_malloc = 1,
-	ALeakD_free = 2,
-	ALeakD_calloc = 3,
-	ALeakD_realloc = 4,
-	ALeakD_posix_memalign = 5,
-	ALeakD_aligned_alloc = 6,
-	ALeakD_memalign = 7,
-	ALeakD_valloc = 8,
-	ALeakD_pvalloc = 9
+enum ALeakD_MsgCode {
+	ALeakD_MsgCode_unknown = 0,
+
+	// memory function
+	ALeakD_MsgCode_malloc = 11,
+	ALeakD_MsgCode_free = 12,
+	ALeakD_MsgCode_calloc = 13,
+	ALeakD_MsgCode_realloc = 14,
+	ALeakD_MsgCode_posix_memalign = 15,
+	ALeakD_MsgCode_aligned_alloc = 16,
+	ALeakD_MsgCode_memalign = 17,
+	ALeakD_MsgCode_valloc = 18,
+	ALeakD_MsgCode_pvalloc = 19,
+
+	// pthread function
+	ALeakD_MsgCode_pthread_create = 31,
+	ALeakD_MsgCode_pthread_set_name = 32,
 };
 
-const char* ALeakD_TypeName(enum ALeakD_AllocType iType);
+const char* ALeakD_MsgLabel(enum ALeakD_MsgCode iFuncType);
 
 #endif //ALEAKD_GLOBAL_CONST_H

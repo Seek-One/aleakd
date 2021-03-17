@@ -5,20 +5,31 @@
 #ifndef ALEAKD_SERVER_MSG_H
 #define ALEAKD_SERVER_MSG_H
 
-struct ServerMemoryMsgV1
-{
-	uint8_t version;
+/////////////////////
+// Header structure
+/////////////////////
 
+typedef uint8_t servermsg_version_t;
+
+struct __attribute__((__packed__)) ServerMsgHeaderV1
+{
 	// Msg timestamp
 	uint64_t time_sec;
 	uint64_t time_usec;
 
-	// Msg type
-	uint8_t msg_type; // ALeakD_AllocType
-
-	// Current thread
+	// Msg thread
 	uint64_t thread_id;
 
+	// Msg type
+	uint8_t msg_code;
+} _ServerMsgHeaderV1;
+
+///////////////////////
+// Memory message
+///////////////////////
+
+struct __attribute__((__packed__)) ServerMsgMemoryDataV1
+{
 	// Alloc infos
 	uint64_t alloc_size;
 	uint64_t alloc_ptr;
@@ -26,6 +37,32 @@ struct ServerMemoryMsgV1
 	// Free infos
 	uint64_t free_ptr;
 
+} _ServerMsgMemoryDataV1;
+
+struct __attribute__((__packed__)) ServerMsgMemoryV1
+{
+	servermsg_version_t msg_version;
+	struct ServerMsgHeaderV1 header;
+	struct ServerMsgMemoryDataV1 data;
 } _ServerMemoryMsgV1;
+
+///////////////////////
+// Thread message
+///////////////////////
+
+struct __attribute__((__packed__)) ServerMsgThreadDataV1
+{
+	// Thread
+	uint64_t thread_id;
+	// Free infos
+	char thread_name[24];
+};
+
+struct __attribute__((__packed__)) ServerMsgThreadV1
+{
+	servermsg_version_t msg_version;
+	struct ServerMsgHeaderV1 header;
+	struct ServerMsgThreadDataV1 data;
+} _ServerMsgThreadV1;
 
 #endif //ALEAKD_SERVER_MSG_H

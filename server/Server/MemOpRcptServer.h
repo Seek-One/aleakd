@@ -34,11 +34,14 @@ private slots:
 	void onSocketDisconnected();
 
 private:
+	bool doProcessMsgV1(QTcpSocket* pClientSocket);
+
+private:
 	QTcpServer* m_pTcpServer;
 	QTcpSocket* m_pClientSocket;
 
 	int m_iState;
-	uint8_t m_iProtocolVersion;
+	short m_iProtocolVersion;
 
 	int m_iPort;
 

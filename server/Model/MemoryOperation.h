@@ -26,12 +26,10 @@ public:
 
 public:
 	struct timeval m_tvOperation;
-
 	// Msg type
-	ALeakD_AllocType m_iMemOpType; // ALeakD_AllocType
-
+	ALeakD_MsgCode m_iMsgCode;
 	// Current thread
-	uint64_t m_iThreadId;
+	uint64_t m_iCallerThreadId;
 
 	// Alloc infos
 	uint64_t m_iAllocSize;

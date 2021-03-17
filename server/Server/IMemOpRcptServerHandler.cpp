@@ -14,12 +14,17 @@ IMemOpRcptServerHandler::~IMemOpRcptServerHandler()
 
 }
 
+void IMemOpRcptServerHandler::onNewConnection()
+{
+
+}
+
 void IMemOpRcptServerHandler::onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation)
 {
 
 }
 
-void IMemOpRcptServerHandler::onNewConnection()
+void IMemOpRcptServerHandler::onThreadOperationReceived(const ThreadOperationSharedPtr& pThreadOperation)
 {
 
 }

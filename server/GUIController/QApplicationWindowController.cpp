@@ -77,41 +77,41 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 		m_globalStats.m_iTotalFreeSize += pMemoryOperationFreed->m_iAllocSize;
 		m_globalStats.m_iTotalRemainingSize -= pMemoryOperationFreed->m_iAllocSize;
 	}
-	switch (pMemoryOperation->m_iMemOpType) {
-	case ALeakD_malloc:
+	switch (pMemoryOperation->m_iMsgCode) {
+	case ALeakD_MsgCode_malloc:
 		m_globalStats.m_iTotalAllocCount++;
 		m_globalStats.m_iMallocCount++;
 		break;
-	case ALeakD_calloc:
+	case ALeakD_MsgCode_calloc:
 		m_globalStats.m_iTotalAllocCount++;
 		m_globalStats.m_iCallocCount++;
 		break;
-	case ALeakD_realloc:
+	case ALeakD_MsgCode_realloc:
 		m_globalStats.m_iTotalAllocCount++;
 		m_globalStats.m_iTotalFreeCount++;
 		m_globalStats.m_iReallocCount++;
 		break;
-	case ALeakD_free:
+	case ALeakD_MsgCode_free:
 		m_globalStats.m_iTotalFreeCount++;
 		m_globalStats.m_iFreeCount++;
 		break;
-	case ALeakD_posix_memalign:
+	case ALeakD_MsgCode_posix_memalign:
 		m_globalStats.m_iTotalAllocCount++;
 		m_globalStats.m_iPosixMemalignCount++;
 		break;
-	case ALeakD_aligned_alloc:
+	case ALeakD_MsgCode_aligned_alloc:
 		m_globalStats.m_iTotalAllocCount++;
 		m_globalStats.m_iAlignedAllocCount++;
 		break;
-	case ALeakD_memalign:
+	case ALeakD_MsgCode_memalign:
 		m_globalStats.m_iTotalAllocCount++;
 		m_globalStats.m_iMemAlignCount++;
 		break;
-	case ALeakD_valloc:
+	case ALeakD_MsgCode_valloc:
 		m_globalStats.m_iTotalAllocCount++;
 		m_globalStats.m_iVAllocCount++;
 		break;
-	case ALeakD_pvalloc:
+	case ALeakD_MsgCode_pvalloc:
 		m_globalStats.m_iTotalAllocCount++;
 		m_globalStats.m_iPVAllocCount++;
 		break;
@@ -155,7 +155,7 @@ void QApplicationWindowController::onFilterButtonClicked()
 		bool bAccept = true;
 		MemoryOperationSharedPtr pMemoryOperation = (*iter);
 		if(bNotFreed){
-			if(pMemoryOperation->m_iMemOpType == ALeakD_free){
+			if(pMemoryOperation->m_iMsgCode == ALeakD_MsgCode_free){
 				bAccept = false;
 			}
 			if(pMemoryOperation->m_bFreed){
@@ -170,41 +170,41 @@ void QApplicationWindowController::onFilterButtonClicked()
 				m_searchStats.m_iTotalFreeSize += pMemoryOperation->m_iAllocSize;
 				m_searchStats.m_iTotalRemainingSize -= pMemoryOperation->m_iAllocSize;
 			}
-			switch (pMemoryOperation->m_iMemOpType) {
-			case ALeakD_malloc:
+			switch (pMemoryOperation->m_iMsgCode) {
+			case ALeakD_MsgCode_malloc:
 				m_searchStats.m_iTotalAllocCount++;
 				m_searchStats.m_iMallocCount++;
 				break;
-			case ALeakD_calloc:
+			case ALeakD_MsgCode_calloc:
 				m_searchStats.m_iTotalAllocCount++;
 				m_searchStats.m_iCallocCount++;
 				break;
-			case ALeakD_realloc:
+			case ALeakD_MsgCode_realloc:
 				m_searchStats.m_iTotalAllocCount++;
 				m_searchStats.m_iTotalFreeCount++;
 				m_searchStats.m_iReallocCount++;
 				break;
-			case ALeakD_free:
+			case ALeakD_MsgCode_free:
 				m_searchStats.m_iTotalFreeCount++;
 				m_searchStats.m_iFreeCount++;
 				break;
-			case ALeakD_posix_memalign:
+			case ALeakD_MsgCode_posix_memalign:
 				m_searchStats.m_iTotalAllocCount++;
 				m_searchStats.m_iPosixMemalignCount++;
 				break;
-			case ALeakD_aligned_alloc:
+			case ALeakD_MsgCode_aligned_alloc:
 				m_searchStats.m_iTotalAllocCount++;
 				m_searchStats.m_iAlignedAllocCount++;
 				break;
-			case ALeakD_memalign:
+			case ALeakD_MsgCode_memalign:
 				m_searchStats.m_iTotalAllocCount++;
 				m_searchStats.m_iMemAlignCount++;
 				break;
-			case ALeakD_valloc:
+			case ALeakD_MsgCode_valloc:
 				m_searchStats.m_iTotalAllocCount++;
 				m_searchStats.m_iVAllocCount++;
 				break;
-			case ALeakD_pvalloc:
+			case ALeakD_MsgCode_pvalloc:
 				m_searchStats.m_iTotalAllocCount++;
 				m_searchStats.m_iPVAllocCount++;
 				break;

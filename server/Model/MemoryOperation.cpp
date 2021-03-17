@@ -8,10 +8,10 @@ MemoryOperation::MemoryOperation()
 {
 	m_tvOperation.tv_sec = 0;
 	m_tvOperation.tv_usec = 0;
-	m_iMemOpType = ALeakD_unknown;
+	m_iMsgCode = ALeakD_MsgCode_unknown;
 
 	// Current thread
-	m_iThreadId = 0;
+	m_iCallerThreadId = 0;
 
 	// Alloc infos
 	m_iAllocSize = 0;

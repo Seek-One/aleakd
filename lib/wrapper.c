@@ -69,8 +69,8 @@ void wrapper_init()
 		// Init thread list
 		aleakd_data_init_thread_list();
 
-		if(getenv("ALEAKD_MIN_ALLOC_NUM")){
-			aleakd_data_set_display_min_alloc_num(atoi(getenv("ALEAKD_MIN_ALLOC_NUM")));
+		if(getenv("ALeakD_MsgCode_MIN_ALLOC_NUM")){
+			aleakd_data_set_display_min_alloc_num(atoi(getenv("ALeakD_MsgCode_MIN_ALLOC_NUM")));
 		}
 
 		// Wrap functions
@@ -149,7 +149,7 @@ int displayEntry(struct ThreadEntry* pThread, struct AllocEntry* pAllocEntry)
 void addEntry(void* ptr, size_t size, char* szAction, int alloc_num)
 {
 #ifdef START_ON_ENV
-	if(!getenv("ALEAKD_START")) {
+	if(!getenv("ALeakD_MsgCode_START")) {
 		return;
 	}
 #endif
@@ -232,7 +232,7 @@ void addEntry(void* ptr, size_t size, char* szAction, int alloc_num)
 void removeEntry(void* ptr, char* szAction)
 {
 #ifdef START_ON_ENV
-	if(!getenv("ALEAKD_START")) {
+	if(!getenv("ALeakD_MsgCode_START")) {
 		return;
 	}
 #endif
@@ -301,13 +301,13 @@ void *malloc(size_t size)
 		addEntry(p, size, "malloc", alloc_num);
 
 		if(g_bUseSocket) {
-			struct ServerMemoryMsgV1 msg;
-			servercomm_msg_init_v1(&msg);
-			msg.msg_type = ALeakD_malloc;
-			msg.alloc_num = (int64_t)alloc_num;
-			msg.alloc_ptr = (int64_t)p;
-			msg.alloc_size = (int64_t)size;
-			servercomm_msg_send_v1(&msg);
+			struct ServerMsgMemoryV1 msg;
+			servercomm_msg_memory_init_v1(&msg);
+			msg.header.msg_code = ALeakD_MsgCode_malloc;
+			msg.data.alloc_num = (int64_t)alloc_num;
+			msg.data.alloc_ptr = (int64_t)p;
+			msg.data.alloc_size = (int64_t)size;
+			servercomm_msg_memory_send_v1(&msg);
 		}
 	}
 
@@ -334,13 +334,13 @@ void *calloc(size_t num, size_t size)
 		addEntry(p, size*num, "calloc", alloc_num);
 
 		if(g_bUseSocket) {
-			struct ServerMemoryMsgV1 msg;
-			servercomm_msg_init_v1(&msg);
-			msg.msg_type = ALeakD_calloc;
-			msg.alloc_num = (int64_t)alloc_num;
-			msg.alloc_ptr = (int64_t)p;
-			msg.alloc_size = (int64_t)size;
-			servercomm_msg_send_v1(&msg);
+			struct ServerMsgMemoryV1 msg;
+			servercomm_msg_memory_init_v1(&msg);
+			msg.header.msg_code = ALeakD_MsgCode_calloc;
+			msg.data.alloc_num = (int64_t)alloc_num;
+			msg.data.alloc_ptr = (int64_t)p;
+			msg.data.alloc_size = (int64_t)size;
+			servercomm_msg_memory_send_v1(&msg);
 		}
 	}
 
@@ -367,14 +367,14 @@ void *realloc(void* ptr, size_t size)
 		addEntry(p, size, "realloc", alloc_num);
 
 		if(g_bUseSocket) {
-			struct ServerMemoryMsgV1 msg;
-			servercomm_msg_init_v1(&msg);
-			msg.msg_type = ALeakD_realloc;
-			msg.alloc_num = (int64_t)alloc_num;
-			msg.alloc_ptr = (int64_t)p;
-			msg.alloc_size = (int64_t)size;
-			msg.free_ptr = (int64_t)ptr;
-			servercomm_msg_send_v1(&msg);
+			struct ServerMsgMemoryV1 msg;
+			servercomm_msg_memory_init_v1(&msg);
+			msg.header.msg_code = ALeakD_MsgCode_realloc;
+			msg.data.alloc_num = (int64_t)alloc_num;
+			msg.data.alloc_ptr = (int64_t)p;
+			msg.data.alloc_size = (int64_t)size;
+			msg.data.free_ptr = (int64_t)ptr;
+			servercomm_msg_memory_send_v1(&msg);
 		}
 	}
 
@@ -391,11 +391,11 @@ void free(void *ptr)
 		removeEntry(ptr, "free");
 
 		if(g_bUseSocket) {
-			struct ServerMemoryMsgV1 msg;
-			servercomm_msg_init_v1(&msg);
-			msg.msg_type = ALeakD_free;
-			msg.free_ptr = (int64_t)ptr;
-			servercomm_msg_send_v1(&msg);
+			struct ServerMsgMemoryV1 msg;
+			servercomm_msg_memory_init_v1(&msg);
+			msg.header.msg_code = ALeakD_MsgCode_free;
+			msg.data.free_ptr = (int64_t)ptr;
+			servercomm_msg_memory_send_v1(&msg);
 		}
 	}
 
@@ -421,14 +421,14 @@ int posix_memalign(void** memptr, size_t alignment, size_t size)
 
 	if(ret == 0){
 		if(g_bUseSocket) {
-			struct ServerMemoryMsgV1 msg;
-			servercomm_msg_init_v1(&msg);
-			msg.msg_type = ALeakD_posix_memalign;
-			msg.alloc_num = (int64_t)alloc_num;
-			msg.alloc_ptr = (int64_t)*memptr;
-			msg.alloc_size = (int64_t)size;
-			msg.free_ptr = (int64_t)NULL;
-			servercomm_msg_send_v1(&msg);
+			struct ServerMsgMemoryV1 msg;
+			servercomm_msg_memory_init_v1(&msg);
+			msg.header.msg_code = ALeakD_MsgCode_posix_memalign;
+			msg.data.alloc_num = (int64_t)alloc_num;
+			msg.data.alloc_ptr = (int64_t)*memptr;
+			msg.data.alloc_size = (int64_t)size;
+			msg.data.free_ptr = (int64_t)NULL;
+			servercomm_msg_memory_send_v1(&msg);
 		}
 	}
 
@@ -449,14 +449,14 @@ void* aligned_alloc(size_t alignment, size_t size)
 
 	if(p){
 		if(g_bUseSocket) {
-			struct ServerMemoryMsgV1 msg;
-			servercomm_msg_init_v1(&msg);
-			msg.msg_type = ALeakD_aligned_alloc;
-			msg.alloc_num = (int64_t)alloc_num;
-			msg.alloc_ptr = (int64_t)p;
-			msg.alloc_size = (int64_t)size;
-			msg.free_ptr = (int64_t)NULL;
-			servercomm_msg_send_v1(&msg);
+			struct ServerMsgMemoryV1 msg;
+			servercomm_msg_memory_init_v1(&msg);
+			msg.header.msg_code = ALeakD_MsgCode_aligned_alloc;
+			msg.data.alloc_num = (int64_t)alloc_num;
+			msg.data.alloc_ptr = (int64_t)p;
+			msg.data.alloc_size = (int64_t)size;
+			msg.data.free_ptr = (int64_t)NULL;
+			servercomm_msg_memory_send_v1(&msg);
 		}
 	}
 
@@ -477,14 +477,14 @@ void* memalign(size_t alignment, size_t size)
 
 	if(p){
 		if(g_bUseSocket) {
-			struct ServerMemoryMsgV1 msg;
-			servercomm_msg_init_v1(&msg);
-			msg.msg_type = ALeakD_memalign;
-			msg.alloc_num = (int64_t)alloc_num;
-			msg.alloc_ptr = (int64_t)p;
-			msg.alloc_size = (int64_t)size;
-			msg.free_ptr = (int64_t)NULL;
-			servercomm_msg_send_v1(&msg);
+			struct ServerMsgMemoryV1 msg;
+			servercomm_msg_memory_init_v1(&msg);
+			msg.header.msg_code = ALeakD_MsgCode_memalign;
+			msg.data.alloc_num = (int64_t)alloc_num;
+			msg.data.alloc_ptr = (int64_t)p;
+			msg.data.alloc_size = (int64_t)size;
+			msg.data.free_ptr = (int64_t)NULL;
+			servercomm_msg_memory_send_v1(&msg);
 		}
 	}
 
@@ -505,14 +505,14 @@ void* valloc(size_t size)
 
 	if(p){
 		if(g_bUseSocket) {
-			struct ServerMemoryMsgV1 msg;
-			servercomm_msg_init_v1(&msg);
-			msg.msg_type = ALeakD_valloc;
-			msg.alloc_num = (int64_t)alloc_num;
-			msg.alloc_ptr = (int64_t)p;
-			msg.alloc_size = (int64_t)size;
-			msg.free_ptr = (int64_t)NULL;
-			servercomm_msg_send_v1(&msg);
+			struct ServerMsgMemoryV1 msg;
+			servercomm_msg_memory_init_v1(&msg);
+			msg.header.msg_code = ALeakD_MsgCode_valloc;
+			msg.data.alloc_num = (int64_t)alloc_num;
+			msg.data.alloc_ptr = (int64_t)p;
+			msg.data.alloc_size = (int64_t)size;
+			msg.data.free_ptr = (int64_t)NULL;
+			servercomm_msg_memory_send_v1(&msg);
 		}
 	}
 
@@ -533,14 +533,14 @@ void* pvalloc(size_t size)
 
 	if(p){
 		if(g_bUseSocket) {
-			struct ServerMemoryMsgV1 msg;
-			servercomm_msg_init_v1(&msg);
-			msg.msg_type = ALeakD_pvalloc;
-			msg.alloc_num = (int64_t)alloc_num;
-			msg.alloc_ptr = (int64_t)p;
-			msg.alloc_size = (int64_t)size;
-			msg.free_ptr = (int64_t)NULL;
-			servercomm_msg_send_v1(&msg);
+			struct ServerMsgMemoryV1 msg;
+			servercomm_msg_memory_init_v1(&msg);
+			msg.header.msg_code = ALeakD_MsgCode_pvalloc;
+			msg.data.alloc_num = (int64_t)alloc_num;
+			msg.data.alloc_ptr = (int64_t)p;
+			msg.data.alloc_size = (int64_t)size;
+			msg.data.free_ptr = (int64_t)NULL;
+			servercomm_msg_memory_send_v1(&msg);
 		}
 	}
 
@@ -555,12 +555,13 @@ static void thread_cleanup (void * data)
 			pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""));
 
 	pthread_key_delete(pThreadEntry->key);
-	//aleakd_print_leaks(idx);
+	//ALeakD_MsgCode_print_leaks(idx);
 
 }
 */
 
 int (*real_pthread_create)(pthread_t *, const pthread_attr_t *, void *(*) (void *), void *);
+int (*real_pthread_setname_np)(pthread_t thread, const char *name);
 //nt (*real_pthread_join)(pthread_t thread, void **retval);
 //void (*real_pthread_exit)(void *rval_ptr);
 //int (*real_pthread_cancel)(pthread_t thread);
@@ -576,13 +577,33 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)
 	res = real_pthread_create(thread, attr, start, arg);
 
 	if(thread){
-		struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
-		struct ThreadEntry* pThreadEntry;
-		int idx = ThreadEntry_getIdxAdd(pThreadEntryList, *thread, MAX_ALLOC_COUNT);
-		if(idx != -1){
-			pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
-			//pthread_key_create(&pThreadEntry->key, thread_cleanup);
-			//pthread_setspecific(pThreadEntry->key, pThreadEntry);
+		if(g_bUseSocket) {
+			struct ServerMsgMemoryV1 msg;
+			servercomm_msg_memory_init_v1(&msg);
+			msg.header.msg_code = ALeakD_MsgCode_pthread_create;
+			servercomm_msg_memory_send_v1(&msg);
+		}
+	}
+
+	return res;
+}
+
+int pthread_setname_np(pthread_t thread, const char *name)
+{
+	int res;
+
+	fprintf(stderr, "[aleakd] set thread name: %s\n", name);
+	if (!real_pthread_setname_np) {
+		real_pthread_setname_np = dlsym(RTLD_NEXT, "pthread_setname_np");
+	}
+	res = real_pthread_setname_np(thread, name);
+
+	if(thread){
+		if(g_bUseSocket) {
+			struct ServerMsgMemoryV1 msg;
+			servercomm_msg_memory_init_v1(&msg);
+			msg.header.msg_code = ALeakD_MsgCode_pthread_create;
+			servercomm_msg_memory_send_v1(&msg);
 		}
 	}
 
@@ -608,7 +629,7 @@ int pthread_join(pthread_t thread, void **retval)
 		fprintf(stderr, "[aleakd] thread %lu (%s): join\n",
 			pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""));
 
-		aleakd_print_leaks(idx);
+		ALeakD_MsgCode_print_leaks(idx);
 	}
 
 	return res;
