@@ -4,6 +4,7 @@
 
 #include <QTcpSocket>
 #include <QTcpServer>
+#include <QUdpSocket>
 
 #include "Model/MemoryOperation.h"
 #include "Model/ThreadOperation.h"
@@ -115,7 +116,7 @@ void MemOpRcptServer::onSocketReadyToRead()
 	}
 }
 
-bool MemOpRcptServer::doProcessMsgV1(QTcpSocket* pClientSocket)
+bool MemOpRcptServer::doProcessMsgV1(QAbstractSocket* pClientSocket)
 {
 	ServerMsgHeaderV1 header;
 	qint64 byteRead = pClientSocket->read((char *) &header, sizeof(header));
@@ -186,16 +187,31 @@ void MemOpRcptServer::run()
 {
 	bool bGoOn;
 
+#ifdef USE_TCP_SERVER
 	m_pTcpServer = new QTcpServer();
 	connect(m_pTcpServer, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
 
 	qCritical("[aleakd-server] Creating server on port: %d", m_iPort);
 	bGoOn = m_pTcpServer->listen(QHostAddress::Any, m_iPort);
+#else
+	m_pServerSocket = new QUdpSocket();
+	connect(m_pServerSocket, SIGNAL(connected()), this, SLOT(onNewConnection()));
+
+	qCritical("[aleakd-server] Creating server on port: %d", m_iPort);
+	bGoOn = m_pServerSocket->bind(QHostAddress::Any, m_iPort);
+#endif
 
 	exec();
 
+#ifdef USE_TCP_SERVER
 	if(m_pTcpServer){
 		delete m_pTcpServer;
 		m_pTcpServer = NULL;
 	}
+#else
+	if(m_pServerSocket){
+		delete m_pServerSocket;
+		m_pServerSocket = NULL;
+	}
+#endif
 }
