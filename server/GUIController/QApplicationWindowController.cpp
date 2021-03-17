@@ -347,9 +347,9 @@ void QApplicationWindowController::onTimerUpdate()
 	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Global, QMemoryOperationView::StatusBarCol_valloc, QString::number(m_globalStats.m_iVAllocCount));
 	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Global, QMemoryOperationView::StatusBarCol_pvalloc, QString::number(m_globalStats.m_iPVAllocCount));
 
-	m_pApplicationWindow->setCaptureMemoryOperationCount(QString::number(m_globalStats.m_iOpCount));
+	m_pApplicationWindow->setCaptureMemoryOperationCount(Utils::getBeautifulNumberString(QString::number(m_globalStats.m_iOpCount)));
 	m_pApplicationWindow->setCaptureMemorySizeUsed(Utils::getBeautifulNumberString(QString::number(m_globalStats.m_iOperationSize)));
-	m_pApplicationWindow->setCaptureThreadCount(QString::number(m_listThreadInfos.count()));
+	m_pApplicationWindow->setCaptureThreadCount(Utils::getBeautifulNumberString(QString::number(m_listThreadInfos.count())));
 
 	m_listFilterThreadInfos.clear();
 	ThreadInfosList::const_iterator iter;

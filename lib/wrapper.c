@@ -4,6 +4,9 @@
 #include <bits/pthreadtypes.h>
 #include <dlfcn.h>
 #include <string.h>
+#include <sys/prctl.h>
+#include <sys/syscall.h>
+#include <stdarg.h>
 
 #include "../config.h"
 #include "../shared/global-const.h"
@@ -664,3 +667,48 @@ int pthread_cancel(pthread_t thread)
 	return res;
 }
 */
+
+int (*real_prctl)(int option, ...);
+
+int prctl(int option, ...)
+{
+	int res;
+
+	//fprintf(stderr, "[aleakd] prctl option=%d\n", option);
+	if (!real_prctl) {
+		real_prctl = dlsym(RTLD_NEXT, "prctl");
+	}
+
+	unsigned long x[4];
+	int i;
+	va_list ap;
+	va_start(ap, option);
+	for (i=0; i<4; i++){
+		x[i] = va_arg(ap, unsigned long);
+	}
+	va_end(ap);
+
+	res = real_prctl(option, x[0], x[1], x[2], x[3]);
+
+	if(res>=0){
+		if(g_bUseSocket) {
+			if(option == PR_SET_NAME) {
+				struct ServerMsgThreadV1 msg;
+				servercomm_msg_thread_init_v1(&msg);
+				msg.header.msg_code = ALeakD_MsgCode_pthread_set_name;
+				msg.data.thread_id = (uint64_t) msg.header.thread_id;
+				const char* szThreadName = (const char*)x[0];
+
+				fprintf(stderr, "[aleakd] prctl set name=%s\n", szThreadName);
+				size_t iMaxLen = strlen(szThreadName);
+				if(iMaxLen > sizeof (msg.data.thread_name)){
+					iMaxLen = sizeof (msg.data.thread_name);
+				}
+				strncpy(msg.data.thread_name, szThreadName, iMaxLen);
+				servercomm_msg_thread_send_v1(&msg);
+			}
+		}
+	}
+
+	return res;
+}
