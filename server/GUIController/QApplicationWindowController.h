@@ -17,6 +17,7 @@
 #include "Server/IMemOpRcptServerHandler.h"
 
 class QApplicationWindow;
+class QMemoryOperationView;
 class QMemoryOperationModel;
 
 class QApplicationWindowController : public QObject, public IMemOpRcptServerHandler {
@@ -47,6 +48,7 @@ private:
 
 private:
 	QApplicationWindow* m_pApplicationWindow;
+	QMemoryOperationView* m_pMemoryOperationView;
 
 	QTimer m_timerUpdate;
 

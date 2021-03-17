@@ -17,6 +17,8 @@ SET (ALEAKD_SERVER_SRC
 	QMainEventFilter.h
 	GUI/QApplicationWindow.cpp
 	GUI/QApplicationWindow.h
+	GUI/QMemoryOperationView.cpp
+	GUI/QMemoryOperationView.h
 	GUIController/QApplicationWindowController.cpp
 	GUIController/QApplicationWindowController.h
 	GUIModel/QMemoryOperationModel.cpp
