@@ -3,3 +3,5 @@
 //#define START_ON_CONSTRUCT
 #define USE_AUTO_THREAD_START
 //#define START_ON_ENV
+
+#define USE_TCP_SERVER

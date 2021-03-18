@@ -5,11 +5,12 @@
 #ifndef ALEAKD_GLOBAL_CONST_H
 #define ALEAKD_GLOBAL_CONST_H
 
-#define ALEAKD_PROTOCOL_VERSION 1
 #define ALEAKD_MSG_VERSION 1
 
 enum ALeakD_MsgCode {
 	ALeakD_MsgCode_unknown = 0,
+	ALeakD_MsgCode_init = 0,
+	ALeakD_MsgCode_dispose = 0,
 
 	// memory function
 	ALeakD_MsgCode_malloc = 11,

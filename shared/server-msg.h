@@ -9,7 +9,7 @@
 // Header structure
 /////////////////////
 
-typedef uint8_t servermsg_version_t;
+typedef uint16_t servermsg_version_t;
 
 struct __attribute__((__packed__)) ServerMsgHeaderV1
 {
@@ -23,6 +23,16 @@ struct __attribute__((__packed__)) ServerMsgHeaderV1
 	// Msg type
 	uint8_t msg_code;
 } _ServerMsgHeaderV1;
+
+///////////////////////
+// Application message
+///////////////////////
+
+struct __attribute__((__packed__)) ServerMsgAppV1
+{
+	servermsg_version_t msg_version;
+	struct ServerMsgHeaderV1 header;
+} _ServerMsgAppV1;
 
 ///////////////////////
 // Memory message

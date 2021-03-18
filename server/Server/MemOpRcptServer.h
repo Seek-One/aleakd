@@ -11,15 +11,10 @@
 
 #include "Server/IMemOpRcptServerHandler.h"
 
-#define USE_TCP_SERVER
-
-#ifdef USE_TCP_SERVER
 class QTcpServer;
 class QTcpSocket;
-#else
 class QUdpSocket;
-#endif
-class QAbstractSocket;
+class QIODevice;
 
 class MemOpRcptServer : public QThread
 {
@@ -36,26 +31,27 @@ protected:
 	void run();
 
 private slots:
+	// TCP mode
 	void onNewConnection();
 	void onSocketReadyToRead();
 	void onSocketDisconnected();
+	// UDP mode
+	void onPendingDatagramToRead();
 
 private:
-	bool doProcessMsgV1(QAbstractSocket* pClientSocket);
+	bool doReadMsg(QIODevice* pIODevice);
+	bool doProcessMsgV1(QIODevice* pIODevice);
 
 private:
-#ifdef USE_TCP_SERVER
-	QTcpServer* m_pTcpServer;
-	QTcpSocket* m_pClientSocket;
-#else
-	QUdpSocket* m_pServerSocket;
-	QUdpSocket* m_pClientSocket;
-#endif
-
-	int m_iState;
-	short m_iProtocolVersion;
-
 	int m_iPort;
+	bool m_bUseTCP;
+
+	// TCP mode
+	QTcpServer* m_pTcpServer;
+	QTcpSocket* m_pTcpClientSocket;
+
+	// UDP mode
+	QUdpSocket* m_pUdpServerSocket;
 
 	IMemOpRcptServerHandler* m_pHandler;
 };

@@ -1,3 +1,5 @@
+#include "../config.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
@@ -13,9 +15,16 @@
 
 #include "server-comm.h"
 
-int g_socket = -1;
+
 #define DEFAULT_SERVER_HOST "127.0.0.1"
 #define DEFAULT_SERVER_PORT 19999
+
+int g_socket = -1;
+struct sockaddr_in g_server;
+
+#ifdef USE_TCP_SERVER
+struct hostent *hostinfo = NULL;
+#endif
 
 char g_preInitBuffer[4096];
 unsigned long g_preInitPos = 0;
@@ -25,7 +34,11 @@ int servercomm_init()
 	int res = 0;
 
 	fprintf(stderr, "[aleakd] init socket\n");
+#ifdef USE_TCP_SERVER
 	g_socket = socket(AF_INET, SOCK_STREAM, 0);
+#else
+	g_socket = socket(AF_INET, SOCK_DGRAM, 0);
+#endif
 	if (g_socket == -1)
 	{
 		fprintf(stderr, "[aleakd] Could not create socket\n");
@@ -33,32 +46,34 @@ int servercomm_init()
 	}
 
 	if(res == 0) {
-		struct sockaddr_in server;
 		char* szHost = getenv("ALEAKD_SERVER_HOST");
 		if(szHost){
-			server.sin_addr.s_addr = inet_addr(szHost);
+			g_server.sin_addr.s_addr = inet_addr(szHost);
 		}else {
-			server.sin_addr.s_addr = inet_addr(DEFAULT_SERVER_HOST);
+			g_server.sin_addr.s_addr = inet_addr(DEFAULT_SERVER_HOST);
 		}
-		server.sin_family = AF_INET;
+		g_server.sin_family = AF_INET;
 		char* szPort = getenv("ALEAKD_SERVER_HOST");
 		if(szPort) {
-			server.sin_port = htons(atoi(szPort));
+			g_server.sin_port = htons(atoi(szPort));
 		}else{
-			server.sin_port = htons(DEFAULT_SERVER_PORT);
+			g_server.sin_port = htons(DEFAULT_SERVER_PORT);
 		}
 
+#ifdef USE_TCP_SERVER
 		// Connect to remote server
-		if (connect(g_socket, (struct sockaddr *) &server, sizeof(server)) < 0) {
+		if (connect(g_socket, (struct sockaddr *) &g_server, sizeof(g_server)) < 0) {
 			fprintf(stderr, "[aleakd] Could not connect socket\n");
 			res = -1;
 		}
+#endif
 	}
 
 	// Send protocol version
 	if(res == 0) {
-		servermsg_version_t version = ALEAKD_PROTOCOL_VERSION;
-		res = servercomm_send((void *) &version, sizeof(servermsg_version_t));
+		struct ServerMsgAppV1 msg;
+		servercomm_msg_app_init_v1(&msg);
+		res = servercomm_msg_app_send_v1(&msg);
 	}
 
 	// Send some data
@@ -81,10 +96,19 @@ void servercomm_dispose()
 
 int servercomm_send(const void* buff, size_t size)
 {
+#ifdef USE_TCP_SERVER
 	if (send(g_socket, buff, size, 0) < 0) {
 		fprintf(stderr, "[aleakd] error to send data\n");
 		return -1;
 	}
+#else
+	if(sendto(g_socket, buff, size, 0,  (const struct sockaddr *)&g_server, sizeof(g_server)) < 0)
+	{
+		fprintf(stderr, "[aleakd] error to send data\n");
+		return -1;
+	}
+
+#endif
 	return 0;
 }
 
@@ -103,7 +127,6 @@ int servercomm_send_safe(const void* buff, size_t size)
 	return size;
 }
 
-
 void servercomm_msg_header_init_v1(struct ServerMsgHeaderV1* pServerMsgHeader)
 {
 	struct timeval tvNow;
@@ -113,6 +136,17 @@ void servercomm_msg_header_init_v1(struct ServerMsgHeaderV1* pServerMsgHeader)
 	pServerMsgHeader->time_usec = tvNow.tv_usec;
 	pServerMsgHeader->thread_id = (int64_t)pthread_self();
 	pServerMsgHeader->msg_code = ALeakD_MsgCode_unknown;
+}
+
+void servercomm_msg_app_init_v1(struct ServerMsgAppV1* pServerMsgApp)
+{
+	pServerMsgApp->msg_version = ALEAKD_MSG_VERSION;
+	servercomm_msg_header_init_v1(&pServerMsgApp->header);
+}
+
+int servercomm_msg_app_send_v1(struct ServerMsgAppV1* pServerMsgApp)
+{
+	return servercomm_send_safe(pServerMsgApp, sizeof(struct ServerMsgAppV1));
 }
 
 void servercomm_msg_memory_init_v1(struct ServerMsgMemoryV1* pServerMemoryMsg)

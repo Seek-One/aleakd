@@ -2,6 +2,13 @@
 // Created by ebeuque on 09/03/2021.
 //
 
+#include "../../config.h"
+
+#include <sys/time.h>
+
+#include <QDateTime>
+#include <QBuffer>
+
 #include <QTcpSocket>
 #include <QTcpServer>
 #include <QUdpSocket>
@@ -16,20 +23,26 @@
 MemOpRcptServer::MemOpRcptServer(QObject* parent)
 	: QThread(parent)
 {
-	m_pClientSocket = NULL;
-	m_iState = 0;
-	m_pHandler = NULL;
-
 	m_iPort = 0;
+	m_bUseTCP = false;
+
+#ifdef USE_TCP_SERVER
+	m_bUseTCP = true;
+#endif
+
+	m_pTcpClientSocket = NULL;
+	m_pUdpServerSocket = NULL;
+
+	m_pHandler = NULL;
 
 	moveToThread(this);
 }
 
 MemOpRcptServer::~MemOpRcptServer()
 {
-	if(m_pClientSocket){
-		delete m_pClientSocket;
-		m_pClientSocket;
+	if(m_pTcpClientSocket){
+		delete m_pTcpClientSocket;
+		m_pTcpClientSocket;
 	}
 }
 
@@ -56,12 +69,11 @@ void MemOpRcptServer::onNewConnection()
 	}
 
 	qInfo("[aleakd-server] New connection on socket %lu", pSocket->socketDescriptor());
-	if(!m_pClientSocket) {
+	if(!m_pTcpClientSocket) {
 		connect(pSocket, SIGNAL(readyRead()), this, SLOT(onSocketReadyToRead()));
 		connect(pSocket, SIGNAL(disconnected()), this, SLOT(onSocketDisconnected()));
 
-		m_pClientSocket = pSocket;
-		m_iState = 0;
+		m_pTcpClientSocket = pSocket;
 	}else{
 		qInfo("[aleakd-server] A connection is already present, closing the connection");
 		if(pSocket) {
@@ -74,59 +86,60 @@ void MemOpRcptServer::onNewConnection()
 
 void MemOpRcptServer::onSocketReadyToRead()
 {
-	// Read protocol version
-	if(m_iState == 0)
-	{
-		servermsg_version_t iProtocolVersion;
-		qint64 byteRead = m_pClientSocket->read((char *) &iProtocolVersion, sizeof(iProtocolVersion));
-		if(byteRead > 0){
-			m_iState = 1;
-			m_iProtocolVersion = iProtocolVersion;
-			qDebug("[aleakd-server] Client using protocol version %d", m_iProtocolVersion);
+	// Read message
+	do {
+		if(!doReadMsg(m_pTcpClientSocket)){
+			break;
+		}
+	} while (true);
+}
 
-			if(m_pHandler){
-				m_pHandler->onNewConnection();
+bool MemOpRcptServer::doReadMsg(QIODevice* pIODevice)
+{
+	bool bRes = false;
+
+	// Read message version to decide how to process the message
+	servermsg_version_t iMsgVersion;
+	qint64 byteRead = pIODevice->read((char *) &iMsgVersion, sizeof(iMsgVersion));
+	if(byteRead > 0){
+		if(iMsgVersion == 1){
+			bRes = doProcessMsgV1(pIODevice);
+			if(!bRes){
+				qCritical("[aleakd-server] Unsupported message");
 			}
 		}else{
-			qDebug("[aleakd-server] Unable to get version, closing connection");
-			m_pClientSocket->close();
+			qCritical("[aleakd-server] Unsupported message");
+			pIODevice->readAll();
 		}
 	}
 
-	// Read message
-	if(m_iState == 1)
-	{
-		servermsg_version_t iMsgVersion;
-		do {
-			qint64 byteRead = m_pClientSocket->read((char *) &iMsgVersion, sizeof(iMsgVersion));
-			if(byteRead > 0){
-				if(iMsgVersion == 1){
-					if(!doProcessMsgV1(m_pClientSocket)){
-						break;
-					}
-				}else{
-					qCritical("[aleakd-server] Unsupported message");
-					m_pClientSocket->readAll();
-					break;
-				}
-			} else {
-				break;
-			}
-		} while (true);
-	}
+	return bRes;
 }
 
-bool MemOpRcptServer::doProcessMsgV1(QAbstractSocket* pClientSocket)
+bool MemOpRcptServer::doProcessMsgV1(QIODevice* pIODevice)
 {
 	ServerMsgHeaderV1 header;
-	qint64 byteRead = pClientSocket->read((char *) &header, sizeof(header));
+	qint64 byteRead = pIODevice->read((char *) &header, sizeof(header));
 	if (byteRead > 0) {
 
+		// Application message
+		if (header.msg_code >= 0 && header.msg_code < 10)
+		{
+			if(header.msg_code == ALeakD_MsgCode_init)
+			{
+				if (m_pHandler) {
+					m_pHandler->onNewConnection();
+				}
+			}
+		}
+
 		// Memory operation
-		if (header.msg_code >= 10 && header.msg_code < 20) {
+		if (header.msg_code >= 10 && header.msg_code < 20)
+		{
 			ServerMsgMemoryDataV1 data;
-			qint64 byteRead = pClientSocket->read((char *) &data, sizeof(data));
+			qint64 byteRead = pIODevice->read((char *) &data, sizeof(data));
 			if (byteRead > 0) {
+
 				MemoryOperation *pMemoryOperation = new MemoryOperation();
 				pMemoryOperation->m_tvOperation.tv_sec = header.time_sec;
 				pMemoryOperation->m_tvOperation.tv_usec = header.time_usec;
@@ -141,16 +154,26 @@ bool MemOpRcptServer::doProcessMsgV1(QAbstractSocket* pClientSocket)
 				//	msg.msg_type, msg.time_sec, msg.time_usec,
 				//  msg.thread_id, msg.alloc_size);
 
+//				struct timeval tvNow;
+//				struct timeval tvRecpt;
+//				gettimeofday(&tvNow, NULL);
+//				timersub(&tvNow, &pMemoryOperation->m_tvOperation, &tvRecpt);
+
 				if (m_pHandler) {
 					m_pHandler->onMemoryOperationReceived(MemoryOperationSharedPtr(pMemoryOperation));
 				}
+
+//				struct timeval tvProcess;
+//				gettimeofday(&tvNow, NULL);
+//				timersub(&tvNow, &pMemoryOperation->m_tvOperation, &tvProcess);
+				//qDebug("[aleakd-latency] latency=%lu,%06lu, process=%lu,%06lu", tvRecpt.tv_sec, tvRecpt.tv_usec, tvProcess.tv_sec, tvProcess.tv_usec);
 			}
 		}
 
 		// Thread operation
 		if (header.msg_code >= 30 && header.msg_code < 40) {
 			ServerMsgThreadDataV1 data;
-			qint64 byteRead = pClientSocket->read((char *) &data, sizeof(data));
+			qint64 byteRead = pIODevice->read((char *) &data, sizeof(data));
 			if (byteRead > 0) {
 				ThreadOperation *pThreadOperation = new ThreadOperation();
 				pThreadOperation->m_tvOperation.tv_sec = header.time_sec;
@@ -176,10 +199,31 @@ bool MemOpRcptServer::doProcessMsgV1(QAbstractSocket* pClientSocket)
 
 void MemOpRcptServer::onSocketDisconnected()
 {
-	if(m_pClientSocket){
+	if(m_pTcpClientSocket){
 		qInfo("[aleakd-server] Closing the connection");
-		m_pClientSocket->close();
-		m_pClientSocket = NULL;
+		m_pTcpClientSocket->close();
+		m_pTcpClientSocket = NULL;
+	}
+}
+
+
+void MemOpRcptServer::onPendingDatagramToRead()
+{
+	while (m_pUdpServerSocket->hasPendingDatagrams())
+	{
+		QByteArray datagram;
+		datagram.resize(m_pUdpServerSocket->pendingDatagramSize());
+		QHostAddress sender;
+		quint16 senderPort;
+
+		qint64 iReadData = m_pUdpServerSocket->readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
+		if(iReadData > 0){
+			QBuffer buffer(&datagram);
+			if(buffer.open(QIODevice::ReadOnly)) {
+				doReadMsg(&buffer);
+				buffer.close();
+			}
+		}
 	}
 }
 
@@ -187,31 +231,31 @@ void MemOpRcptServer::run()
 {
 	bool bGoOn;
 
-#ifdef USE_TCP_SERVER
-	m_pTcpServer = new QTcpServer();
-	connect(m_pTcpServer, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
+	if(m_bUseTCP) {
+		m_pTcpServer = new QTcpServer();
+		connect(m_pTcpServer, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
 
-	qCritical("[aleakd-server] Creating server on port: %d", m_iPort);
-	bGoOn = m_pTcpServer->listen(QHostAddress::Any, m_iPort);
-#else
-	m_pServerSocket = new QUdpSocket();
-	connect(m_pServerSocket, SIGNAL(connected()), this, SLOT(onNewConnection()));
+		qCritical("[aleakd-server] Creating TCP server on port: %d", m_iPort);
+		bGoOn = m_pTcpServer->listen(QHostAddress::Any, m_iPort);
+	}else {
+		m_pUdpServerSocket = new QUdpSocket();
+		connect(m_pUdpServerSocket, SIGNAL(readyRead()), this, SLOT(onPendingDatagramToRead()));
 
-	qCritical("[aleakd-server] Creating server on port: %d", m_iPort);
-	bGoOn = m_pServerSocket->bind(QHostAddress::Any, m_iPort);
-#endif
+		qCritical("[aleakd-server] Creating UDP server on port: %d", m_iPort);
+		bGoOn = m_pUdpServerSocket->bind(QHostAddress::Any, m_iPort);
+	}
+	if(!bGoOn){
+		qCritical("[aleakd-server] Cannot initialize service");
+	}
 
 	exec();
 
-#ifdef USE_TCP_SERVER
 	if(m_pTcpServer){
 		delete m_pTcpServer;
 		m_pTcpServer = NULL;
 	}
-#else
-	if(m_pServerSocket){
-		delete m_pServerSocket;
-		m_pServerSocket = NULL;
+	if(m_pUdpServerSocket){
+		delete m_pUdpServerSocket;
+		m_pUdpServerSocket = NULL;
 	}
-#endif
 }
