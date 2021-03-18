@@ -8,7 +8,9 @@ ThreadInfos::ThreadInfos()
 {
 	m_iThreadId = 0;
 
+	m_iCurrentAllocCount = 0;
 	m_iCurrentSize = 0;
+	m_iTotalAllocCount = 0;
 	m_iPeakSize = 0;
 }
 

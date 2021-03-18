@@ -21,7 +21,9 @@ public:
 	uint64_t m_iThreadId;
 	QString m_szThreadName;
 
+	uint32_t  m_iCurrentAllocCount;
 	uint64_t m_iCurrentSize;
+	uint32_t  m_iTotalAllocCount;
 	uint64_t m_iPeakSize;
 };
 

@@ -134,6 +134,14 @@ void wrapper_init()
 	}
 }
 
+void wrapper_dispose()
+{
+	if(g_bUseSocket){
+		servercomm_dispose();
+	}
+}
+
+
 int displayEntry(struct ThreadEntry* pThread, struct AllocEntry* pAllocEntry)
 {
 	if(!aleakd_data_get_enable_print_action()){

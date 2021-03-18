@@ -58,6 +58,8 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 		pTreeView->header()->resizeSection(1, 200);
 		pTreeView->header()->resizeSection(2, 150);
 		pTreeView->header()->resizeSection(3, 150);
+		pTreeView->header()->resizeSection(4, 150);
+		pTreeView->header()->resizeSection(5, 150);
 	}
 
 	// Memory infos tab
@@ -194,6 +196,8 @@ void QApplicationWindowController::updateThreadInfosAddAlloc(uint64_t iThreadId,
 	ThreadInfosSharedPtr pThreadInfos = getThreadInfos(iThreadId);
 	if(pThreadInfos){
 		pThreadInfos->m_iCurrentSize += iSize;
+		pThreadInfos->m_iCurrentAllocCount++;
+		pThreadInfos->m_iTotalAllocCount++;
 		if(pThreadInfos->m_iCurrentSize > pThreadInfos->m_iPeakSize){
 			pThreadInfos->m_iPeakSize = pThreadInfos->m_iCurrentSize;
 		}
@@ -205,6 +209,7 @@ void QApplicationWindowController::updateThreadInfosAddFree(uint64_t iThreadId, 
 	ThreadInfosSharedPtr pThreadInfos = getThreadInfos(iThreadId);
 	if(pThreadInfos){
 		pThreadInfos->m_iCurrentSize -= iSize;
+		pThreadInfos->m_iCurrentAllocCount--;
 	}
 }
 

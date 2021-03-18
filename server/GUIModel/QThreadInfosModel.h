@@ -19,8 +19,11 @@ public:
 	enum Cols {
 		ThreadIdColumn = 0,
 		ThreadNameColumn,
+		CurrentAllocCountColumn,
 		CurrentSizeColumn,
-		PeakSizeColumn
+		TotalAllocCountColumn,
+		PeakSizeColumn,
+		ColCount
 	};
 
 public:

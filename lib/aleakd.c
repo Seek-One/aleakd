@@ -248,4 +248,5 @@ void __attribute__((destructor)) aleakd_destructor()
 	AllocList_PrintLeaks_All(aleakd_data_get_alloc_list(), 0, aleakd_data_get_display_min_alloc_num());
 	ThreadEntryList_PrintLeaks_Summary(aleakd_data_get_thread_list());
 	aleakd_data_unlock();
+	wrapper_dispose();
 }

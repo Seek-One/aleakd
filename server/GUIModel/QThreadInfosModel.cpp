@@ -56,7 +56,7 @@ int QThreadInfosModel::rowCount(const QModelIndex &parent) const
 
 int QThreadInfosModel::columnCount(const QModelIndex &parent) const
 {
-	return 4;
+	return ColCount;
 }
 
 QVariant QThreadInfosModel::data(const QModelIndex &index, int role) const
@@ -76,8 +76,12 @@ QVariant QThreadInfosModel::data(const QModelIndex &index, int role) const
 			return QString::number(pThreadInfos->m_iThreadId);
 		case ThreadNameColumn:
 			return pThreadInfos->m_szThreadName;
+		case CurrentAllocCountColumn:
+			return Utils::getBeautifulNumberString(QString::number(pThreadInfos->m_iCurrentAllocCount));
 		case CurrentSizeColumn:
 			return Utils::getBeautifulNumberString(QString::number(pThreadInfos->m_iCurrentSize));
+		case TotalAllocCountColumn:
+			return Utils::getBeautifulNumberString(QString::number(pThreadInfos->m_iTotalAllocCount));
 		case PeakSizeColumn:
 			return Utils::getBeautifulNumberString(QString::number(pThreadInfos->m_iPeakSize));
 		}
@@ -93,16 +97,20 @@ QVariant QThreadInfosModel::headerData(int section, Qt::Orientation orientation,
 	if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
 	{
 		switch (section) {
-			case ThreadIdColumn:
-				return tr("Thread id");
-			case ThreadNameColumn:
-				return tr("Thread name");
-			case CurrentSizeColumn:
-				return tr("Current size");
-			case PeakSizeColumn:
-				return tr("Peak size");
-			default:
-				return QVariant();
+		case ThreadIdColumn:
+			return tr("Thread id");
+		case ThreadNameColumn:
+			return tr("Thread name");
+		case CurrentAllocCountColumn:
+			return tr("Alloc count");
+		case CurrentSizeColumn:
+			return tr("Current size");
+		case TotalAllocCountColumn:
+			return tr("Total alloc count");
+		case PeakSizeColumn:
+			return tr("Peak size");
+		default:
+			return QVariant();
 		}
 	}
 
