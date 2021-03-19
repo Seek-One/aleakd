@@ -237,7 +237,10 @@ void aleakd_set_break_alloc_num(unsigned long num)
 void __attribute__((constructor)) aleakd_constructor()
 {
 	fprintf(stderr, "[aleakd] init\n");
-	wrapper_init();
+	if(wrapper_init() != 0){
+		fprintf(stderr, "[aleakd] failed to init\n");
+		exit(-1);
+	}
 }
 
 void __attribute__((destructor)) aleakd_destructor()

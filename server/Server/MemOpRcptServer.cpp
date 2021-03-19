@@ -5,9 +5,12 @@
 #include "../../config.h"
 
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <QDateTime>
 #include <QBuffer>
+#include <QFile>
 
 #include <QTcpSocket>
 #include <QTcpServer>
@@ -17,6 +20,7 @@
 #include "Model/ThreadOperation.h"
 
 #include "../shared/server-msg.h"
+#include "../shared/global-const.h"
 
 #include "MemOpRcptServer.h"
 
@@ -24,15 +28,14 @@ MemOpRcptServer::MemOpRcptServer(QObject* parent)
 	: QThread(parent)
 {
 	m_iPort = 0;
-	m_bUseTCP = false;
 
-#ifdef USE_TCP_SERVER
-	m_bUseTCP = true;
-#endif
+	m_iTransferMode = TRANSFER_MODE_USED;
 
 	m_pTcpClientSocket = NULL;
 	m_pUdpServerSocket = NULL;
+	m_pNamedPipeFile = NULL;
 
+	m_iMsgCount = 0;
 	m_pHandler = NULL;
 
 	moveToThread(this);
@@ -88,7 +91,9 @@ void MemOpRcptServer::onSocketReadyToRead()
 {
 	// Read message
 	do {
-		if(!doReadMsg(m_pTcpClientSocket)){
+		if(doReadMsg(m_pTcpClientSocket)) {
+			qDebug("message received: %d", m_iMsgCount);
+		}else{
 			break;
 		}
 	} while (true);
@@ -98,103 +103,191 @@ bool MemOpRcptServer::doReadMsg(QIODevice* pIODevice)
 {
 	bool bRes = false;
 
-	// Read message version to decide how to process the message
-	servermsg_version_t iMsgVersion;
-	qint64 byteRead = pIODevice->read((char *) &iMsgVersion, sizeof(iMsgVersion));
-	if(byteRead > 0){
-		if(iMsgVersion == 1){
-			bRes = doProcessMsgV1(pIODevice);
-			if(!bRes){
-				qCritical("[aleakd-server] Unsupported message");
+	char pBuffer[8192]; // Read 4096 but use bigger buffer to be able to add remaining data
+	int iBufferReadSize = 0;
+
+	qint64 iSizeRead;
+	qint64 iSizeProcessed;
+	qint64 iSizeRemaining;
+	do{
+		iSizeRead = pIODevice->read(pBuffer+iBufferReadSize, 4096);
+
+		if(iSizeRead > 0) {
+			iBufferReadSize += iSizeRead;
+
+//			char szString[9000];
+//			ALeakD_toHexString((const unsigned char*)pBuffer, iBufferReadSize, szString, 9000);
+//			qDebug("read: %d", iBufferReadSize);
+//			qDebug("read: %s", szString);
+
+			iSizeProcessed = doProcessDataRead(pBuffer, iBufferReadSize);
+			if(iSizeProcessed > 0) {
+				iSizeRemaining = iBufferReadSize - iSizeProcessed;
+				if (iSizeRemaining > 0) {
+					memcpy(pBuffer, pBuffer + iSizeProcessed, iSizeRemaining);
+					iBufferReadSize = iSizeRemaining;
+				} else {
+					iBufferReadSize = 0;
+				}
+			}else{
+				qCritical("[aleakd-server] Error to process data");
+				break;
 			}
-		}else{
-			qCritical("[aleakd-server] Unsupported message");
-			pIODevice->readAll();
 		}
-	}
+	}while(iSizeRead);
 
 	return bRes;
 }
 
-bool MemOpRcptServer::doProcessMsgV1(QIODevice* pIODevice)
+qint64 MemOpRcptServer::doProcessDataRead(char* pBuffer, qint64 iMaxSize)
 {
+	int iRes = 0;
+	int iSizeRead = 0;
+
+	do
+	{
+		if(iSizeRead < iMaxSize) {
+			iRes = doProcessMsg(pBuffer + iSizeRead, iMaxSize - iSizeRead);
+			if (iRes > 0) {
+				iSizeRead += iRes;
+				m_iMsgCount++;
+				//qDebug("message: %d", m_iMsgCount);
+			} else if (iRes == 0) {
+				// End of data we can read
+				return iSizeRead;
+			} else {
+				return iRes;
+			}
+		}else{
+			return iSizeRead;
+		}
+	}while(iRes > 0);
+
+	return iRes;
+}
+
+qint64 MemOpRcptServer::doProcessMsg(char* pBuffer, qint64 iMaxSize)
+{
+	int iRes = 0;
+	qint64 iSizeRead = 0;
+
+	if(iMaxSize < sizeof(servermsg_version_t)){
+		return 0;
+	}
+
+	// Read message version to decide how to process the message
+	servermsg_version_t iMsgVersion;
+	memcpy(&iMsgVersion, pBuffer, sizeof(servermsg_version_t));
+	iSizeRead += sizeof(servermsg_version_t);
+
+	if(iMsgVersion == 1){
+		iRes = doProcessMsgV1(pBuffer+iSizeRead, iMaxSize-iSizeRead);
+		if(iRes > 0){
+			return iSizeRead + iRes;
+		}else{
+			return iRes;
+		}
+	}
+
+	return -1;
+}
+
+qint64 MemOpRcptServer::doProcessMsgV1(char* pBuffer, qint64 iMaxSize)
+{
+	int iSizeRead = 0;
+
+	// Check if we can read header size
+	if(iMaxSize < sizeof(ServerMsgHeaderV1)){
+		return 0;
+	}
+
+	// Set headers
 	ServerMsgHeaderV1 header;
-	qint64 byteRead = pIODevice->read((char *) &header, sizeof(header));
-	if (byteRead > 0) {
+	memcpy(&header, pBuffer, sizeof(header));
+	iSizeRead += sizeof(header);
 
-		// Application message
-		if (header.msg_code >= 0 && header.msg_code < 10)
+	// Application message
+	if (header.msg_code >= 0 && header.msg_code < 10)
+	{
+		if(header.msg_code == ALeakD_MsgCode_init)
 		{
-			if(header.msg_code == ALeakD_MsgCode_init)
-			{
-				if (m_pHandler) {
-					m_pHandler->onNewConnection();
-				}
-			}
-		}
-
-		// Memory operation
-		if (header.msg_code >= 10 && header.msg_code < 20)
-		{
-			ServerMsgMemoryDataV1 data;
-			qint64 byteRead = pIODevice->read((char *) &data, sizeof(data));
-			if (byteRead > 0) {
-
-				MemoryOperation *pMemoryOperation = new MemoryOperation();
-				pMemoryOperation->m_tvOperation.tv_sec = header.time_sec;
-				pMemoryOperation->m_tvOperation.tv_usec = header.time_usec;
-				pMemoryOperation->m_iMsgCode = (ALeakD_MsgCode) header.msg_code;
-				pMemoryOperation->m_iCallerThreadId = header.thread_id;
-				pMemoryOperation->m_iAllocSize = data.alloc_size;
-				pMemoryOperation->m_iAllocPtr = data.alloc_ptr;
-				pMemoryOperation->m_iAllocNum = data.alloc_num;
-				pMemoryOperation->m_iFreePtr = data.free_ptr;
-
-				//qDebug("[aleakd-server] msg received: type=%d, time=%lu,%lu, thread=%lu, size=%lu",
-				//	msg.msg_type, msg.time_sec, msg.time_usec,
-				//  msg.thread_id, msg.alloc_size);
-
-//				struct timeval tvNow;
-//				struct timeval tvRecpt;
-//				gettimeofday(&tvNow, NULL);
-//				timersub(&tvNow, &pMemoryOperation->m_tvOperation, &tvRecpt);
-
-				if (m_pHandler) {
-					m_pHandler->onMemoryOperationReceived(MemoryOperationSharedPtr(pMemoryOperation));
-				}
-
-//				struct timeval tvProcess;
-//				gettimeofday(&tvNow, NULL);
-//				timersub(&tvNow, &pMemoryOperation->m_tvOperation, &tvProcess);
-				//qDebug("[aleakd-latency] latency=%lu,%06lu, process=%lu,%06lu", tvRecpt.tv_sec, tvRecpt.tv_usec, tvProcess.tv_sec, tvProcess.tv_usec);
-			}
-		}
-
-		// Thread operation
-		if (header.msg_code >= 30 && header.msg_code < 40) {
-			ServerMsgThreadDataV1 data;
-			qint64 byteRead = pIODevice->read((char *) &data, sizeof(data));
-			if (byteRead > 0) {
-				ThreadOperation *pThreadOperation = new ThreadOperation();
-				pThreadOperation->m_tvOperation.tv_sec = header.time_sec;
-				pThreadOperation->m_tvOperation.tv_usec = header.time_usec;
-				pThreadOperation->m_iMsgCode = (ALeakD_MsgCode) header.msg_code;
-				pThreadOperation->m_iCallerThreadId = header.thread_id;
-				pThreadOperation->m_iThreadId = data.thread_id;
-				pThreadOperation->m_szThreadName = data.thread_name;
-
-				//qDebug("[aleakd-server] msg received: type=%d, time=%lu,%lu, thread=%lu, size=%lu",
-				//	msg.msg_type, msg.time_sec, msg.time_usec,
-				//  msg.thread_id, msg.alloc_size);
-
-				if (m_pHandler) {
-					m_pHandler->onThreadOperationReceived(ThreadOperationSharedPtr(pThreadOperation));
-				}
+			// Should be the first message
+			m_iMsgCount = 0;
+			if (m_pHandler) {
+				m_pHandler->onNewConnection();
 			}
 		}
 	}
 
-	return true;
+	// Memory operation
+	if (header.msg_code >= 10 && header.msg_code < 20)
+	{
+		if((iMaxSize - iSizeRead) < sizeof(ServerMsgMemoryDataV1)){
+			return 0;
+		}
+
+		ServerMsgMemoryDataV1 data;
+		memcpy(&data, pBuffer+iSizeRead, sizeof(data));
+		iSizeRead += sizeof(data);
+
+		MemoryOperation *pMemoryOperation = new MemoryOperation();
+		pMemoryOperation->m_tvOperation.tv_sec = header.time_sec;
+		pMemoryOperation->m_tvOperation.tv_usec = header.time_usec;
+		pMemoryOperation->m_iMsgCode = (ALeakD_MsgCode) header.msg_code;
+		pMemoryOperation->m_iCallerThreadId = header.thread_id;
+		pMemoryOperation->m_iAllocSize = data.alloc_size;
+		pMemoryOperation->m_iAllocPtr = data.alloc_ptr;
+		pMemoryOperation->m_iAllocNum = data.alloc_num;
+		pMemoryOperation->m_iFreePtr = data.free_ptr;
+
+		//qDebug("[aleakd-server] msg received: type=%d, time=%lu,%lu, thread=%lu, size=%lu",
+		//	msg.msg_type, msg.time_sec, msg.time_usec,
+		//  msg.thread_id, msg.alloc_size);
+
+//		struct timeval tvNow;
+//		struct timeval tvRecpt;
+//		gettimeofday(&tvNow, NULL);
+//		timersub(&tvNow, &pMemoryOperation->m_tvOperation, &tvRecpt);
+
+		if (m_pHandler) {
+			m_pHandler->onMemoryOperationReceived(MemoryOperationSharedPtr(pMemoryOperation));
+		}
+
+//		struct timeval tvProcess;
+//		gettimeofday(&tvNow, NULL);
+//		timersub(&tvNow, &pMemoryOperation->m_tvOperation, &tvProcess);
+		//qDebug("[aleakd-latency] latency=%lu,%06lu, process=%lu,%06lu", tvRecpt.tv_sec, tvRecpt.tv_usec, tvProcess.tv_sec, tvProcess.tv_usec);
+	}
+
+
+	// Thread operation
+	if (header.msg_code >= 30 && header.msg_code < 40)
+	{
+		if(iMaxSize - iSizeRead < sizeof(ServerMsgThreadDataV1)){
+			return 0;
+		}
+
+		ServerMsgThreadDataV1 data;
+		memcpy(&data, pBuffer+iSizeRead, sizeof(data));
+		iSizeRead += sizeof(data);
+
+		ThreadOperation *pThreadOperation = new ThreadOperation();
+		pThreadOperation->m_tvOperation.tv_sec = header.time_sec;
+		pThreadOperation->m_tvOperation.tv_usec = header.time_usec;
+		pThreadOperation->m_iMsgCode = (ALeakD_MsgCode) header.msg_code;
+		pThreadOperation->m_iCallerThreadId = header.thread_id;
+		pThreadOperation->m_iThreadId = data.thread_id;
+		pThreadOperation->m_szThreadName = data.thread_name;
+
+		//qDebug("[aleakd-server] msg received: type=%d, time=%lu,%lu, thread=%lu, size=%lu",
+		//	msg.msg_type, msg.time_sec, msg.time_usec,
+		//  msg.thread_id, msg.alloc_size);
+		if (m_pHandler) {
+			m_pHandler->onThreadOperationReceived(ThreadOperationSharedPtr(pThreadOperation));
+		}
+	}
+
+	return iSizeRead;
 }
 
 void MemOpRcptServer::onSocketDisconnected()
@@ -231,30 +324,66 @@ void MemOpRcptServer::run()
 {
 	bool bGoOn;
 
-	if(m_bUseTCP) {
+	if(m_iTransferMode == TRANSFER_MODE_TCP) {
 		m_pTcpServer = new QTcpServer();
 		connect(m_pTcpServer, SIGNAL(newConnection()), this, SLOT(onNewConnection()));
 
-		qCritical("[aleakd-server] Creating TCP server on port: %d", m_iPort);
+		qDebug("[aleakd-server] Creating TCP server on port: %d", m_iPort);
 		bGoOn = m_pTcpServer->listen(QHostAddress::Any, m_iPort);
-	}else {
+	}
+	if(m_iTransferMode == TRANSFER_MODE_UDP) {
 		m_pUdpServerSocket = new QUdpSocket();
 		connect(m_pUdpServerSocket, SIGNAL(readyRead()), this, SLOT(onPendingDatagramToRead()));
 
-		qCritical("[aleakd-server] Creating UDP server on port: %d", m_iPort);
+		qDebug("[aleakd-server] Creating UDP server on port: %d", m_iPort);
 		bGoOn = m_pUdpServerSocket->bind(QHostAddress::Any, m_iPort);
+	}
+	if(m_iTransferMode == TRANSFER_MODE_NAMEDPIPE) {
+		qDebug("[aleakd-server] Creating named pipe : %s", NAMED_PIPE_FILE);
+		m_pNamedPipeFile = new QFile(NAMED_PIPE_FILE);
+		if(!m_pNamedPipeFile->exists()) {
+			bGoOn = (mkfifo(NAMED_PIPE_FILE, 0666) >= 0);
+			if (!bGoOn) {
+				qCritical("[aleakd-server] Unable to create named pipe");
+			}
+		}
 	}
 	if(!bGoOn){
 		qCritical("[aleakd-server] Cannot initialize service");
 	}
 
-	exec();
+	if(!m_pNamedPipeFile) {
+		exec();
+	}else{
+		while(bGoOn) {
+			bGoOn = m_pNamedPipeFile->open(QIODevice::ReadOnly);
+			if (!bGoOn) {
+				qCritical("[aleakd-server] Unable to open the named pipe");
+			}
+			if(bGoOn) {
+				qDebug("[aleakd-server] Start named pipe reading");
+				while (doReadMsg(m_pNamedPipeFile)) {
+
+				}
+				qDebug("[aleakd-server] Stop named pipe reading");
+				m_pNamedPipeFile->close();
+			}
+		}
+	}
+
+	if(m_pNamedPipeFile){
+		m_pNamedPipeFile->close();
+		m_pNamedPipeFile->remove();
+		delete m_pNamedPipeFile;
+		m_pNamedPipeFile = NULL;
+	}
 
 	if(m_pTcpServer){
 		delete m_pTcpServer;
 		m_pTcpServer = NULL;
 	}
 	if(m_pUdpServerSocket){
+		m_pUdpServerSocket->close();
 		delete m_pUdpServerSocket;
 		m_pUdpServerSocket = NULL;
 	}

@@ -15,6 +15,7 @@ SET (ALEAKD_LIB_SRC
 	wrapper.h
 	server-comm.c
 	server-comm.h
+	../shared/common.c
 )
 
 #################

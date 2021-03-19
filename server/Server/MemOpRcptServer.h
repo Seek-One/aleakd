@@ -14,6 +14,7 @@
 class QTcpServer;
 class QTcpSocket;
 class QUdpSocket;
+class QFile;
 class QIODevice;
 
 class MemOpRcptServer : public QThread
@@ -40,11 +41,13 @@ private slots:
 
 private:
 	bool doReadMsg(QIODevice* pIODevice);
-	bool doProcessMsgV1(QIODevice* pIODevice);
+	qint64 doProcessDataRead(char* pBuffer, qint64 iMaxSize);
+	qint64 doProcessMsg(char* pBuffer, qint64 iMaxSize);
+	qint64 doProcessMsgV1(char* pBuffer, qint64 iMaxSize);
 
 private:
 	int m_iPort;
-	bool m_bUseTCP;
+	int m_iTransferMode;
 
 	// TCP mode
 	QTcpServer* m_pTcpServer;
@@ -53,6 +56,10 @@ private:
 	// UDP mode
 	QUdpSocket* m_pUdpServerSocket;
 
+	// Named pipe mode
+	QFile* m_pNamedPipeFile;
+
+	int m_iMsgCount;
 	IMemOpRcptServerHandler* m_pHandler;
 };
 

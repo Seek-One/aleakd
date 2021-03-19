@@ -59,8 +59,10 @@ void dummy_free(void *ptr)
 
 }
 
-void wrapper_init()
+int wrapper_init()
 {
+	int res = 0;
+
 	if(g_bIsInitializing == 0)
 	{
 		g_bIsInitializing = 1;
@@ -123,7 +125,7 @@ void wrapper_init()
 		}
 
 		if(g_bUseSocket){
-			servercomm_init();
+			res = servercomm_init();
 		}
 
 		fprintf(stderr, "[aleakd] wrapper_init done\n");
@@ -132,6 +134,8 @@ void wrapper_init()
 		g_bIsInitializing = 0;
 #endif
 	}
+
+	return res;
 }
 
 void wrapper_dispose()

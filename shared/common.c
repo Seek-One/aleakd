@@ -2,6 +2,8 @@
 // Created by ebeuque on 11/03/2021.
 //
 
+#include <stdlib.h>
+
 #include "global-const.h"
 
 const char* ALeakD_MsgLabel(enum ALeakD_MsgCode iMsgCode)
@@ -33,4 +35,19 @@ const char* ALeakD_MsgLabel(enum ALeakD_MsgCode iMsgCode)
 		return "pthread_set_name";
 	}
 	return "";
+}
+
+static char g_szValBase16[16] = {
+		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+};
+
+void ALeakD_toHexString(const unsigned char* bytes, size_t size, char* szString, int iStrSize)
+{
+	if(size > 0 && bytes != NULL){
+		for(size_t j = 0; j < size; j++){
+			szString[j*2] = g_szValBase16[((bytes[j] >> 4) & 0xF)];
+			szString[(j*2) + 1] = g_szValBase16[(bytes[j]) & 0x0F];
+		}
+		szString[size*2] = '\0';
+	}
 }

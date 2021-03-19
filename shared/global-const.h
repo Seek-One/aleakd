@@ -9,8 +9,8 @@
 
 enum ALeakD_MsgCode {
 	ALeakD_MsgCode_unknown = 0,
-	ALeakD_MsgCode_init = 0,
-	ALeakD_MsgCode_dispose = 0,
+	ALeakD_MsgCode_init = 1,
+	ALeakD_MsgCode_dispose = 2,
 
 	// memory function
 	ALeakD_MsgCode_malloc = 11,
@@ -29,5 +29,7 @@ enum ALeakD_MsgCode {
 };
 
 const char* ALeakD_MsgLabel(enum ALeakD_MsgCode iFuncType);
+
+void ALeakD_toHexString(const unsigned char* bytes, size_t size, char* szString, int iStrSize);
 
 #endif //ALEAKD_GLOBAL_CONST_H

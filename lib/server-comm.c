@@ -2,8 +2,11 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <sys/time.h>
 #include <pthread.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 // socket
 #include <unistd.h>
@@ -15,28 +18,36 @@
 
 #include "server-comm.h"
 
-
 #define DEFAULT_SERVER_HOST "127.0.0.1"
 #define DEFAULT_SERVER_PORT 19999
 
 int g_socket = -1;
 struct sockaddr_in g_server;
+pthread_mutex_t g_lockSocket = PTHREAD_MUTEX_INITIALIZER;
 
-#ifdef USE_TCP_SERVER
-struct hostent *hostinfo = NULL;
-#endif
+pthread_mutex_t g_lockMsgCount = PTHREAD_MUTEX_INITIALIZER;
+int g_iMsgNum = 0;
 
-char g_preInitBuffer[4096];
+#define BUFFER_SIZE 4096
+int g_bTransfertBufferEnabled = 0;
+char g_pTransferBuffer[BUFFER_SIZE];
+unsigned long g_iTransfertBufferSize = 0;
+
+char g_preInitBuffer[BUFFER_SIZE];
 unsigned long g_preInitPos = 0;
 
-int servercomm_init()
+int servercomm_send_physical(const void* buff, size_t size);
+
+int servercomm_init_socket()
 {
 	int res = 0;
 
-	fprintf(stderr, "[aleakd] init socket\n");
-#ifdef USE_TCP_SERVER
+#if TRANSFER_MODE_USED == TRANSFER_MODE_TCP
+	fprintf(stderr, "[aleakd] init comm with mode: tcp\n");
 	g_socket = socket(AF_INET, SOCK_STREAM, 0);
-#else
+#endif
+#if TRANSFER_MODE_USED == TRANSFER_MODE_UDP
+	fprintf(stderr, "[aleakd] init comm with mode: udp\n");
 	g_socket = socket(AF_INET, SOCK_DGRAM, 0);
 #endif
 	if (g_socket == -1)
@@ -60,7 +71,7 @@ int servercomm_init()
 			g_server.sin_port = htons(DEFAULT_SERVER_PORT);
 		}
 
-#ifdef USE_TCP_SERVER
+#if TRANSFER_MODE_USED == TRANSFER_MODE_TCP
 		// Connect to remote server
 		if (connect(g_socket, (struct sockaddr *) &g_server, sizeof(g_server)) < 0) {
 			fprintf(stderr, "[aleakd] Could not connect socket\n");
@@ -68,6 +79,40 @@ int servercomm_init()
 		}
 #endif
 	}
+
+	return res;
+}
+
+int servercomm_name_pipe()
+{
+	int res = 0;
+
+	fprintf(stderr, "[aleakd] init comm with mode: named pipe\n");
+
+	const char* szFile = NAMED_PIPE_FILE;
+
+	res = access( szFile, F_OK );
+	if(res == 0 ) {
+		g_socket = open(szFile, O_WRONLY);
+		if(g_socket <= 0){
+			res = -1;
+		}
+	} else {
+		fprintf(stderr, "[aleakd] named pipe not found %s\n", NAMED_PIPE_FILE);
+	}
+
+	return res;
+}
+
+int servercomm_init()
+{
+	int res = 0;
+
+#if TRANSFER_MODE_USED == TRANSFER_MODE_NAMEDPIPE
+	res = servercomm_name_pipe();
+#else
+	res = servercomm_init_socket();
+#endif
 
 	// Send protocol version
 	if(res == 0) {
@@ -81,8 +126,13 @@ int servercomm_init()
 		if(g_preInitPos > 0) {
 			fprintf(stderr, "[aleakd] sending pre init data: %d\n", g_preInitPos);
 			res = servercomm_send((void *) g_preInitBuffer, g_preInitPos);
+			g_preInitPos = 0;
 		}
 	}
+
+#ifdef BUFFERIZE_TRANSFERT
+	g_bTransfertBufferEnabled = 1;
+#endif
 
 	return res;
 }
@@ -90,41 +140,89 @@ int servercomm_init()
 void servercomm_dispose()
 {
 	if(g_socket != -1){
-		close(g_socket);
+		fprintf(stderr, "[aleakd] dispose socket, total message: %d\n", g_iMsgNum);
+		if(g_bTransfertBufferEnabled) {
+			servercomm_send_physical(g_pTransferBuffer, g_iTransfertBufferSize);
+			g_bTransfertBufferEnabled = 0;
+		}
+		//close(g_socket);
+		//g_socket == -1;
 	}
+}
+
+int servercomm_send_physical(const void* buff, size_t size)
+{
+	int res = 0;
+
+	//fprintf(stderr, "[aleakd] servercomm_send_physical #%d (%lu bytes)\n", g_iMsgNum, size);
+//	char szData[9000];
+//	ALeakD_toHexString(buff, size, szData, 9000);
+//	fprintf(stderr, "[aleakd] servercomm_send_physical #%s\n", szData);
+
+#if TRANSFER_MODE_USED == TRANSFER_MODE_TCP
+	res = send(g_socket, buff, size, 0);
+#endif
+#if TRANSFER_MODE_USED == TRANSFER_MODE_UDP
+	res = sendto(g_socket, buff, size, 0,  (const struct sockaddr *)&g_server, sizeof(g_server));
+#endif
+#if TRANSFER_MODE_USED == TRANSFER_MODE_NAMEDPIPE
+	res = write(g_socket, buff, size);
+#endif
+	if(res < 0){
+		fprintf(stderr, "[aleakd] error to send data\n");
+		return -1;
+	}
+
+	return res;
 }
 
 int servercomm_send(const void* buff, size_t size)
 {
-#ifdef USE_TCP_SERVER
-	if (send(g_socket, buff, size, 0) < 0) {
-		fprintf(stderr, "[aleakd] error to send data\n");
-		return -1;
-	}
-#else
-	if(sendto(g_socket, buff, size, 0,  (const struct sockaddr *)&g_server, sizeof(g_server)) < 0)
-	{
-		fprintf(stderr, "[aleakd] error to send data\n");
-		return -1;
+	int res = 0;
+
+	pthread_mutex_lock(&g_lockSocket);
+
+	if(g_bTransfertBufferEnabled) {
+		//fprintf(stderr, "[aleakd] servercomm_send: %d\n", size);
+
+		int bSendBuffer = 0;
+		if ((g_iTransfertBufferSize + size) >= BUFFER_SIZE) {
+			bSendBuffer = 1;
+		}
+
+		if (bSendBuffer) {
+			res = servercomm_send_physical(g_pTransferBuffer, g_iTransfertBufferSize);
+			g_iTransfertBufferSize = 0;
+		}
+
+		char *szBuffStart = ((char *) g_pTransferBuffer) + g_iTransfertBufferSize;
+		memcpy(szBuffStart, buff, size);
+		g_iTransfertBufferSize += size;
+	}else {
+		servercomm_send_physical(buff, size);
 	}
 
-#endif
+	pthread_mutex_unlock(&g_lockSocket);
 	return 0;
 }
 
 int servercomm_send_safe(const void* buff, size_t size)
 {
-	// Store send data if init is not done
+	int res = 0;
+
+	pthread_mutex_lock(&g_lockMsgCount);
+	g_iMsgNum++;
+	pthread_mutex_unlock(&g_lockMsgCount);
+
 	if(g_socket != -1) {
-		//fprintf(stderr, "[aleakd] -- send: %d\n", size);
-		return servercomm_send(buff, size);
+		res = servercomm_send((void*)buff, size);
 	}else{
-		//fprintf(stderr, "[aleakd] -- presend: %d\n", size);
-		char* szBuffStart = ((char*)g_preInitBuffer)+g_preInitPos;
+		char *szBuffStart = ((char *) g_preInitBuffer) + g_preInitPos;
 		memcpy(szBuffStart, buff, size);
-		g_preInitPos += sizeof(struct ServerMsgMemoryV1);
+		g_preInitPos += size;
 	}
-	return size;
+
+	return res;
 }
 
 void servercomm_msg_header_init_v1(struct ServerMsgHeaderV1* pServerMsgHeader)
@@ -135,7 +233,7 @@ void servercomm_msg_header_init_v1(struct ServerMsgHeaderV1* pServerMsgHeader)
 	pServerMsgHeader->time_sec = tvNow.tv_sec;
 	pServerMsgHeader->time_usec = tvNow.tv_usec;
 	pServerMsgHeader->thread_id = (int64_t)pthread_self();
-	pServerMsgHeader->msg_code = ALeakD_MsgCode_unknown;
+	pServerMsgHeader->msg_code = ALeakD_MsgCode_init;
 }
 
 void servercomm_msg_app_init_v1(struct ServerMsgAppV1* pServerMsgApp)
