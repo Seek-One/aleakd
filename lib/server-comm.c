@@ -21,6 +21,7 @@
 #define DEFAULT_SERVER_HOST "127.0.0.1"
 #define DEFAULT_SERVER_PORT 19999
 
+int g_bInit = 0;
 int g_socket = -1;
 struct sockaddr_in g_server;
 pthread_mutex_t g_lockSocket = PTHREAD_MUTEX_INITIALIZER;
@@ -133,6 +134,7 @@ int servercomm_init()
 #ifdef BUFFERIZE_TRANSFERT
 	g_bTransfertBufferEnabled = 1;
 #endif
+	g_bInit = 1;
 
 	return res;
 }
@@ -145,8 +147,11 @@ void servercomm_dispose()
 			servercomm_send_physical(g_pTransferBuffer, g_iTransfertBufferSize);
 			g_bTransfertBufferEnabled = 0;
 		}
+		// Don't close socket because more message can arrive
 		//close(g_socket);
 		//g_socket == -1;
+		fprintf(stderr, "[aleakd] some message can be sent after this point\n");
+		g_bInit = 0;
 	}
 }
 
@@ -212,6 +217,9 @@ int servercomm_send_safe(const void* buff, size_t size)
 
 	pthread_mutex_lock(&g_lockMsgCount);
 	g_iMsgNum++;
+	if(g_bInit == 0){
+		fprintf(stderr, "[aleakd] message sent in state unitialized: #%d (%lu bytes)\n", g_iMsgNum, size);
+	}
 	pthread_mutex_unlock(&g_lockMsgCount);
 
 	if(g_socket != -1) {
