@@ -8,6 +8,10 @@ ThreadInfos::ThreadInfos()
 {
 	m_iThreadId = 0;
 
+	timerclear(&m_tvCreation);
+	timerclear(&m_tvTermination);
+	m_bIsTerminated = false;
+
 	m_iCurrentAllocCount = 0;
 	m_iCurrentSize = 0;
 	m_iTotalAllocCount = 0;

@@ -2,6 +2,8 @@
 // Created by ebeuque on 17/03/2021.
 //
 
+#include <QColor>
+
 #include "Model/ThreadInfos.h"
 
 #include "Global/Utils.h"
@@ -74,6 +76,15 @@ QVariant QThreadInfosModel::data(const QModelIndex &index, int role) const
 		switch(index.column()) {
 		case ThreadIdColumn:
 			return QString::number(pThreadInfos->m_iThreadId);
+		case TimeCreation:
+			return QString("%0,%1").arg(pThreadInfos->m_tvCreation.tv_sec).arg(pThreadInfos->m_tvCreation.tv_usec, 6, 10, QChar('0'));
+		case TimeTermination:
+			if(timerisset(&pThreadInfos->m_tvTermination)) {
+				return QString("%0,%1").arg(pThreadInfos->m_tvTermination.tv_sec).arg(
+						pThreadInfos->m_tvTermination.tv_usec, 6, 10, QChar('0'));
+			}else{
+				return QString();
+			}
 		case ThreadNameColumn:
 			return pThreadInfos->m_szThreadName;
 		case CurrentAllocCountColumn:
@@ -86,6 +97,16 @@ QVariant QThreadInfosModel::data(const QModelIndex &index, int role) const
 			return Utils::getBeautifulNumberString(QString::number(pThreadInfos->m_iPeakSize));
 		}
 		return QVariant();
+	}
+
+	if (role == Qt::BackgroundRole){
+		ThreadInfosSharedPtr pThreadInfos = m_pThreadInfoList->value(index.row());
+		if(!pThreadInfos){
+			return QString();
+		}
+		if(pThreadInfos->m_bIsTerminated){
+			return QColor(180, 180, 180);
+		}
 	}
 
 	return QVariant();
@@ -101,6 +122,10 @@ QVariant QThreadInfosModel::headerData(int section, Qt::Orientation orientation,
 			return tr("Thread id");
 		case ThreadNameColumn:
 			return tr("Thread name");
+		case TimeCreation:
+			return tr("Time creation");
+		case TimeTermination:
+			return tr("Time termination");
 		case CurrentAllocCountColumn:
 			return tr("Alloc count");
 		case CurrentSizeColumn:
@@ -125,6 +150,5 @@ void QThreadInfosModel::clear()
 
 void QThreadInfosModel::refresh()
 {
-	beginResetModel();
-	endResetModel();
+	emit layoutChanged();
 }

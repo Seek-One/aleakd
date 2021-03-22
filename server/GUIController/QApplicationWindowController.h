@@ -44,9 +44,9 @@ private:
 	void clearData();
 	void addMemoryOperation(const MemoryOperationSharedPtr& pMemoryOperation);
 	void updateThreadInfos(const ThreadOperationSharedPtr& pThreadOperation);
-	void updateThreadInfosAddAlloc(uint64_t iThreadId, uint64_t iSize);
-	void updateThreadInfosAddFree(uint64_t iThreadId, uint64_t iSize);
-	ThreadInfosSharedPtr getThreadInfos(uint64_t iThreadId);
+	void updateThreadInfosAddAlloc(uint64_t iThreadId, uint64_t iSize, struct timeval& tvOperation);
+	void updateThreadInfosAddFree(uint64_t iThreadId, uint64_t iSize, struct timeval& tvOperation);
+	ThreadInfosSharedPtr getThreadInfos(uint64_t iThreadId, bool bThreadCreation, struct timeval& tvOperation);
 
 private:
 	QApplicationWindow* m_pApplicationWindow;

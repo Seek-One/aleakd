@@ -5,6 +5,8 @@
 #ifndef ALEAKD_THREADINFOS_H
 #define ALEAKD_THREADINFOS_H
 
+#include <sys/time.h>
+
 #include <QList>
 #include <QSharedPointer>
 
@@ -20,6 +22,10 @@ public:
 public:
 	uint64_t m_iThreadId;
 	QString m_szThreadName;
+
+	struct timeval m_tvCreation;
+	struct timeval m_tvTermination;
+	bool m_bIsTerminated;
 
 	uint32_t  m_iCurrentAllocCount;
 	uint64_t m_iCurrentSize;
