@@ -240,23 +240,25 @@ qint64 MemOpRcptServer::doProcessMsgV1(char* pBuffer, qint64 iMaxSize)
 		pMemoryOperation->m_iAllocNum = data.alloc_num;
 		pMemoryOperation->m_iFreePtr = data.free_ptr;
 
-		//qDebug("[aleakd-server] msg received: type=%d, time=%lu,%lu, thread=%lu, size=%lu",
-		//	msg.msg_type, msg.time_sec, msg.time_usec,
-		//  msg.thread_id, msg.alloc_size);
+//		qDebug("[aleakd-server] msg received: type=%d, time=%lu,%lu, thread=%lu, size=%lu",
+//			msg.msg_type, msg.time_sec, msg.time_usec,
+//		  msg.thread_id, msg.alloc_size);
 
-//		struct timeval tvNow;
+//		struct timeval tvStart;
 //		struct timeval tvRecpt;
-//		gettimeofday(&tvNow, NULL);
-//		timersub(&tvNow, &pMemoryOperation->m_tvOperation, &tvRecpt);
+//		gettimeofday(&tvStart, NULL);
+//		timersub(&tvStart, &pMemoryOperation->m_tvOperation, &tvRecpt);
 
 		if (m_pHandler) {
 			m_pHandler->onMemoryOperationReceived(MemoryOperationSharedPtr(pMemoryOperation));
 		}
 
+//		struct timeval tvEnd;
 //		struct timeval tvProcess;
-//		gettimeofday(&tvNow, NULL);
-//		timersub(&tvNow, &pMemoryOperation->m_tvOperation, &tvProcess);
-		//qDebug("[aleakd-latency] latency=%lu,%06lu, process=%lu,%06lu", tvRecpt.tv_sec, tvRecpt.tv_usec, tvProcess.tv_sec, tvProcess.tv_usec);
+//		gettimeofday(&tvEnd, NULL);
+//		timersub(&tvEnd, &tvStart, &tvProcess);
+//		qDebug("[aleakd-latency] latency=%lu,%06lu, process=%lu,%06lu", tvRecpt.tv_sec, tvRecpt.tv_usec,
+//		 	tvProcess.tv_sec, tvProcess.tv_usec);
 	}
 
 
@@ -322,7 +324,7 @@ void MemOpRcptServer::onPendingDatagramToRead()
 
 void MemOpRcptServer::run()
 {
-	bool bGoOn;
+	bool bGoOn = true;
 
 	if(m_iTransferMode == TRANSFER_MODE_TCP) {
 		m_pTcpServer = new QTcpServer();

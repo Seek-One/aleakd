@@ -51,6 +51,7 @@ public:
 	virtual ~MemoryOperationList();
 
 	MemoryOperationSharedPtr getPtrNotFreed(uint64_t iPtrAddr) const;
+	MemoryOperationSharedPtr takeByPtrNotFreed(uint64_t iPtrAddr);
 };
 
 #endif //ALEAKD_MEMORYOPERATION_H

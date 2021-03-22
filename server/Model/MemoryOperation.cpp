@@ -85,3 +85,22 @@ MemoryOperationSharedPtr MemoryOperationList::getPtrNotFreed(uint64_t iPtrAddr) 
 
 	return MemoryOperationSharedPtr();
 }
+
+MemoryOperationSharedPtr MemoryOperationList::takeByPtrNotFreed(uint64_t iPtrAddr)
+{
+	MemoryOperationList::iterator iter;
+	iter = end();
+	while(iter != begin())
+	{
+		iter--;
+		const MemoryOperationSharedPtr& pMemoryOperation = (*iter);
+		if(pMemoryOperation->m_iAllocPtr == iPtrAddr && !pMemoryOperation->m_bFreed)
+		{
+			MemoryOperationSharedPtr pMemoryOperationResult = pMemoryOperation;
+			erase(iter);
+			return pMemoryOperationResult;
+		}
+	}
+
+	return MemoryOperationSharedPtr();
+}

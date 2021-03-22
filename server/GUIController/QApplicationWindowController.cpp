@@ -94,6 +94,7 @@ void QApplicationWindowController::clearData()
 {
 	m_lockListMemoryOperation.lockForWrite();
 	m_listMemoryOperation.clear();
+	m_listMemoryOperationNonFreed.clear();
 	m_lockListMemoryOperation.unlock();
 
 	m_searchStats.reset();
@@ -114,12 +115,15 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 
 	m_lockListMemoryOperation.lockForWrite();
 	if(pMemoryOperation->m_iFreePtr){
-		pMemoryOperationFreed = m_listMemoryOperation.getPtrNotFreed(pMemoryOperation->m_iFreePtr);
+		pMemoryOperationFreed = m_listMemoryOperationNonFreed.takeByPtrNotFreed(pMemoryOperation->m_iFreePtr);
 		if(pMemoryOperationFreed) {
 			pMemoryOperationFreed->m_bFreed = true;
 		}
 	}
 	m_listMemoryOperation.append(pMemoryOperation);
+	if(pMemoryOperation->hasAllocOperation()) {
+		m_listMemoryOperationNonFreed.append(pMemoryOperation);
+	}
 
 	m_lockGlobalStats.lockForWrite();
 	m_globalStats.m_iOpCount++;
