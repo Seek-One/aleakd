@@ -11,7 +11,6 @@
 #include "../config.h"
 #include "../shared/global-const.h"
 
-#include "aleakd-data.h"
 #include "aleakd.h"
 
 #include "server-comm.h"
@@ -67,16 +66,6 @@ int wrapper_init()
 	{
 		g_bIsInitializing = 1;
 		fprintf(stderr, "[aleakd] wrapper_init\n");
-
-		// Init alloc list
-		aleakd_data_init_alloc_list();
-
-		// Init thread list
-		aleakd_data_init_thread_list();
-
-		if(getenv("ALeakD_MsgCode_MIN_ALLOC_NUM")){
-			aleakd_data_set_display_min_alloc_num(atoi(getenv("ALeakD_MsgCode_MIN_ALLOC_NUM")));
-		}
 
 		// Wrap functions
 		real_malloc = dlsym(RTLD_NEXT, "malloc");
@@ -145,156 +134,6 @@ void wrapper_dispose()
 	}
 }
 
-
-int displayEntry(struct ThreadEntry* pThread, struct AllocEntry* pAllocEntry)
-{
-	if(!aleakd_data_get_enable_print_action()){
-		return 0;
-	}
-	if(pAllocEntry->alloc_num < aleakd_data_get_display_min_alloc_num())
-	{
-		//if(pThread->name && pThread->iAllocCount > 10){
-		//	return 0;
-		//}
-		return 0;
-	}
-	return 1;
-}
-
-void addEntry(void* ptr, size_t size, char* szAction, int alloc_num)
-{
-#ifdef START_ON_ENV
-	if(!getenv("ALeakD_MsgCode_START")) {
-		return;
-	}
-#endif
-
-	aleakd_data_lock();
-
-	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
-	struct ThreadEntry* pThreadEntry = NULL;
-
-	int bMustAdd = 1;
-
-	pthread_t thread = pthread_self();
-	int idx = ThreadEntry_getIdx(pThreadEntryList, thread);
-	if(idx == -1) {
-		idx = ThreadEntry_getIdxAdd(pThreadEntryList, thread, MAX_ALLOC_COUNT);
-	}
-	if(idx != -1) {
-		pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
-#ifdef USE_AUTO_THREAD_START
-		pThreadEntry->iDetectionStarted = 1;
-#endif
-	}
-	if(pThreadEntry && !pThreadEntry->iDetectionStarted){
-		bMustAdd = 0;
-	}
-
-	struct AllocEntry allocEntry;
-	allocEntry.ptr = ptr;
-	allocEntry.size = size;
-	allocEntry.thread = thread;
-	allocEntry.alloc_num = alloc_num;
-
-	if(size == 304 || size == 272){
-		fprintf(stderr, "[aleakd] leak\n");
-	}
-
-	// Add allocation in the list
-	if(bMustAdd){
-		AllocList_Add(aleakd_data_get_alloc_list(), &allocEntry);
-	}
-
-	// Add thread in the list
-	if(pThreadEntry) {
-
-		if(pThreadEntry->name == NULL){
-			//fprintf(stderr, "[aleakd] null thread\n");
-		}
-
-		pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
-		if (pThreadEntry->iDetectionStarted)
-		{
-			pThreadEntry->iCurrentSize += size;
-			pThreadEntry->iAllocCount++;
-			if (pThreadEntry->iCurrentSize > pThreadEntry->iMaxSize) {
-				if(aleakd_data_get_alloc_number() > 22065) {
-					fprintf(stderr, "[aleakd] thread %lu (%s): max size increase  with alloc %lu\n",
-							pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""),
-							aleakd_data_get_alloc_number());
-				}
-				pThreadEntry->iMaxSize = pThreadEntry->iCurrentSize;
-			}
-		}
-	}
-
-	// Check if we can display alloc
-	if (displayEntry(pThreadEntry, &allocEntry)) {
-		fprintf(stderr,
-				"[aleakd] thread %lu (%s): %s ptr=%p, size=%lu bytes, alloc_num=%lu => thread state: alloc_count=%d, memory=%lu bytes\n",
-				pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""),
-				szAction, ptr, size, allocEntry.alloc_num,
-				pThreadEntry->iAllocCount, pThreadEntry->iCurrentSize);
-	}
-	if (aleakd_data_get_alloc_number() == aleakd_data_get_break_alloc_num()) {
-		fprintf(stderr, "[aleakd] break\n");
-	}
-
-	aleakd_data_unlock();
-}
-
-void removeEntry(void* ptr, char* szAction)
-{
-#ifdef START_ON_ENV
-	if(!getenv("ALeakD_MsgCode_START")) {
-		return;
-	}
-#endif
-
-	aleakd_data_lock();
-
-	struct ThreadEntryList* pThreadEntryList = aleakd_data_get_thread_list();
-	struct ThreadEntry* pThreadEntry;
-
-	struct AllocEntry allocEntry;
-
-	// Remove allocation in the list
-	int iFound = 0;
-	iFound = AllocList_Remove(aleakd_data_get_alloc_list(), ptr, &allocEntry);
-
-	// Update the thread data
-	if(iFound){
-		// Update thread data
-		int idx = ThreadEntry_getIdx(pThreadEntryList, allocEntry.thread);
-		if(idx != -1) {
-			pThreadEntry = ThreadEntry_getByIdx(pThreadEntryList, idx);
-		}
-
-		if(pThreadEntry->thread == 0){
-			fprintf(stderr, "[aleakd] bug");
-		}
-
-		if(pThreadEntry) {
-			pThreadEntry->iCurrentSize -= allocEntry.size;
-			pThreadEntry->iAllocCount--;
-		}
-
-		if(pThreadEntry->iAllocCount < 0){
-			fprintf(stderr, "[aleakd] error");
-		}
-
-		if (displayEntry(pThreadEntry, &allocEntry)) {
-			fprintf(stderr, "[aleakd] thread %lu (%s): %s %p (%lu bytes) => alloc_count=%d, memory=%lu bytes\n",
-					pThreadEntry->thread, (pThreadEntry->name ? pThreadEntry->name : ""),
-					szAction, ptr, allocEntry.size,
-					pThreadEntry->iAllocCount, pThreadEntry->iCurrentSize);
-		}
-	}
-
-	aleakd_data_unlock();
-}
-
 void *malloc(size_t size)
 {
 	void *p = NULL;
@@ -313,8 +152,6 @@ void *malloc(size_t size)
 	}
 
 	if(p){
-		//addEntry(p, size, "malloc", alloc_num);
-
 		if(g_bUseSocket) {
 			struct ServerMsgMemoryV1 msg;
 			servercomm_msg_memory_init_v1(&msg);
@@ -346,8 +183,6 @@ void *calloc(size_t num, size_t size)
 	}
 
 	if(p){
-		//addEntry(p, size*num, "calloc", alloc_num);
-
 		if(g_bUseSocket) {
 			struct ServerMsgMemoryV1 msg;
 			servercomm_msg_memory_init_v1(&msg);
@@ -371,16 +206,10 @@ void *realloc(void* ptr, size_t size)
 	aleakd_data_incr_alloc_number();
 	int alloc_num = aleakd_data_get_alloc_number();
 
-	if(ptr){	
-		//removeEntry(ptr, "realloc::free");
-	}
-
 	void *p = NULL;
 	p = real_realloc(ptr, size);
 	
 	if(p){
-		//addEntry(p, size, "realloc", alloc_num);
-
 		if(g_bUseSocket) {
 			struct ServerMsgMemoryV1 msg;
 			servercomm_msg_memory_init_v1(&msg);
@@ -403,8 +232,6 @@ void free(void *ptr)
 	}
 
 	if(ptr != NULL) {
-		//removeEntry(ptr, "free");
-
 		if(g_bUseSocket) {
 			struct ServerMsgMemoryV1 msg;
 			servercomm_msg_memory_init_v1(&msg);

@@ -3,14 +3,8 @@
 #################
 
 SET (ALEAKD_LIB_SRC
-	alloc-entry.c
-	alloc-entry.h
 	aleakd.c
 	aleakd.h
-	aleakd-data.c
-	aleakd-data.h
-	thread-entry.c
-	thread-entry.h
 	wrapper.c
 	wrapper.h
 	server-comm.c
