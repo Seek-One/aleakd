@@ -151,7 +151,7 @@ qint64 MemOpRcptServer::doProcessDataRead(char* pBuffer, qint64 iMaxSize)
 			if (iRes > 0) {
 				iSizeRead += iRes;
 				m_iMsgCount++;
-				//qDebug("message: %d", m_iMsgCount);
+				//qDebug("message: %d (%ld bytes)", m_iMsgCount, iRes);
 			} else if (iRes == 0) {
 				// End of data we can read
 				return iSizeRead;
@@ -205,6 +205,8 @@ qint64 MemOpRcptServer::doProcessMsgV1(char* pBuffer, qint64 iMaxSize)
 	ServerMsgHeaderV1 header;
 	memcpy(&header, pBuffer, sizeof(header));
 	iSizeRead += sizeof(header);
+
+	//qDebug("msg header: %d %lu", header.msg_code, header.thread_id);
 
 	// Application message
 	if (header.msg_code >= 0 && header.msg_code < 10)

@@ -220,6 +220,11 @@ int servercomm_send_safe(const void* buff, size_t size)
 	if(g_bInit == 0){
 		fprintf(stderr, "[aleakd] message sent in state unitialized: #%d (%lu bytes)\n", g_iMsgNum, size);
 	}
+
+	//struct ServerMsgHeaderV1 headers;
+	//memcpy(&headers, buff+2, sizeof(headers));
+	//fprintf(stderr, "[aleakd] message #%d sent (%lu bytes): thread:%lu, msg_code=%d\n", g_iMsgNum, size, headers.thread_id, headers.msg_code);
+
 	pthread_mutex_unlock(&g_lockMsgCount);
 
 	if(g_socket != -1) {
@@ -269,7 +274,7 @@ void servercomm_msg_memory_init_v1(struct ServerMsgMemoryV1* pServerMemoryMsg)
 
 int servercomm_msg_memory_send_v1(struct ServerMsgMemoryV1* pServerMemoryMsg)
 {
-	//fprintf(stderr, "[aleakd] memory msg: %d\n", pServerMemoryMsg->header.msg_code);
+	//fprintf(stderr, "[aleakd] memory msg: %d %lu\n", pServerMemoryMsg->header.msg_code, pServerMemoryMsg->header.thread_id);
 	return servercomm_send_safe(pServerMemoryMsg, sizeof(struct ServerMsgMemoryV1));
 }
 
@@ -288,6 +293,6 @@ void servercomm_msg_thread_init_v1(struct ServerMsgThreadV1* pServerMsgThread)
 
 int servercomm_msg_thread_send_v1(struct ServerMsgThreadV1* pServerMsgThread)
 {
-	//fprintf(stderr, "[aleakd] thread msg: %d\n", pServerMsgThread->header.msg_code);
+	//fprintf(stderr, "[aleakd] thread msg: %d %lu\n", pServerMsgThread->header.msg_code, pServerMsgThread->header.thread_id);
 	return servercomm_send_safe(pServerMsgThread, sizeof(struct ServerMsgThreadV1));
 }

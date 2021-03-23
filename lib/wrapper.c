@@ -585,7 +585,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)
 {
 	int res;
 
-	fprintf(stderr, "[aleakd] creating thread\n");
+	//fprintf(stderr, "[aleakd] creating thread: %d\n");
 	if (!real_pthread_create) {
 		real_pthread_create = dlsym(RTLD_NEXT, "pthread_create");
 	}
@@ -595,8 +595,8 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)
 		if(g_bUseSocket) {
 			struct ServerMsgThreadV1 msg;
 			servercomm_msg_thread_init_v1(&msg);
-			msg.header.msg_code = ALeakD_MsgCode_pthread_set_name;
-			msg.data.thread_id = (uint64_t)thread;
+			msg.header.msg_code = ALeakD_MsgCode_pthread_create;
+			msg.data.thread_id = (uint64_t)*thread;
 			servercomm_msg_thread_send_v1(&msg);
 		}
 	}
