@@ -9,6 +9,7 @@
 #include <QPushButton>
 #include <QElapsedTimer>
 #include <QCheckBox>
+#include <QComboBox>
 
 #include "Global/Utils.h"
 
@@ -253,6 +254,10 @@ void QApplicationWindowController::onFilterButtonClicked()
 	timer.start();
 
 	bool bNotFreed = m_pMemoryOperationView->getNotFreeOnlyCheckBox()->isChecked();
+	qulonglong iThreadId = 0;
+	if(m_pMemoryOperationView->getThreadIdComboBox()->currentIndex() != -1){
+		iThreadId = m_pMemoryOperationView->getThreadIdComboBox()->currentData().toULongLong();
+	}
 
 	m_searchStats.reset();
 
@@ -268,6 +273,11 @@ void QApplicationWindowController::onFilterButtonClicked()
 				bAccept = false;
 			}
 			if(pMemoryOperation->m_bFreed){
+				bAccept = false;
+			}
+		}
+		if(iThreadId > 0){
+			if(pMemoryOperation->m_iCallerThreadId != iThreadId){
 				bAccept = false;
 			}
 		}
@@ -372,10 +382,26 @@ void QApplicationWindowController::onTimerUpdate()
 	m_pApplicationWindow->setCaptureMemorySizeUsed(Utils::getBeautifulNumberString(QString::number(m_globalStats.m_iOperationSize)));
 	m_pApplicationWindow->setCaptureThreadCount(Utils::getBeautifulNumberString(QString::number(m_listThreadInfos.count())));
 
+	QComboBox* pThreadIdComboBox = m_pMemoryOperationView->getThreadIdComboBox();
 	m_listFilterThreadInfos.clear();
 	ThreadInfosList::const_iterator iter;
 	for(iter = m_listThreadInfos.constBegin(); iter != m_listThreadInfos.constEnd(); ++iter)
 	{
+		const ThreadInfosSharedPtr& pThreadInfos = (*iter);
+		qulonglong iThreadId = (qulonglong)pThreadInfos->m_iThreadId;
+		QString szEntryLabel;
+		if(pThreadInfos->m_szThreadName.isEmpty()) {
+			szEntryLabel = QString::number(iThreadId);
+		}else{
+			szEntryLabel = QString("%0 (%1)").arg(iThreadId).arg(pThreadInfos->m_szThreadName);
+		}
+		int iFind = pThreadIdComboBox->findData(iThreadId);
+		if(iFind == -1){
+			pThreadIdComboBox->addItem(szEntryLabel, iThreadId);
+		}else{
+			pThreadIdComboBox->setItemText(iFind, szEntryLabel);
+		}
+
 		m_listFilterThreadInfos.append(*iter);
 	}
 	m_pModelThreadInfos->refresh();

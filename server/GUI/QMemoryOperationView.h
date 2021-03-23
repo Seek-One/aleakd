@@ -10,6 +10,7 @@
 class QTreeView;
 class QPushButton;
 class QCheckBox;
+class QComboBox;
 
 class QMemoryOperationView : public QWidget
 {
@@ -49,6 +50,7 @@ public:
 
 public:
 	QCheckBox* getNotFreeOnlyCheckBox() const;
+	QComboBox* getThreadIdComboBox() const;
 	QPushButton* getFilterButton() const;
 
 	QTreeView* getTreeView() const;
@@ -63,6 +65,7 @@ private:
 
 private:
 	QCheckBox* m_pFreedOnlyCheckBox;
+	QComboBox* m_pThreadIdComboBox;
 	QPushButton* m_pFilterButton;
 
 	QTreeView* m_pTreeView;

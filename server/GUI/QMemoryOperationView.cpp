@@ -8,6 +8,7 @@
 #include <QTreeView>
 #include <QPushButton>
 #include <QCheckBox>
+#include <QComboBox>
 
 #include "QMemoryOperationView.h"
 
@@ -47,12 +48,18 @@ QWidget* QMemoryOperationView::createFilterForm(QWidget* pParent)
 	pMainLayout->setContentsMargins(0, 0, 0, 0);
 	pMainWidget->setLayout(pMainLayout);
 
+	pMainLayout->addWidget(new QLabel(tr("Thread:")));
+	m_pThreadIdComboBox = new QComboBox();
+	m_pThreadIdComboBox->setEditable(true);
+	pMainLayout->addWidget(m_pThreadIdComboBox);
+
 	pMainLayout->addWidget(new QLabel(tr("Not freed only:")));
 	m_pFreedOnlyCheckBox = new QCheckBox();
 	pMainLayout->addWidget(m_pFreedOnlyCheckBox);
 
 	m_pFilterButton = new QPushButton(tr("Filter"));
 	pMainLayout->addWidget(m_pFilterButton);
+
 
 	pMainLayout->addStretch();
 
@@ -116,6 +123,11 @@ QWidget* QMemoryOperationView::createStatisticsBar(QWidget* pParent)
 QCheckBox* QMemoryOperationView::getNotFreeOnlyCheckBox() const
 {
 	return m_pFreedOnlyCheckBox;
+}
+
+QComboBox* QMemoryOperationView::getThreadIdComboBox() const
+{
+	return m_pThreadIdComboBox;
 }
 
 QPushButton* QMemoryOperationView::getFilterButton() const
