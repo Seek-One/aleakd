@@ -33,7 +33,7 @@ char tmpbuf[4096];
 unsigned long tmppos = 0;
 unsigned long tmpallocs = 0;
 
-int g_bUseSocket = 1;
+int g_bUseServerMessage = 1;
 
 void* dummy_malloc(size_t size)
 {
@@ -113,7 +113,7 @@ int wrapper_init()
 			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
 		}
 
-		if(g_bUseSocket){
+		if(g_bUseServerMessage){
 			res = servercomm_init();
 		}
 
@@ -129,7 +129,7 @@ int wrapper_init()
 
 void wrapper_dispose()
 {
-	if(g_bUseSocket){
+	if(g_bUseServerMessage){
 		servercomm_dispose();
 	}
 }
@@ -152,7 +152,7 @@ void *malloc(size_t size)
 	}
 
 	if(p){
-		if(g_bUseSocket) {
+		if(g_bUseServerMessage) {
 			struct ServerMsgMemoryV1 msg;
 			servercomm_msg_memory_init_v1(&msg);
 			msg.header.msg_code = ALeakD_MsgCode_malloc;
@@ -183,7 +183,7 @@ void *calloc(size_t num, size_t size)
 	}
 
 	if(p){
-		if(g_bUseSocket) {
+		if(g_bUseServerMessage) {
 			struct ServerMsgMemoryV1 msg;
 			servercomm_msg_memory_init_v1(&msg);
 			msg.header.msg_code = ALeakD_MsgCode_calloc;
@@ -210,7 +210,7 @@ void *realloc(void* ptr, size_t size)
 	p = real_realloc(ptr, size);
 	
 	if(p){
-		if(g_bUseSocket) {
+		if(g_bUseServerMessage) {
 			struct ServerMsgMemoryV1 msg;
 			servercomm_msg_memory_init_v1(&msg);
 			msg.header.msg_code = ALeakD_MsgCode_realloc;
@@ -232,7 +232,7 @@ void free(void *ptr)
 	}
 
 	if(ptr != NULL) {
-		if(g_bUseSocket) {
+		if(g_bUseServerMessage) {
 			struct ServerMsgMemoryV1 msg;
 			servercomm_msg_memory_init_v1(&msg);
 			msg.header.msg_code = ALeakD_MsgCode_free;
@@ -262,7 +262,7 @@ int posix_memalign(void** memptr, size_t alignment, size_t size)
 	ret = real_posix_memalign(memptr, alignment, size);
 
 	if(ret == 0){
-		if(g_bUseSocket) {
+		if(g_bUseServerMessage) {
 			struct ServerMsgMemoryV1 msg;
 			servercomm_msg_memory_init_v1(&msg);
 			msg.header.msg_code = ALeakD_MsgCode_posix_memalign;
@@ -290,7 +290,7 @@ void* aligned_alloc(size_t alignment, size_t size)
 	p = real_aligned_alloc(alignment, size);
 
 	if(p){
-		if(g_bUseSocket) {
+		if(g_bUseServerMessage) {
 			struct ServerMsgMemoryV1 msg;
 			servercomm_msg_memory_init_v1(&msg);
 			msg.header.msg_code = ALeakD_MsgCode_aligned_alloc;
@@ -318,7 +318,7 @@ void* memalign(size_t alignment, size_t size)
 	p = real_memalign(alignment, size);
 
 	if(p){
-		if(g_bUseSocket) {
+		if(g_bUseServerMessage) {
 			struct ServerMsgMemoryV1 msg;
 			servercomm_msg_memory_init_v1(&msg);
 			msg.header.msg_code = ALeakD_MsgCode_memalign;
@@ -346,7 +346,7 @@ void* valloc(size_t size)
 	p = real_valloc(size);
 
 	if(p){
-		if(g_bUseSocket) {
+		if(g_bUseServerMessage) {
 			struct ServerMsgMemoryV1 msg;
 			servercomm_msg_memory_init_v1(&msg);
 			msg.header.msg_code = ALeakD_MsgCode_valloc;
@@ -374,7 +374,7 @@ void* pvalloc(size_t size)
 	p = real_pvalloc(size);
 
 	if(p){
-		if(g_bUseSocket) {
+		if(g_bUseServerMessage) {
 			struct ServerMsgMemoryV1 msg;
 			servercomm_msg_memory_init_v1(&msg);
 			msg.header.msg_code = ALeakD_MsgCode_pvalloc;
@@ -419,7 +419,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)
 	res = real_pthread_create(thread, attr, start, arg);
 
 	if(thread){
-		if(g_bUseSocket) {
+		if(g_bUseServerMessage) {
 			struct ServerMsgThreadV1 msg;
 			servercomm_msg_thread_init_v1(&msg);
 			msg.header.msg_code = ALeakD_MsgCode_pthread_create;
@@ -442,7 +442,7 @@ int pthread_setname_np(pthread_t thread, const char *name)
 	res = real_pthread_setname_np(thread, name);
 
 	if(thread){
-		if(g_bUseSocket) {
+		if(g_bUseServerMessage) {
 			struct ServerMsgThreadV1 msg;
 			servercomm_msg_thread_init_v1(&msg);
 			msg.header.msg_code = ALeakD_MsgCode_pthread_set_name;
@@ -530,7 +530,7 @@ int prctl(int option, ...)
 	res = real_prctl(option, x[0], x[1], x[2], x[3]);
 
 	if(res>=0){
-		if(g_bUseSocket) {
+		if(g_bUseServerMessage) {
 			if(option == PR_SET_NAME) {
 				struct ServerMsgThreadV1 msg;
 				servercomm_msg_thread_init_v1(&msg);
