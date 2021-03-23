@@ -54,7 +54,16 @@ Run the server:
 
 Run the the program to be analyzed:
 ```
-    LD_PRELOAD=./libaleak.so myprogram
+    LD_PRELOAD=./libaleakd.so myprogram
+```
+
+Options
+-------
+
+You can use the following environnement vaiables:
+```
+ALEAKD_SERVER_HOST: host address to the aleakd server
+ALEAKD_SERVER_PORT: port address to the aleakd server
 ```
 
 

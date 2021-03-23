@@ -65,7 +65,7 @@ int servercomm_init_socket()
 			g_server.sin_addr.s_addr = inet_addr(DEFAULT_SERVER_HOST);
 		}
 		g_server.sin_family = AF_INET;
-		char* szPort = getenv("ALEAKD_SERVER_HOST");
+		char* szPort = getenv("ALEAKD_SERVER_PORT");
 		if(szPort) {
 			g_server.sin_port = htons(atoi(szPort));
 		}else{
