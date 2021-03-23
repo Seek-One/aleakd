@@ -11,6 +11,7 @@ class QTreeView;
 class QPushButton;
 class QCheckBox;
 class QComboBox;
+class QLineEdit;
 
 class QMemoryOperationView : public QWidget
 {
@@ -49,8 +50,10 @@ public:
 	};
 
 public:
-	QCheckBox* getNotFreeOnlyCheckBox() const;
+	QLineEdit* getTimeStampMinLineEdit() const;
+	QLineEdit* getTimeStampMaxLineEdit() const;
 	QComboBox* getThreadIdComboBox() const;
+	QCheckBox* getNotFreeOnlyCheckBox() const;
 	QPushButton* getFilterButton() const;
 
 	QTreeView* getTreeView() const;
@@ -64,6 +67,8 @@ private:
 	static QString getColName(int iCol);
 
 private:
+	QLineEdit* m_pTimeStampMinLineEdit;
+	QLineEdit* m_pTimeStampMaxLineEdit;
 	QCheckBox* m_pFreedOnlyCheckBox;
 	QComboBox* m_pThreadIdComboBox;
 	QPushButton* m_pFilterButton;

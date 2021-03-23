@@ -9,6 +9,7 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QLineEdit>
 
 #include "QMemoryOperationView.h"
 
@@ -47,6 +48,14 @@ QWidget* QMemoryOperationView::createFilterForm(QWidget* pParent)
 	pMainLayout = new QHBoxLayout();
 	pMainLayout->setContentsMargins(0, 0, 0, 0);
 	pMainWidget->setLayout(pMainLayout);
+
+	pMainLayout->addWidget(new QLabel(tr("Timestamp from:")));
+	m_pTimeStampMinLineEdit = new QLineEdit();
+	pMainLayout->addWidget(m_pTimeStampMinLineEdit);
+
+	pMainLayout->addWidget(new QLabel(tr("to:")));
+	m_pTimeStampMaxLineEdit = new QLineEdit();
+	pMainLayout->addWidget(m_pTimeStampMaxLineEdit);
 
 	pMainLayout->addWidget(new QLabel(tr("Thread:")));
 	m_pThreadIdComboBox = new QComboBox();
@@ -118,6 +127,16 @@ QWidget* QMemoryOperationView::createStatisticsBar(QWidget* pParent)
 	}
 
 	return pMainWidget;
+}
+
+QLineEdit* QMemoryOperationView::getTimeStampMinLineEdit() const
+{
+	return m_pTimeStampMinLineEdit;
+}
+
+QLineEdit* QMemoryOperationView::getTimeStampMaxLineEdit() const
+{
+	return m_pTimeStampMaxLineEdit;
 }
 
 QCheckBox* QMemoryOperationView::getNotFreeOnlyCheckBox() const

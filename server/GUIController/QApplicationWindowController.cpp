@@ -10,6 +10,7 @@
 #include <QElapsedTimer>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QLineEdit>
 
 #include "Global/Utils.h"
 
@@ -253,11 +254,14 @@ void QApplicationWindowController::onFilterButtonClicked()
 	qDebug("[aleakd-server] Start search");
 	timer.start();
 
-	bool bNotFreed = m_pMemoryOperationView->getNotFreeOnlyCheckBox()->isChecked();
+	qulonglong iTimeMin = m_pMemoryOperationView->getTimeStampMinLineEdit()->text().toULongLong();
+	qulonglong iTimeMax = m_pMemoryOperationView->getTimeStampMaxLineEdit()->text().toULongLong();
+
 	qulonglong iThreadId = 0;
 	if(m_pMemoryOperationView->getThreadIdComboBox()->currentIndex() != -1){
 		iThreadId = m_pMemoryOperationView->getThreadIdComboBox()->currentData().toULongLong();
 	}
+	bool bNotFreed = m_pMemoryOperationView->getNotFreeOnlyCheckBox()->isChecked();
 
 	m_searchStats.reset();
 
@@ -278,6 +282,16 @@ void QApplicationWindowController::onFilterButtonClicked()
 		}
 		if(iThreadId > 0){
 			if(pMemoryOperation->m_iCallerThreadId != iThreadId){
+				bAccept = false;
+			}
+		}
+		if(iTimeMin > 0){
+			if(pMemoryOperation->m_tvOperation.tv_sec < iTimeMin){
+				bAccept = false;
+			}
+		}
+		if(iTimeMax > 0){
+			if(pMemoryOperation->m_tvOperation.tv_sec > iTimeMax){
 				bAccept = false;
 			}
 		}
