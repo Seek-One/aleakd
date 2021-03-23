@@ -1,12 +1,19 @@
 # aleakd
 Another leak detector
 
-aleakd use is a simple libray that override the malloc and free function to help to find some memory leaks problems.
+ALeakD is leak detector and memory analyser. It's composed with a libary that override memory allocation/deallocation and thread creation, which send message to a graphical server application that records all operation of the program.
 
-The library is able to manage a per-thread counter of allocation.
+By this way, you can debug memory leak without closing your application and check which thread is given leaks.
 
-Because it use a static allocation list. You have to configure the number of thread you want to check and the maximum number of allocation per thread you want to manage.
-See the config.h file.
+Features
+--------
+
+- Communication mode: TCP, UDP, Named pipe (recommended).
+- Only compatible with POSIX systems
+- View real time per thread usage and memory peak
+- Statistics for each: malloc, calloc, realloc, free, posix_memalign, aligned_alloc, memalign, valloc, pvalloc
+- Use filter in the GUI to find a memory operation
+- Colored view for each memory allocation to view directly the state (free or not free)
 
 Build
 --------
@@ -17,4 +24,8 @@ make
 Usage
 --------
 
-LD_PRELOAD=./aleak.so myprogram
+Start the server:
+./aleakd-server
+
+Start the program you want to check:
+LD_PRELOAD=./libaleak.so myprogram
