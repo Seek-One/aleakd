@@ -5,6 +5,17 @@ ALeakD is leak detector and memory analyser. It's composed with a libary that ov
 
 By this way, you can debug memory leak without closing your application and check which thread is given leaks.
 
+License
+-------
+
+This program is licensed under the terms of the MIT License.
+
+Requirements
+------------
+
+- CMake
+- Qt version 5
+
 Features
 --------
 
@@ -18,14 +29,37 @@ Features
 Build
 --------
 
-cmake -DCMAKE_BUILD_TYPE=Debug .
-make
+Install dependencies:
+```
+    apt-get install git cmake qtbase5-dev qttools5-dev qttools5-dev-tools
+```
 
-Usage
---------
+Edit the config.h file to modify some options.
 
-Start the server:
-./aleakd-server
+Get the code:
+```
+    git clone https://github.com/Jet1oeil/aleakd.git && cd aleakd
+```
 
-Start the program you want to check:
-LD_PRELOAD=./libaleak.so myprogram
+Compile:
+```
+    cmake -DCMAKE_BUILD_TYPE=Debug .
+    make
+```
+
+Run the server:
+```
+    ./aleakd-server
+```
+
+Run the the program to be analyzed:
+```
+    LD_PRELOAD=./libaleak.so myprogram
+```
+
+
+Screenshot
+----------
+
+![alt text](https://raw.githubusercontent.com/Jet1oeil/aleakd/master/doc/aleakd-screenshot-1.png)
+![alt text](https://raw.githubusercontent.com/Jet1oeil/aleakd/master/doc/aleakd-screenshot-2.png)
