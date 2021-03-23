@@ -60,6 +60,7 @@ QWidget* QMemoryOperationView::createFilterForm(QWidget* pParent)
 	pMainLayout->addWidget(new QLabel(tr("Thread:")));
 	m_pThreadIdComboBox = new QComboBox();
 	m_pThreadIdComboBox->setEditable(true);
+	m_pThreadIdComboBox->setMinimumWidth(200);
 	pMainLayout->addWidget(m_pThreadIdComboBox);
 
 	pMainLayout->addWidget(new QLabel(tr("Not freed only:")));

@@ -23,6 +23,7 @@ public:
 	QMemoryOperationView* getMemoryOperationView() const;
 
 	// Status bar
+	void setCaptureMessageCount(const QString& szValue);
 	void setCaptureMemoryOperationCount(const QString& szValue);
 	void setCaptureMemorySizeUsed(const QString& szValue);
 	void setCaptureThreadCount(const QString& szValue);
@@ -39,6 +40,7 @@ private:
 
 	// Status bar
 	QStatusBar* m_pStatusBar;
+	QLabel* m_pCaptureMessageCountLabel;
 	QLabel* m_pCaptureMemoryOperationCountLabel;
 	QLabel* m_pCaptureMemorySizeUsedLabel;
 	QLabel* m_pCaptureThreadCountLabel;

@@ -109,6 +109,7 @@ void QApplicationWindowController::clearData()
 	m_pModelMemoryOperation->clear();
 	m_listFilterThreadInfos.clear();
 	m_pModelThreadInfos->clear();
+	m_pMemoryOperationView->getThreadIdComboBox()->clear();
 }
 
 void QApplicationWindowController::addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation)
@@ -128,8 +129,9 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 	}
 
 	m_lockGlobalStats.lockForWrite();
-	m_globalStats.m_iOpCount++;
-	m_globalStats.m_iOperationSize += sizeof(MemoryOperation);
+	m_globalStats.m_iMessageCount++;
+	m_globalStats.m_iMemoryOperationCount++;
+	m_globalStats.m_iMemoryOperationSize += sizeof(MemoryOperation);
 	m_globalStats.m_iTotalAllocSize += pMemoryOperation->m_iAllocSize;
 	m_globalStats.m_iTotalRemainingSize += pMemoryOperation->m_iAllocSize;
 	if(pMemoryOperationFreed){
@@ -192,6 +194,7 @@ void QApplicationWindowController::updateThreadInfos(const ThreadOperationShared
 		bThreadCreation = true;
 	}
 	m_lockGlobalStats.lockForWrite();
+	m_globalStats.m_iMessageCount++;
 	ThreadInfosSharedPtr pThreadInfos = getThreadInfos(pThreadOperation->m_iThreadId, bThreadCreation, pThreadOperation->m_tvOperation);
 	if (pThreadOperation->m_iMsgCode == ALeakD_MsgCode_pthread_set_name) {
 		if(pThreadInfos) {
@@ -296,7 +299,7 @@ void QApplicationWindowController::onFilterButtonClicked()
 			}
 		}
 		if(bAccept) {
-			m_searchStats.m_iOpCount++;
+			m_searchStats.m_iMemoryOperationCount++;
 			m_searchStats.m_iTotalAllocSize += pMemoryOperation->m_iAllocSize;
 			m_searchStats.m_iTotalRemainingSize += pMemoryOperation->m_iAllocSize;
 			if(pMemoryOperation->m_bFreed){
@@ -358,7 +361,7 @@ void QApplicationWindowController::onTimerUpdate()
 {
 	m_lockGlobalStats.lockForRead();
 
-	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Search, QMemoryOperationView::StatusBarCol_OpCount, QString::number(m_searchStats.m_iOpCount));
+	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Search, QMemoryOperationView::StatusBarCol_OpCount, QString::number(m_searchStats.m_iMemoryOperationCount));
 	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Search, QMemoryOperationView::StatusBarCol_TotalAllocCount, QString::number(m_searchStats.m_iTotalAllocCount));
 	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Search, QMemoryOperationView::StatusBarCol_TotalAllocSize, QString::number(m_searchStats.m_iTotalAllocSize));
 	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Search, QMemoryOperationView::StatusBarCol_TotalFreeCount, QString::number(m_searchStats.m_iTotalFreeCount));
@@ -376,7 +379,7 @@ void QApplicationWindowController::onTimerUpdate()
 	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Search, QMemoryOperationView::StatusBarCol_pvalloc, QString::number(m_searchStats.m_iPVAllocCount));
 
 	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Global, QMemoryOperationView::StatusBarCol_TotalAllocCount, QString::number(m_globalStats.m_iTotalAllocCount));
-	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Global, QMemoryOperationView::StatusBarCol_OpCount, QString::number(m_globalStats.m_iOpCount));
+	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Global, QMemoryOperationView::StatusBarCol_OpCount, QString::number(m_globalStats.m_iMemoryOperationCount));
 	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Global, QMemoryOperationView::StatusBarCol_TotalAllocSize, QString::number(m_globalStats.m_iTotalAllocSize));
 	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Global, QMemoryOperationView::StatusBarCol_TotalFreeCount, QString::number(m_globalStats.m_iTotalFreeCount));
 	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Global, QMemoryOperationView::StatusBarCol_TotalFreeSize, QString::number(m_globalStats.m_iTotalFreeSize));
@@ -392,8 +395,9 @@ void QApplicationWindowController::onTimerUpdate()
 	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Global, QMemoryOperationView::StatusBarCol_valloc, QString::number(m_globalStats.m_iVAllocCount));
 	m_pMemoryOperationView->setData(QMemoryOperationView::StatusBarRow_Global, QMemoryOperationView::StatusBarCol_pvalloc, QString::number(m_globalStats.m_iPVAllocCount));
 
-	m_pApplicationWindow->setCaptureMemoryOperationCount(Utils::getBeautifulNumberString(QString::number(m_globalStats.m_iOpCount)));
-	m_pApplicationWindow->setCaptureMemorySizeUsed(Utils::getBeautifulNumberString(QString::number(m_globalStats.m_iOperationSize)));
+	m_pApplicationWindow->setCaptureMessageCount(Utils::getBeautifulNumberString(QString::number(m_globalStats.m_iMessageCount)));
+	m_pApplicationWindow->setCaptureMemoryOperationCount(Utils::getBeautifulNumberString(QString::number(m_globalStats.m_iMemoryOperationCount)));
+	m_pApplicationWindow->setCaptureMemorySizeUsed(Utils::getBeautifulNumberString(QString::number(m_globalStats.m_iMemoryOperationSize)));
 	m_pApplicationWindow->setCaptureThreadCount(Utils::getBeautifulNumberString(QString::number(m_listThreadInfos.count())));
 
 	QComboBox* pThreadIdComboBox = m_pMemoryOperationView->getThreadIdComboBox();

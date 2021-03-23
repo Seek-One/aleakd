@@ -55,6 +55,10 @@ QStatusBar* QApplicationWindow::createStatusBar(QWidget* pParent)
 {
 	QStatusBar* pMainWidget = new QStatusBar(pParent);
 
+	m_pCaptureMessageCountLabel = new QLabel();
+	pMainWidget->addPermanentWidget(m_pCaptureMessageCountLabel);
+	setCaptureMessageCount("0");
+
 	m_pCaptureMemoryOperationCountLabel = new QLabel();
 	pMainWidget->addPermanentWidget(m_pCaptureMemoryOperationCountLabel);
 	setCaptureMemoryOperationCount("0");
@@ -78,6 +82,12 @@ QThreadInfosView* QApplicationWindow::getThreadInfosView() const
 QMemoryOperationView* QApplicationWindow::getMemoryOperationView() const
 {
 	return m_pMemoryOperationView;
+}
+
+void QApplicationWindow::setCaptureMessageCount(const QString& szValue)
+{
+	QString szTmp = QString("Message count: %0").arg(szValue);
+	m_pCaptureMessageCountLabel->setText(szTmp);
 }
 
 void QApplicationWindow::setCaptureMemoryOperationCount(const QString& szValue)

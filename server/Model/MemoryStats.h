@@ -16,8 +16,10 @@ public:
 	void reset();
 
 public:
-	int m_iOpCount;
-	uint64_t m_iOperationSize;
+	int m_iMessageCount;
+
+	int m_iMemoryOperationCount;
+	uint64_t m_iMemoryOperationSize;
 
 	int m_iTotalAllocCount;
 	uint64_t m_iTotalAllocSize;

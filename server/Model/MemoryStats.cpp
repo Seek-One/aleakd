@@ -6,8 +6,10 @@
 
 MemoryStats::MemoryStats()
 {
-	m_iOpCount = 0;
-	m_iOperationSize = 0;
+	m_iMessageCount = 0;
+
+	m_iMemoryOperationCount = 0;
+	m_iMemoryOperationSize = 0;
 
 	m_iTotalAllocCount = 0;
 	m_iTotalAllocSize = 0;
@@ -35,8 +37,10 @@ MemoryStats::~MemoryStats(){
 
 void MemoryStats::reset()
 {
-	m_iOpCount = 0;
-	m_iOperationSize = 0;
+	m_iMessageCount = 0;
+
+	m_iMemoryOperationCount = 0;
+	m_iMemoryOperationSize = 0;
 
 	m_iTotalAllocCount = 0;
 	m_iTotalAllocSize = 0;
