@@ -5,6 +5,8 @@
 SET (ALEAKD_LIB_SRC
 	aleakd.c
 	aleakd.h
+	backtrace.c
+	backtrace.h
 	wrapper.c
 	wrapper.h
 	server-comm.c

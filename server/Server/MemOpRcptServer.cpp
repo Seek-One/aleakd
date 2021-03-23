@@ -291,6 +291,10 @@ qint64 MemOpRcptServer::doProcessMsgV1(char* pBuffer, qint64 iMaxSize)
 		}
 	}
 
+	if(header.backtrace_size > 0){
+
+	}
+
 	return iSizeRead;
 }
 

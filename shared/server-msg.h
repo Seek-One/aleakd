@@ -22,6 +22,9 @@ struct __attribute__((__packed__)) ServerMsgHeaderV1
 
 	// Msg type
 	uint8_t msg_code;
+
+	// Backtrace
+	uint8_t backtrace_size;
 } _ServerMsgHeaderV1;
 
 ///////////////////////
@@ -74,5 +77,23 @@ struct __attribute__((__packed__)) ServerMsgThreadV1
 	struct ServerMsgHeaderV1 header;
 	struct ServerMsgThreadDataV1 data;
 } _ServerMsgThreadV1;
+
+///////////////////////
+// Backtrace message
+///////////////////////
+
+struct __attribute__((__packed__)) ServerMsgBacktraceRowV1
+{
+	uint64_t addr;
+	uint16_t symbol_name_size;
+	const char* symbol_name;
+	uint16_t object_name_size;
+	const char* object_name;
+} _ServerMsgBacktraceRowV1;
+
+struct __attribute__((__packed__)) ServerMsgBacktraceV1
+{
+	struct ServerMsgBacktraceRowV1 list_backtrace[BACKTRACE_MAX_SIZE];
+} _ServerMsgBacktraceV1;
 
 #endif //ALEAKD_SERVER_MSG_H

@@ -16,6 +16,8 @@
 
 #include "../shared/global-const.h"
 
+#include "backtrace.h"
+
 #include "server-comm.h"
 
 #define DEFAULT_SERVER_HOST "127.0.0.1"
@@ -238,7 +240,7 @@ int servercomm_send_safe(const void* buff, size_t size)
 	return res;
 }
 
-void servercomm_msg_header_init_v1(struct ServerMsgHeaderV1* pServerMsgHeader)
+void servercomm_msg_header_init_v1(struct ServerMsgHeaderV1* pServerMsgHeader, int iBacktraceSize)
 {
 	struct timeval tvNow;
 	gettimeofday(&tvNow, NULL);
@@ -247,12 +249,13 @@ void servercomm_msg_header_init_v1(struct ServerMsgHeaderV1* pServerMsgHeader)
 	pServerMsgHeader->time_usec = tvNow.tv_usec;
 	pServerMsgHeader->thread_id = (int64_t)pthread_self();
 	pServerMsgHeader->msg_code = ALeakD_MsgCode_init;
+	pServerMsgHeader->backtrace_size = iBacktraceSize;
 }
 
 void servercomm_msg_app_init_v1(struct ServerMsgAppV1* pServerMsgApp)
 {
 	pServerMsgApp->msg_version = ALEAKD_MSG_VERSION;
-	servercomm_msg_header_init_v1(&pServerMsgApp->header);
+	servercomm_msg_header_init_v1(&pServerMsgApp->header, 0);
 }
 
 int servercomm_msg_app_send_v1(struct ServerMsgAppV1* pServerMsgApp)
@@ -260,11 +263,11 @@ int servercomm_msg_app_send_v1(struct ServerMsgAppV1* pServerMsgApp)
 	return servercomm_send_safe(pServerMsgApp, sizeof(struct ServerMsgAppV1));
 }
 
-void servercomm_msg_memory_init_v1(struct ServerMsgMemoryV1* pServerMemoryMsg)
+void servercomm_msg_memory_init_v1(struct ServerMsgMemoryV1* pServerMemoryMsg, int iBacktraceSize)
 {
 	pServerMemoryMsg->msg_version = ALEAKD_MSG_VERSION;
 
-	servercomm_msg_header_init_v1(&pServerMemoryMsg->header);
+	servercomm_msg_header_init_v1(&pServerMemoryMsg->header, iBacktraceSize);
 
 	pServerMemoryMsg->data.alloc_size = 0;
 	pServerMemoryMsg->data.alloc_ptr = 0;
@@ -272,27 +275,40 @@ void servercomm_msg_memory_init_v1(struct ServerMsgMemoryV1* pServerMemoryMsg)
 	pServerMemoryMsg->data.free_ptr = 0;
 }
 
-int servercomm_msg_memory_send_v1(struct ServerMsgMemoryV1* pServerMemoryMsg)
+int servercomm_msg_memory_send_v1(struct ServerMsgMemoryV1* pServerMemoryMsg, struct ServerMsgBacktraceV1* pBacktrace)
 {
 	//fprintf(stderr, "[aleakd] memory msg: %d %lu\n", pServerMemoryMsg->header.msg_code, pServerMemoryMsg->header.thread_id);
 	return servercomm_send_safe(pServerMemoryMsg, sizeof(struct ServerMsgMemoryV1));
 }
 
-void servercomm_msg_thread_init_v1(struct ServerMsgThreadV1* pServerMsgThread)
+void servercomm_msg_thread_init_v1(struct ServerMsgThreadV1* pServerMsgThread, int iBacktraceSize)
 {
 	struct timeval tvNow;
 	gettimeofday(&tvNow, NULL);
 
 	pServerMsgThread->msg_version = ALEAKD_MSG_VERSION;
 
-	servercomm_msg_header_init_v1(&pServerMsgThread->header);
+	servercomm_msg_header_init_v1(&pServerMsgThread->header, iBacktraceSize);
 
 	pServerMsgThread->data.thread_id = 0;
 	memset(pServerMsgThread->data.thread_name, 0, sizeof(pServerMsgThread->data.thread_name));
 }
 
-int servercomm_msg_thread_send_v1(struct ServerMsgThreadV1* pServerMsgThread)
+int servercomm_msg_thread_send_v1(struct ServerMsgThreadV1* pServerMsgThread, struct ServerMsgBacktraceV1* pBacktrace)
 {
 	//fprintf(stderr, "[aleakd] thread msg: %d %lu\n", pServerMsgThread->header.msg_code, pServerMsgThread->header.thread_id);
 	return servercomm_send_safe(pServerMsgThread, sizeof(struct ServerMsgThreadV1));
+}
+
+void servercomm_make_backtrace(void** listBackTraceAddr, int iSize, struct ServerMsgBacktraceV1* pBacktrace)
+{
+	for(int i=0; i<iSize; i++)
+	{
+		void* addr = listBackTraceAddr[0];
+		struct ServerMsgBacktraceRowV1* pRow = &(pBacktrace->list_backtrace[i]);
+		pRow->addr = (uint64_t)addr;
+		backtrace_get_infos((void*)pRow->addr, &pRow->object_name, NULL, &pRow->symbol_name, NULL);
+		pRow->object_name_size = strlen(pRow->object_name);
+		pRow->symbol_name_size = strlen(pRow->symbol_name);
+	}
 }

@@ -13,9 +13,13 @@
 
 #include "aleakd.h"
 
+#include "backtrace.h"
+
 #include "server-comm.h"
 
 static int g_bIsInitializing = 0;
+static int g_bIsInitialized = 0;
+static int g_bIsBacktraceInitializing = 0;
 
 static void* (*real_malloc)(size_t) = NULL;
 static void* (*real_calloc)(size_t, size_t) = NULL;
@@ -67,6 +71,10 @@ int wrapper_init()
 		g_bIsInitializing = 1;
 		fprintf(stderr, "[aleakd] wrapper_init\n");
 
+		g_bIsBacktraceInitializing = 1;
+		backtrace_init();
+		g_bIsBacktraceInitializing = 0;
+
 		// Wrap functions
 		real_malloc = dlsym(RTLD_NEXT, "malloc");
 		if (NULL == real_malloc) {
@@ -117,11 +125,8 @@ int wrapper_init()
 			res = servercomm_init();
 		}
 
+		g_bIsInitialized = 0;
 		fprintf(stderr, "[aleakd] wrapper_init done\n");
-		//fprintf(stderr, "[aleakd] done");
-#ifdef START_ON_CONSTRUCT
-		g_bIsInitializing = 0;
-#endif
 	}
 
 	return res;
@@ -132,6 +137,7 @@ void wrapper_dispose()
 	if(g_bUseServerMessage){
 		servercomm_dispose();
 	}
+	g_bIsInitialized = 0;
 }
 
 void *malloc(size_t size)
@@ -152,14 +158,27 @@ void *malloc(size_t size)
 	}
 
 	if(p){
+		if(g_bIsBacktraceInitializing){
+			// Backtrace initializing may generate a malloc call, we ignore it
+			return p;
+		}
+
 		if(g_bUseServerMessage) {
+			struct ServerMsgBacktraceV1 bt_msg;
+			void* listBacktraceAddr[BACKTRACE_MAX_SIZE];
+			int iBacktraceSize = 0;
+			if(g_bIsInitialized) {
+				iBacktraceSize = backtrace (listBacktraceAddr, BACKTRACE_MAX_SIZE);
+				servercomm_make_backtrace(listBacktraceAddr, iBacktraceSize, &bt_msg);
+			}
+
 			struct ServerMsgMemoryV1 msg;
-			servercomm_msg_memory_init_v1(&msg);
+			servercomm_msg_memory_init_v1(&msg, iBacktraceSize);
 			msg.header.msg_code = ALeakD_MsgCode_malloc;
 			msg.data.alloc_num = (int64_t)alloc_num;
 			msg.data.alloc_ptr = (int64_t)p;
 			msg.data.alloc_size = (int64_t)size;
-			servercomm_msg_memory_send_v1(&msg);
+			servercomm_msg_memory_send_v1(&msg, &bt_msg);
 		}
 	}
 
@@ -184,13 +203,21 @@ void *calloc(size_t num, size_t size)
 
 	if(p){
 		if(g_bUseServerMessage) {
+			struct ServerMsgBacktraceV1 bt_msg;
+			void* listBacktraceAddr[BACKTRACE_MAX_SIZE];
+			int iBacktraceSize = 0;
+			if(g_bIsInitialized) {
+				iBacktraceSize = backtrace (listBacktraceAddr, BACKTRACE_MAX_SIZE);
+				servercomm_make_backtrace(listBacktraceAddr, iBacktraceSize, &bt_msg);
+			}
+
 			struct ServerMsgMemoryV1 msg;
-			servercomm_msg_memory_init_v1(&msg);
+			servercomm_msg_memory_init_v1(&msg, iBacktraceSize);
 			msg.header.msg_code = ALeakD_MsgCode_calloc;
 			msg.data.alloc_num = (int64_t)alloc_num;
 			msg.data.alloc_ptr = (int64_t)p;
 			msg.data.alloc_size = (int64_t)size;
-			servercomm_msg_memory_send_v1(&msg);
+			servercomm_msg_memory_send_v1(&msg, &bt_msg);
 		}
 	}
 
@@ -211,14 +238,22 @@ void *realloc(void* ptr, size_t size)
 	
 	if(p){
 		if(g_bUseServerMessage) {
+			struct ServerMsgBacktraceV1 bt_msg;
+			void* listBacktraceAddr[BACKTRACE_MAX_SIZE];
+			int iBacktraceSize = 0;
+			if(g_bIsInitialized) {
+				iBacktraceSize = backtrace (listBacktraceAddr, BACKTRACE_MAX_SIZE);
+				servercomm_make_backtrace(listBacktraceAddr, iBacktraceSize, &bt_msg);
+			}
+
 			struct ServerMsgMemoryV1 msg;
-			servercomm_msg_memory_init_v1(&msg);
+			servercomm_msg_memory_init_v1(&msg, iBacktraceSize);
 			msg.header.msg_code = ALeakD_MsgCode_realloc;
 			msg.data.alloc_num = (int64_t)alloc_num;
 			msg.data.alloc_ptr = (int64_t)p;
 			msg.data.alloc_size = (int64_t)size;
 			msg.data.free_ptr = (int64_t)ptr;
-			servercomm_msg_memory_send_v1(&msg);
+			servercomm_msg_memory_send_v1(&msg, &bt_msg);
 		}
 	}
 
@@ -233,11 +268,19 @@ void free(void *ptr)
 
 	if(ptr != NULL) {
 		if(g_bUseServerMessage) {
+			struct ServerMsgBacktraceV1 bt_msg;
+			void* listBacktraceAddr[BACKTRACE_MAX_SIZE];
+			int iBacktraceSize = 0;
+			if(g_bIsInitialized) {
+				iBacktraceSize = backtrace (listBacktraceAddr, BACKTRACE_MAX_SIZE);
+				servercomm_make_backtrace(listBacktraceAddr, iBacktraceSize, &bt_msg);
+			}
+
 			struct ServerMsgMemoryV1 msg;
-			servercomm_msg_memory_init_v1(&msg);
+			servercomm_msg_memory_init_v1(&msg, iBacktraceSize);
 			msg.header.msg_code = ALeakD_MsgCode_free;
 			msg.data.free_ptr = (int64_t)ptr;
-			servercomm_msg_memory_send_v1(&msg);
+			servercomm_msg_memory_send_v1(&msg, &bt_msg);
 		}
 	}
 
@@ -263,14 +306,22 @@ int posix_memalign(void** memptr, size_t alignment, size_t size)
 
 	if(ret == 0){
 		if(g_bUseServerMessage) {
+			struct ServerMsgBacktraceV1 bt_msg;
+			void* listBacktraceAddr[BACKTRACE_MAX_SIZE];
+			int iBacktraceSize = 0;
+			if(g_bIsInitialized) {
+				iBacktraceSize = backtrace (listBacktraceAddr, BACKTRACE_MAX_SIZE);
+				servercomm_make_backtrace(listBacktraceAddr, iBacktraceSize, &bt_msg);
+			}
+
 			struct ServerMsgMemoryV1 msg;
-			servercomm_msg_memory_init_v1(&msg);
+			servercomm_msg_memory_init_v1(&msg, iBacktraceSize);
 			msg.header.msg_code = ALeakD_MsgCode_posix_memalign;
 			msg.data.alloc_num = (int64_t)alloc_num;
 			msg.data.alloc_ptr = (int64_t)*memptr;
 			msg.data.alloc_size = (int64_t)size;
 			msg.data.free_ptr = (int64_t)NULL;
-			servercomm_msg_memory_send_v1(&msg);
+			servercomm_msg_memory_send_v1(&msg, &bt_msg);
 		}
 	}
 
@@ -291,14 +342,22 @@ void* aligned_alloc(size_t alignment, size_t size)
 
 	if(p){
 		if(g_bUseServerMessage) {
+			struct ServerMsgBacktraceV1 bt_msg;
+			void* listBacktraceAddr[BACKTRACE_MAX_SIZE];
+			int iBacktraceSize = 0;
+			if(g_bIsInitialized) {
+				iBacktraceSize = backtrace (listBacktraceAddr, BACKTRACE_MAX_SIZE);
+				servercomm_make_backtrace(listBacktraceAddr, iBacktraceSize, &bt_msg);
+			}
+
 			struct ServerMsgMemoryV1 msg;
-			servercomm_msg_memory_init_v1(&msg);
+			servercomm_msg_memory_init_v1(&msg, iBacktraceSize);
 			msg.header.msg_code = ALeakD_MsgCode_aligned_alloc;
 			msg.data.alloc_num = (int64_t)alloc_num;
 			msg.data.alloc_ptr = (int64_t)p;
 			msg.data.alloc_size = (int64_t)size;
 			msg.data.free_ptr = (int64_t)NULL;
-			servercomm_msg_memory_send_v1(&msg);
+			servercomm_msg_memory_send_v1(&msg, &bt_msg);
 		}
 	}
 
@@ -319,14 +378,22 @@ void* memalign(size_t alignment, size_t size)
 
 	if(p){
 		if(g_bUseServerMessage) {
+			struct ServerMsgBacktraceV1 bt_msg;
+			void* listBacktraceAddr[BACKTRACE_MAX_SIZE];
+			int iBacktraceSize = 0;
+			if(g_bIsInitialized) {
+				iBacktraceSize = backtrace (listBacktraceAddr, BACKTRACE_MAX_SIZE);
+				servercomm_make_backtrace(listBacktraceAddr, iBacktraceSize, &bt_msg);
+			}
+
 			struct ServerMsgMemoryV1 msg;
-			servercomm_msg_memory_init_v1(&msg);
+			servercomm_msg_memory_init_v1(&msg, iBacktraceSize);
 			msg.header.msg_code = ALeakD_MsgCode_memalign;
 			msg.data.alloc_num = (int64_t)alloc_num;
 			msg.data.alloc_ptr = (int64_t)p;
 			msg.data.alloc_size = (int64_t)size;
 			msg.data.free_ptr = (int64_t)NULL;
-			servercomm_msg_memory_send_v1(&msg);
+			servercomm_msg_memory_send_v1(&msg, &bt_msg);
 		}
 	}
 
@@ -347,14 +414,22 @@ void* valloc(size_t size)
 
 	if(p){
 		if(g_bUseServerMessage) {
+			struct ServerMsgBacktraceV1 bt_msg;
+			void* listBacktraceAddr[BACKTRACE_MAX_SIZE];
+			int iBacktraceSize = 0;
+			if(g_bIsInitialized) {
+				iBacktraceSize = backtrace (listBacktraceAddr, BACKTRACE_MAX_SIZE);
+				servercomm_make_backtrace(listBacktraceAddr, iBacktraceSize, &bt_msg);
+			}
+
 			struct ServerMsgMemoryV1 msg;
-			servercomm_msg_memory_init_v1(&msg);
+			servercomm_msg_memory_init_v1(&msg, iBacktraceSize);
 			msg.header.msg_code = ALeakD_MsgCode_valloc;
 			msg.data.alloc_num = (int64_t)alloc_num;
 			msg.data.alloc_ptr = (int64_t)p;
 			msg.data.alloc_size = (int64_t)size;
 			msg.data.free_ptr = (int64_t)NULL;
-			servercomm_msg_memory_send_v1(&msg);
+			servercomm_msg_memory_send_v1(&msg, &bt_msg);
 		}
 	}
 
@@ -375,14 +450,22 @@ void* pvalloc(size_t size)
 
 	if(p){
 		if(g_bUseServerMessage) {
+			struct ServerMsgBacktraceV1 bt_msg;
+			void* listBacktraceAddr[BACKTRACE_MAX_SIZE];
+			int iBacktraceSize = 0;
+			if(g_bIsInitialized) {
+				iBacktraceSize = backtrace (listBacktraceAddr, BACKTRACE_MAX_SIZE);
+				servercomm_make_backtrace(listBacktraceAddr, iBacktraceSize, &bt_msg);
+			}
+
 			struct ServerMsgMemoryV1 msg;
-			servercomm_msg_memory_init_v1(&msg);
+			servercomm_msg_memory_init_v1(&msg, iBacktraceSize);
 			msg.header.msg_code = ALeakD_MsgCode_pvalloc;
 			msg.data.alloc_num = (int64_t)alloc_num;
 			msg.data.alloc_ptr = (int64_t)p;
 			msg.data.alloc_size = (int64_t)size;
 			msg.data.free_ptr = (int64_t)NULL;
-			servercomm_msg_memory_send_v1(&msg);
+			servercomm_msg_memory_send_v1(&msg, &bt_msg);
 		}
 	}
 
@@ -420,11 +503,19 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)
 
 	if(thread){
 		if(g_bUseServerMessage) {
+			struct ServerMsgBacktraceV1 bt_msg;
+			void* listBacktraceAddr[BACKTRACE_MAX_SIZE];
+			int iBacktraceSize = 0;
+			if(g_bIsInitialized) {
+				iBacktraceSize = backtrace (listBacktraceAddr, BACKTRACE_MAX_SIZE);
+				servercomm_make_backtrace(listBacktraceAddr, iBacktraceSize, &bt_msg);
+			}
+
 			struct ServerMsgThreadV1 msg;
-			servercomm_msg_thread_init_v1(&msg);
+			servercomm_msg_thread_init_v1(&msg, iBacktraceSize);
 			msg.header.msg_code = ALeakD_MsgCode_pthread_create;
 			msg.data.thread_id = (uint64_t)*thread;
-			servercomm_msg_thread_send_v1(&msg);
+			servercomm_msg_thread_send_v1(&msg, &bt_msg);
 		}
 	}
 
@@ -443,8 +534,16 @@ int pthread_setname_np(pthread_t thread, const char *name)
 
 	if(thread){
 		if(g_bUseServerMessage) {
+			struct ServerMsgBacktraceV1 bt_msg;
+			void* listBacktraceAddr[BACKTRACE_MAX_SIZE];
+			int iBacktraceSize = 0;
+			if(g_bIsInitialized) {
+				iBacktraceSize = backtrace (listBacktraceAddr, BACKTRACE_MAX_SIZE);
+				servercomm_make_backtrace(listBacktraceAddr, iBacktraceSize, &bt_msg);
+			}
+
 			struct ServerMsgThreadV1 msg;
-			servercomm_msg_thread_init_v1(&msg);
+			servercomm_msg_thread_init_v1(&msg, iBacktraceSize);
 			msg.header.msg_code = ALeakD_MsgCode_pthread_set_name;
 			msg.data.thread_id = (uint64_t)thread;
 			size_t iMaxLen = strlen(name);
@@ -452,7 +551,7 @@ int pthread_setname_np(pthread_t thread, const char *name)
 				iMaxLen = sizeof (msg.data.thread_name);
 			}
 			strncpy(msg.data.thread_name, name, iMaxLen);
-			servercomm_msg_thread_send_v1(&msg);
+			servercomm_msg_thread_send_v1(&msg, &bt_msg);
 		}
 	}
 
@@ -532,8 +631,16 @@ int prctl(int option, ...)
 	if(res>=0){
 		if(g_bUseServerMessage) {
 			if(option == PR_SET_NAME) {
+				struct ServerMsgBacktraceV1 bt_msg;
+				void* listBacktraceAddr[BACKTRACE_MAX_SIZE];
+				int iBacktraceSize = 0;
+				if(g_bIsInitialized) {
+					iBacktraceSize = backtrace (listBacktraceAddr, BACKTRACE_MAX_SIZE);
+					servercomm_make_backtrace(listBacktraceAddr, iBacktraceSize, &bt_msg);
+				}
+
 				struct ServerMsgThreadV1 msg;
-				servercomm_msg_thread_init_v1(&msg);
+				servercomm_msg_thread_init_v1(&msg, iBacktraceSize);
 				msg.header.msg_code = ALeakD_MsgCode_pthread_set_name;
 				msg.data.thread_id = (uint64_t) msg.header.thread_id;
 				const char* szThreadName = (const char*)x[0];
@@ -544,7 +651,7 @@ int prctl(int option, ...)
 					iMaxLen = sizeof (msg.data.thread_name);
 				}
 				strncpy(msg.data.thread_name, szThreadName, iMaxLen);
-				servercomm_msg_thread_send_v1(&msg);
+				servercomm_msg_thread_send_v1(&msg, &bt_msg);
 			}
 		}
 	}
