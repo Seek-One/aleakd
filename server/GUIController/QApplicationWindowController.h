@@ -60,6 +60,7 @@ private:
 	MemoryOperationList m_listMemoryOperation;
 	MemoryOperationList m_listMemoryOperationNonFreed;
 	ThreadInfosList m_listThreadInfos;
+	ThreadInfosList m_listThreadInfosAlive;
 
 	// Global infos
 	QReadWriteLock m_lockGlobalStats;

@@ -225,11 +225,12 @@ ThreadInfosSharedPtr QApplicationWindowController::getThreadInfos(uint64_t iThre
 {
 	// Assume m_listThreadInfos has been protected by caller
 	ThreadInfosSharedPtr pThreadInfos;
-	pThreadInfos = m_listThreadInfos.getById(iThreadId);
+	pThreadInfos = m_listThreadInfosAlive.getById(iThreadId);
 	if(pThreadInfos && bThreadCreation){
 		// This is a recycled thread, we create a new entry
 		pThreadInfos->m_bIsTerminated = true;
 		pThreadInfos = ThreadInfosSharedPtr();
+		m_listThreadInfosAlive.removeById(iThreadId);
 	}
 	if(!pThreadInfos){
 		pThreadInfos = ThreadInfosSharedPtr(new ThreadInfos());
@@ -239,6 +240,7 @@ ThreadInfosSharedPtr QApplicationWindowController::getThreadInfos(uint64_t iThre
 			pThreadInfos->m_szThreadName = "main";
 		}
 		m_listThreadInfos.append(pThreadInfos);
+		m_listThreadInfosAlive.append(pThreadInfos);
 	}
 
 	return pThreadInfos;

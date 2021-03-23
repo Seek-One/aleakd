@@ -48,3 +48,19 @@ ThreadInfosSharedPtr ThreadInfosList::getById(uint64_t iThreadId) const
 	}
 	return ThreadInfosSharedPtr();
 }
+
+void ThreadInfosList::removeById(uint64_t iThreadId)
+{
+	ThreadInfosList::iterator iter;
+	iter = begin();
+	while(iter != end())
+	{
+		const ThreadInfosSharedPtr& pThreadInfos = (*iter);
+		if(pThreadInfos->m_iThreadId == iThreadId)
+		{
+			iter = erase(iter);
+		}else {
+			iter++;
+		}
+	}
+}

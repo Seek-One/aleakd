@@ -40,6 +40,7 @@ public:
 	virtual ~ThreadInfosList();
 
 	ThreadInfosSharedPtr getById(uint64_t iThreadId) const;
+	void removeById(uint64_t iThreadId);
 };
 
 

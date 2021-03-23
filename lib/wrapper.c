@@ -585,7 +585,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)
 {
 	int res;
 
-	//fprintf(stderr, "[aleakd] creating thread: %d\n");
+	fprintf(stderr, "[aleakd] creating thread: %lu\n", *thread);
 	if (!real_pthread_create) {
 		real_pthread_create = dlsym(RTLD_NEXT, "pthread_create");
 	}
