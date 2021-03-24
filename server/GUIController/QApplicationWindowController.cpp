@@ -418,6 +418,10 @@ void QApplicationWindowController::onTimerUpdate()
 
 	QComboBox* pThreadIdComboBox = m_pMemoryOperationView->getThreadIdComboBox();
 	m_listFilterThreadInfos.clear();
+	if(pThreadIdComboBox->count() == 0)
+	{
+		pThreadIdComboBox->addItem(tr("All threads"), 0);
+	}
 	ThreadInfosList::const_iterator iter;
 	for(iter = m_listThreadInfos.constBegin(); iter != m_listThreadInfos.constEnd(); ++iter)
 	{
@@ -436,7 +440,7 @@ void QApplicationWindowController::onTimerUpdate()
 			pThreadIdComboBox->setItemText(iFind, szEntryLabel);
 		}
 
-		m_listFilterThreadInfos.append(*iter);
+		m_listFilterThreadInfos.append(pThreadInfos);
 	}
 	m_pModelThreadInfos->refresh();
 	m_lockGlobalStats.unlock();
