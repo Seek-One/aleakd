@@ -17,7 +17,7 @@
 #include "Server/IMemOpRcptServerHandler.h"
 
 class QApplicationWindow;
-class QMemoryOperationView;
+class QMemoryOperationListView;
 class QMemoryOperationModel;
 class QThreadInfosView;
 class QThreadInfosModel;
@@ -40,6 +40,7 @@ public:
 private slots:
 	void onFilterButtonClicked();
 	void onTimerUpdate();
+	void onMemoryOperationDoubleClicked(const QModelIndex &index);
 
 private:
 	void clearData();
@@ -53,7 +54,7 @@ private:
 private:
 	QApplicationWindow* m_pApplicationWindow;
 	QThreadInfosView* m_pThreadInfosView;
-	QMemoryOperationView* m_pMemoryOperationView;
+	QMemoryOperationListView* m_pMemoryOperationListView;
 
 	QTimer m_timerUpdate;
 

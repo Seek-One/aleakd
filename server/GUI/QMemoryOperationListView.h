@@ -2,8 +2,8 @@
 // Created by ebeuque on 17/03/2021.
 //
 
-#ifndef ALEAKD_QMEMORYOPERATIONVIEW_H
-#define ALEAKD_QMEMORYOPERATIONVIEW_H
+#ifndef ALEAKD_QMEMORYOPERATIONLISTVIEW_H
+#define ALEAKD_QMEMORYOPERATIONLISTVIEW_H
 
 #include <QWidget>
 
@@ -13,11 +13,11 @@ class QCheckBox;
 class QComboBox;
 class QLineEdit;
 
-class QMemoryOperationView : public QWidget
+class QMemoryOperationListView : public QWidget
 {
 public:
-	QMemoryOperationView(QWidget* pParent);
-	virtual ~QMemoryOperationView();
+	QMemoryOperationListView(QWidget* pParent);
+	virtual ~QMemoryOperationListView();
 
 public:
 	enum StatusBarRows {
@@ -82,4 +82,4 @@ private:
 };
 
 
-#endif //ALEAKD_QMEMORYOPERATIONVIEW_H
+#endif //ALEAKD_QMEMORYOPERATIONLISTVIEW_H

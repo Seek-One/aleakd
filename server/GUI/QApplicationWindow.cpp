@@ -9,7 +9,7 @@
 #include <QStatusBar>
 
 #include "GUI/QThreadInfosView.h"
-#include "GUI/QMemoryOperationView.h"
+#include "GUI/QMemoryOperationListView.h"
 
 #include "QApplicationWindow.h"
 
@@ -45,8 +45,8 @@ QWidget* QApplicationWindow::createTabs(QWidget* pParent)
 	m_pThreadInfosView = new QThreadInfosView(m_pTabWidget);
 	m_pTabWidget->addTab(m_pThreadInfosView, tr("Threads"));
 
-	m_pMemoryOperationView = new QMemoryOperationView(m_pTabWidget);
-	m_pTabWidget->addTab(m_pMemoryOperationView, tr("Memory operation"));
+	m_pMemoryOperationListView = new QMemoryOperationListView(m_pTabWidget);
+	m_pTabWidget->addTab(m_pMemoryOperationListView, tr("Memory operation"));
 
 	return m_pTabWidget;
 }
@@ -79,9 +79,9 @@ QThreadInfosView* QApplicationWindow::getThreadInfosView() const
 	return m_pThreadInfosView;
 }
 
-QMemoryOperationView* QApplicationWindow::getMemoryOperationView() const
+QMemoryOperationListView* QApplicationWindow::getMemoryOperationListView() const
 {
-	return m_pMemoryOperationView;
+	return m_pMemoryOperationListView;
 }
 
 void QApplicationWindow::setCaptureMessageCount(const QString& szValue)

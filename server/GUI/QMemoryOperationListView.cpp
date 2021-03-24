@@ -11,9 +11,9 @@
 #include <QComboBox>
 #include <QLineEdit>
 
-#include "QMemoryOperationView.h"
+#include "QMemoryOperationListView.h"
 
-QMemoryOperationView::QMemoryOperationView(QWidget* pParent)
+QMemoryOperationListView::QMemoryOperationListView(QWidget* pParent)
 	: QWidget(pParent)
 {
 	QBoxLayout* pMainLayout = new QVBoxLayout();
@@ -34,12 +34,12 @@ QMemoryOperationView::QMemoryOperationView(QWidget* pParent)
 	pMainLayout->addWidget(pTmpWidget);
 }
 
-QMemoryOperationView::~QMemoryOperationView()
+QMemoryOperationListView::~QMemoryOperationListView()
 {
 
 }
 
-QWidget* QMemoryOperationView::createFilterForm(QWidget* pParent)
+QWidget* QMemoryOperationListView::createFilterForm(QWidget* pParent)
 {
 	QWidget* pMainWidget = new QWidget(pParent);
 	pMainWidget->setContentsMargins(0, 0, 0, 0);
@@ -76,7 +76,7 @@ QWidget* QMemoryOperationView::createFilterForm(QWidget* pParent)
 	return pMainWidget;
 }
 
-QWidget* QMemoryOperationView::createStatisticsBar(QWidget* pParent)
+QWidget* QMemoryOperationListView::createStatisticsBar(QWidget* pParent)
 {
 	QWidget* pMainWidget = new QWidget(pParent);
 	pMainWidget->setContentsMargins(0, 0, 0, 0);
@@ -130,37 +130,37 @@ QWidget* QMemoryOperationView::createStatisticsBar(QWidget* pParent)
 	return pMainWidget;
 }
 
-QLineEdit* QMemoryOperationView::getTimeStampMinLineEdit() const
+QLineEdit* QMemoryOperationListView::getTimeStampMinLineEdit() const
 {
 	return m_pTimeStampMinLineEdit;
 }
 
-QLineEdit* QMemoryOperationView::getTimeStampMaxLineEdit() const
+QLineEdit* QMemoryOperationListView::getTimeStampMaxLineEdit() const
 {
 	return m_pTimeStampMaxLineEdit;
 }
 
-QCheckBox* QMemoryOperationView::getNotFreeOnlyCheckBox() const
+QCheckBox* QMemoryOperationListView::getNotFreeOnlyCheckBox() const
 {
 	return m_pFreedOnlyCheckBox;
 }
 
-QComboBox* QMemoryOperationView::getThreadIdComboBox() const
+QComboBox* QMemoryOperationListView::getThreadIdComboBox() const
 {
 	return m_pThreadIdComboBox;
 }
 
-QPushButton* QMemoryOperationView::getFilterButton() const
+QPushButton* QMemoryOperationListView::getFilterButton() const
 {
 	return m_pFilterButton;
 }
 
-QTreeView* QMemoryOperationView::getTreeView() const
+QTreeView* QMemoryOperationListView::getTreeView() const
 {
 	return m_pTreeView;
 }
 
-void QMemoryOperationView::setData(int iRow, int iCol, const QString& szValue)
+void QMemoryOperationListView::setData(int iRow, int iCol, const QString& szValue)
 {
 	if(iRow == StatusBarRow_Search){
 		m_listStatusRow1.value(iCol)->setText(szValue);
@@ -170,7 +170,7 @@ void QMemoryOperationView::setData(int iRow, int iCol, const QString& szValue)
 	}
 }
 
-QString QMemoryOperationView::getColName(int iCol)
+QString QMemoryOperationListView::getColName(int iCol)
 {
 	switch(iCol)
 	{

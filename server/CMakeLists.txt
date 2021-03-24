@@ -19,8 +19,8 @@ SET (ALEAKD_SERVER_SRC
 	Global/Utils.h
 	GUI/QApplicationWindow.cpp
 	GUI/QApplicationWindow.h
-	GUI/QMemoryOperationView.cpp
-	GUI/QMemoryOperationView.h
+        GUI/QMemoryOperationListView.cpp
+        GUI/QMemoryOperationListView.h
 	GUI/QThreadInfosView.cpp
 	GUI/QThreadInfosView.h
 	GUIController/QApplicationWindowController.cpp
