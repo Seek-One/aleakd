@@ -220,7 +220,7 @@ int servercomm_send_safe(const void* buff, size_t size)
 	if(g_bInit == 0){
 		struct ServerMsgHeaderV1 headers;
 		memcpy(&headers, buff+sizeof(servermsg_version_t), sizeof(headers));
-		fprintf(stderr, "[aleakd] message sent in state unitialized: #%d (%lu bytes)\n", headers.msg_num, size);
+		fprintf(stderr, "[aleakd] message sent in state unitialized: #%d type:%d (%lu bytes)\n", headers.msg_num, headers.msg_code, size);
 		//fprintf(stderr, "[aleakd] message #%d sent (%lu bytes): thread:%lu, msg_code=%d\n", g_iMsgNum, size, headers.thread_id, headers.msg_code);
 	}
 
@@ -331,4 +331,22 @@ void servercomm_msg_backtrace_make(struct ServerMsgBacktraceV1* pBacktrace, void
 		pRow->symbol_name_size = strlen(pRow->symbol_name);
 				 */
 	}
+}
+
+void servercomm_msg_symbolinfos_init_v1(struct ServerMsgSymbolInfosV1* pServerMsgSymbolInfos)
+{
+	pServerMsgSymbolInfos->msg_version = ALEAKD_MSG_VERSION;
+
+	servercomm_msg_header_init_v1(&pServerMsgSymbolInfos->header);
+	pServerMsgSymbolInfos->header.msg_code = ALeakD_MsgCode_symbolinfos;
+
+	pServerMsgSymbolInfos->data.object_addr = 0;
+	memset(pServerMsgSymbolInfos->data.object_name, 0, sizeof(pServerMsgSymbolInfos->data.object_name));
+	pServerMsgSymbolInfos->data.symbol_addr = 0;
+	memset(pServerMsgSymbolInfos->data.symbol_name, 0, sizeof(pServerMsgSymbolInfos->data.symbol_name));
+}
+
+int servercomm_msg_symbolinfos_send_v1(struct ServerMsgSymbolInfosV1* pServerMsgSymbolInfos)
+{
+	return servercomm_send_safe(pServerMsgSymbolInfos, sizeof(struct ServerMsgSymbolInfosV1));
 }

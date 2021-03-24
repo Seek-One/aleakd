@@ -36,12 +36,15 @@ char tmpbuf[4096];
 unsigned long tmppos = 0;
 unsigned long tmpallocs = 0;
 
-static int g_bSendBacktrace = 1;
+static int g_bSendBacktrace = 0;
 static int g_bUseServerMessage = 1;
 
 void* dummy_malloc(size_t size)
 {
-    if (tmppos + size >= sizeof(tmpbuf)) exit(1);
+    if (tmppos + size >= sizeof(tmpbuf)){
+		fprintf(stderr, "[aleakd] dummy_malloc fail due to buffer overflow\n");
+    	exit(1);
+    }
     void *retptr = tmpbuf + tmppos;
     tmppos += size;
     ++tmpallocs;
@@ -125,6 +128,8 @@ int wrapper_init()
 			res = servercomm_init();
 		}
 
+		g_bSendBacktrace = 1;
+
 		fprintf(stderr, "[aleakd] wrapper_init done\n");
 	}
 
@@ -145,6 +150,44 @@ void backtrace_send(void** listBacktraceAddr, int iBacktraceSize, int iOriginMsg
 	bt_msg.data.origin_msg_num = iOriginMsgNum;
 	servercomm_msg_backtrace_make(&bt_msg, listBacktraceAddr, iBacktraceSize);
 	servercomm_msg_backtrace_send_v1(&bt_msg);
+
+	for(int i=0; i<iBacktraceSize; i++){
+		void* addr = listBacktraceAddr[i];
+
+		const char* fname = NULL;
+		void* fbase = NULL;
+		const char* sfname = NULL;
+		void* saddr = NULL;
+		backtrace_get_infos(addr, &fname, &fbase, &sfname, &saddr);
+
+		int iLen;
+
+		struct ServerMsgSymbolInfosV1 sym_msg;
+		servercomm_msg_symbolinfos_init_v1(&sym_msg);
+
+		// Addr
+		sym_msg.data.addr = (uint64_t)addr;
+		// Object name
+		if(fname) {
+			iLen = strlen(fname);
+			if (iLen > 0) {
+				memcpy(sym_msg.data.object_name, fname, iLen);
+			}
+		}
+		// Object addr
+		sym_msg.data.object_addr = (uint64_t)fbase;
+		// Symbol name
+		if(sfname) {
+			iLen = strlen(sfname);
+			if (iLen > 0) {
+				memcpy(sym_msg.data.symbol_name, sfname, iLen);
+			}
+		}
+		// Symbol addr
+		sym_msg.data.symbol_addr = (uint64_t)saddr;
+
+		servercomm_msg_symbolinfos_send_v1(&sym_msg);
+	}
 }
 
 void *malloc(size_t size)

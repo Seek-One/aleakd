@@ -80,15 +80,6 @@ struct __attribute__((__packed__)) ServerMsgThreadV1
 // Backtrace message
 ///////////////////////
 
-struct __attribute__((__packed__)) ServerMsgBacktraceRowV1
-{
-	uint64_t addr;
-	uint16_t symbol_name_size;
-	const char* symbol_name;
-	uint16_t object_name_size;
-	const char* object_name;
-} _ServerMsgBacktraceRowV1;
-
 struct __attribute__((__packed__)) ServerMsgBacktraceDataV1
 {
 	uint16_t origin_msg_num;
@@ -102,5 +93,25 @@ struct __attribute__((__packed__)) ServerMsgBacktraceV1
 	struct ServerMsgHeaderV1 header;
 	struct ServerMsgBacktraceDataV1 data;
 } _ServerMsgBacktraceV1;
+
+///////////////////////
+// Symbol table infos
+///////////////////////
+
+struct __attribute__((__packed__)) ServerMsgSymbolInfosDataV1
+{
+	uint64_t addr;
+	char object_name[255];
+	uint64_t object_addr;
+	char symbol_name[100];
+	uint64_t symbol_addr;
+} _ServerMsgSymbolInfosDataV1;
+
+struct __attribute__((__packed__)) ServerMsgSymbolInfosV1
+{
+	servermsg_version_t msg_version;
+	struct ServerMsgHeaderV1 header;
+	struct ServerMsgSymbolInfosDataV1 data;
+} _ServerMsgSymbolInfosV1;
 
 #endif //ALEAKD_SERVER_MSG_H

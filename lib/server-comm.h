@@ -24,4 +24,7 @@ void servercomm_msg_backtrace_init_v1(struct ServerMsgBacktraceV1* pServerMsgBac
 int servercomm_msg_backtrace_send_v1(struct ServerMsgBacktraceV1* pServerMsgBacktrace);
 void servercomm_msg_backtrace_make(struct ServerMsgBacktraceV1* pBacktrace, void** listBackTraceAddr, int iSize);
 
+void servercomm_msg_symbolinfos_init_v1(struct ServerMsgSymbolInfosV1* pServerMsgSymbolInfos);
+int servercomm_msg_symbolinfos_send_v1(struct ServerMsgSymbolInfosV1* pServerMsgSymbolInfos);
+
 #endif // ALEAKD_SERVER_COMM
