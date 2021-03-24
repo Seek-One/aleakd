@@ -128,7 +128,12 @@ int wrapper_init()
 			res = servercomm_init();
 		}
 
-		g_bSendBacktrace = 1;
+		char* szBacktraceEnabled = getenv("ALEAKD_BACKTRACE");
+		if(szBacktraceEnabled) {
+			g_bSendBacktrace = atoi(szBacktraceEnabled);
+		}else {
+			g_bSendBacktrace = 1;
+		}
 
 		fprintf(stderr, "[aleakd] wrapper_init done\n");
 	}

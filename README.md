@@ -25,6 +25,7 @@ Features
 - Statistics for each: malloc, calloc, realloc, free, posix_memalign, aligned_alloc, memalign, valloc, pvalloc
 - Use filter in the GUI to find a memory operation
 - Colored view for each memory allocation to view directly the state (free or not free)
+- Get backtrace for every memory operation
 
 Build
 --------
@@ -63,7 +64,8 @@ Options
 You can use the following environnement vaiables:
 ```
 ALEAKD_SERVER_HOST: host address to the aleakd server
-ALEAKD_SERVER_PORT: port address to the aleakd server
+ALEAKD_SERVER_PORT: port address to the aleakd server (default: 19000)
+ALEAKD_BACKTRACE: enable backtrace message (default: 1). This can reduce the performance.
 ```
 
 
