@@ -475,7 +475,9 @@ void QApplicationWindowController::onMemoryOperationDoubleClicked(const QModelIn
 
 		QStringList listHeaders;
 		listHeaders.append(tr("Address"));
+		listHeaders.append(tr("Symbol addr"));
 		listHeaders.append(tr("Symbol name"));
+		listHeaders.append(tr("Object addr"));
 		listHeaders.append(tr("Object name"));
 		modelBacktrace.setHorizontalHeaderLabels(listHeaders);
 
@@ -496,8 +498,18 @@ void QApplicationWindowController::onMemoryOperationDoubleClicked(const QModelIn
 
 				SymbolInfosSharedPtr pSymbolInfos = m_listSymbolInfos.getByAddr(iAddr);
 				if(pSymbolInfos){
+					// Symbol addr
+					pItem = new QStandardItem("0x" + QString::number(pSymbolInfos->m_iSymbolAddr));
+					pItem->setEditable(false);
+					listCols.append(pItem);
+
 					// Symbol name
 					pItem = new QStandardItem(pSymbolInfos->m_szSymbolName);
+					pItem->setEditable(false);
+					listCols.append(pItem);
+
+					// Object addr
+					pItem = new QStandardItem("0x" + QString::number(pSymbolInfos->m_iObjectAddr));
 					pItem->setEditable(false);
 					listCols.append(pItem);
 
@@ -516,8 +528,10 @@ void QApplicationWindowController::onMemoryOperationDoubleClicked(const QModelIn
 		dialog.setBacktraceModel(&modelBacktrace);
 		QTreeView *pTreeView = dialog.getBacktraceTreeView();
 		pTreeView->header()->resizeSection(0, 150);
-		pTreeView->header()->resizeSection(1, 200);
-		pTreeView->header()->resizeSection(2, 400);
+		pTreeView->header()->resizeSection(1, 150);
+		pTreeView->header()->resizeSection(2, 200);
+		pTreeView->header()->resizeSection(3, 150);
+		pTreeView->header()->resizeSection(4, 400);
 
 		dialog.exec();
 
