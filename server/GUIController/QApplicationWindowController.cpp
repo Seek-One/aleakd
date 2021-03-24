@@ -11,11 +11,13 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QLineEdit>
+#include <QStandardItemModel>
 
 #include "Global/Utils.h"
 
 #include "GUI/QApplicationWindow.h"
 #include "GUI/QMemoryOperationListView.h"
+#include "GUI/QMemoryOperationView.h"
 #include "GUI/QThreadInfosView.h"
 
 #include "GUIModel/QMemoryOperationModel.h"
@@ -101,7 +103,7 @@ void QApplicationWindowController::clearData()
 	m_lockListMemoryOperation.lockForWrite();
 	m_listMemoryOperation.clear();
 	m_listMemoryOperationNonFreed.clear();
-	m_listMemoryOperationNoBacktrace.clear();
+	m_listMemoryOperationWithoutBacktrace.clear();
 	m_lockListMemoryOperation.unlock();
 
 	m_searchStats.reset();
@@ -129,7 +131,7 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 		}
 	}
 	m_listMemoryOperation.append(pMemoryOperation);
-	m_listMemoryOperationNoBacktrace.append(pMemoryOperation);
+	m_listMemoryOperationWithoutBacktrace.append(pMemoryOperation);
 	if(pMemoryOperation->hasAllocOperation()) {
 		m_listMemoryOperationNonFreed.append(pMemoryOperation);
 	}
@@ -260,7 +262,7 @@ ThreadInfosSharedPtr QApplicationWindowController::getThreadInfos(uint64_t iThre
 void QApplicationWindowController::addBacktrace(const BacktraceSharedPtr& pBacktrace)
 {
 	m_lockListMemoryOperation.lockForWrite();
-	MemoryOperationSharedPtr pMemoryOperation = m_listMemoryOperationNoBacktrace.takeByMsgNum(pBacktrace->m_iOriginMsgNum);
+	MemoryOperationSharedPtr pMemoryOperation = m_listMemoryOperationWithoutBacktrace.takeByMsgNum(pBacktrace->m_iOriginMsgNum);
 	if(pMemoryOperation){
 		pMemoryOperation->m_pBackTrace = pBacktrace;
 	}
@@ -454,7 +456,40 @@ void QApplicationWindowController::onMemoryOperationDoubleClicked(const QModelIn
 {
 	MemoryOperationSharedPtr pMemoryOperation = m_listFilterMemoryOperation.value(index.row());
 	if(pMemoryOperation) {
-		qDebug("clicked: %d", pMemoryOperation->m_iMsgNum);
+		BacktraceSharedPtr pBackTrace = pMemoryOperation->m_pBackTrace;
+
+		QStandardItemModel modelBacktrace;
+
+		QStringList listHeaders;
+		listHeaders.append(tr("Address"));
+		listHeaders.append(tr("Symbol name"));
+		listHeaders.append(tr("Object name"));
+		modelBacktrace.setHorizontalHeaderLabels(listHeaders);
+
+		if(pBackTrace){
+			QStandardItem* pItem;
+			QList<quint64>::const_iterator iter;
+			for(iter = pBackTrace->m_listAddr.constBegin(); iter != pBackTrace->m_listAddr.constEnd(); ++iter)
+			{
+				QList<QStandardItem*> listCols;
+
+				pItem = new QStandardItem("0x" + QString::number(*iter));
+				pItem->setEditable(false);
+				listCols.append(pItem);
+
+				modelBacktrace.appendRow(listCols);
+			}
+		}
+
+		QMemoryOperationView dialog(m_pMemoryOperationListView);
+		dialog.setBacktraceModel(&modelBacktrace);
+		QTreeView *pTreeView = dialog.getBacktraceTreeView();
+		pTreeView->header()->resizeSection(0, 150);
+		pTreeView->header()->resizeSection(1, 200);
+		pTreeView->header()->resizeSection(2, 400);
+
+		dialog.exec();
+
 	}
 }
 

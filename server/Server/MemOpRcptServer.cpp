@@ -304,7 +304,7 @@ qint64 MemOpRcptServer::doProcessMsgV1(char* pBuffer, qint64 iMaxSize)
 		iSizeRead += sizeof(data);
 
 		Backtrace *pBacktrace = new Backtrace();
-		pBacktrace->m_iOriginMsgNum = header.msg_num;
+		pBacktrace->m_iOriginMsgNum = data.origin_msg_num;
 
 		for(int i=0; i < data.backtrace_size; i++){
 			pBacktrace->m_listAddr.append(data.list_addr[i]);

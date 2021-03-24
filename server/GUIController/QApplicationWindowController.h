@@ -62,7 +62,7 @@ private:
 	QReadWriteLock m_lockListMemoryOperation;
 	MemoryOperationList m_listMemoryOperation;
 	MemoryOperationList m_listMemoryOperationNonFreed; // Used to speed up the search
-	MemoryOperationList m_listMemoryOperationNoBacktrace; // Used to speed up the search
+	MemoryOperationList m_listMemoryOperationWithoutBacktrace; // Used to speed up the search
 	ThreadInfosList m_listThreadInfos;
 	ThreadInfosList m_listThreadInfosAlive;
 

@@ -320,7 +320,7 @@ void servercomm_msg_backtrace_make(struct ServerMsgBacktraceV1* pBacktrace, void
 	pBacktrace->data.backtrace_size = iSize;
 	for(int i=0; i<iSize; i++)
 	{
-		void* addr = listBackTraceAddr[0];
+		void* addr = listBackTraceAddr[i];
 		pBacktrace->data.list_addr[i] = (uint64_t)addr;
 
 				/*
