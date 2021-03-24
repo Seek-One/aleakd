@@ -106,6 +106,10 @@ void QApplicationWindowController::clearData()
 	m_listMemoryOperationWithoutBacktrace.clear();
 	m_lockListMemoryOperation.unlock();
 
+	m_lockSymbolInfos.lockForWrite();
+	m_listSymbolInfos.clear();
+	m_lockSymbolInfos.unlock();
+
 	m_searchStats.reset();
 	m_lockGlobalStats.lockForWrite();
 	m_globalStats.reset();
@@ -271,6 +275,15 @@ void QApplicationWindowController::addBacktrace(const BacktraceSharedPtr& pBackt
 	m_lockGlobalStats.lockForWrite();
 	m_globalStats.m_iMessageCount++;
 	m_lockGlobalStats.unlock();
+}
+
+void QApplicationWindowController::addSymbolInfos(const SymbolInfosSharedPtr& pSymbolInfos)
+{
+	m_lockSymbolInfos.lockForWrite();
+	if(!m_listSymbolInfos.contains(pSymbolInfos->m_iAddr)){
+		m_listSymbolInfos.insert(pSymbolInfos->m_iAddr, pSymbolInfos);
+	}
+	m_lockSymbolInfos.unlock();
 }
 
 void QApplicationWindowController::onFilterButtonClicked()
@@ -469,16 +482,34 @@ void QApplicationWindowController::onMemoryOperationDoubleClicked(const QModelIn
 		if(pBackTrace){
 			QStandardItem* pItem;
 			QList<quint64>::const_iterator iter;
+			m_lockSymbolInfos.lockForRead();
 			for(iter = pBackTrace->m_listAddr.constBegin(); iter != pBackTrace->m_listAddr.constEnd(); ++iter)
 			{
+				quint64 iAddr = *iter;
+
 				QList<QStandardItem*> listCols;
 
-				pItem = new QStandardItem("0x" + QString::number(*iter));
+				// Addr
+				pItem = new QStandardItem("0x" + QString::number(iAddr));
 				pItem->setEditable(false);
 				listCols.append(pItem);
 
+				SymbolInfosSharedPtr pSymbolInfos = m_listSymbolInfos.getByAddr(iAddr);
+				if(pSymbolInfos){
+					// Symbol name
+					pItem = new QStandardItem(pSymbolInfos->m_szSymbolName);
+					pItem->setEditable(false);
+					listCols.append(pItem);
+
+					// Object name
+					pItem = new QStandardItem(pSymbolInfos->m_szObjectName);
+					pItem->setEditable(false);
+					listCols.append(pItem);
+				}
+
 				modelBacktrace.appendRow(listCols);
 			}
+			m_lockSymbolInfos.unlock();
 		}
 
 		QMemoryOperationView dialog(m_pMemoryOperationListView);
@@ -511,4 +542,9 @@ void QApplicationWindowController::onThreadOperationReceived(const ThreadOperati
 void QApplicationWindowController::onBacktraceReceived(const BacktraceSharedPtr& pBacktrace)
 {
 	addBacktrace(pBacktrace);
+}
+
+void QApplicationWindowController::onSymbolInfosReceived(const SymbolInfosSharedPtr& pSymbolInfos)
+{
+	addSymbolInfos(pSymbolInfos);
 }

@@ -319,28 +319,24 @@ qint64 MemOpRcptServer::doProcessMsgV1(char* pBuffer, qint64 iMaxSize)
 	// Symbol infos operation
 	if (header.msg_code >= 50 && header.msg_code < 60)
 	{
-		qDebug("symbol_infos");
-
 		if(iMaxSize - iSizeRead < sizeof(ServerMsgSymbolInfosV1)){
 			return 0;
 		}
 
-		ServerMsgSymbolInfosV1 data;
+		ServerMsgSymbolInfosDataV1 data;
 		memcpy(&data, pBuffer+iSizeRead, sizeof(data));
 		iSizeRead += sizeof(data);
 
-		/*
-		Backtrace *pBacktrace = new Backtrace();
-		pBacktrace->m_iOriginMsgNum = data.origin_msg_num;
-
-		for(int i=0; i < data.backtrace_size; i++){
-			pBacktrace->m_listAddr.append(data.list_addr[i]);
-		}
+		SymbolInfos *pSymbolInfos = new SymbolInfos();
+		pSymbolInfos->m_iAddr = data.addr;
+		pSymbolInfos->m_iObjectAddr = data.object_addr;
+		pSymbolInfos->m_szObjectName = data.object_name;
+		pSymbolInfos->m_iSymbolAddr = data.symbol_addr;
+		pSymbolInfos->m_szSymbolName = data.symbol_name;
 
 		if (m_pHandler) {
-			m_pHandler->onBacktraceReceived(BacktraceSharedPtr(pBacktrace));
+			m_pHandler->onSymbolInfosReceived(SymbolInfosSharedPtr(pSymbolInfos));
 		}
-		 */
 
 	}
 

@@ -37,6 +37,8 @@ SET (ALEAKD_SERVER_SRC
 	Model/MemoryOperation.h
 	Model/MemoryStats.cpp
 	Model/MemoryStats.h
+	Model/SymbolInfos.cpp
+	Model/SymbolInfos.h
 	Model/ThreadInfos.cpp
 	Model/ThreadInfos.h
 	Model/ThreadOperation.cpp

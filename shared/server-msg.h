@@ -101,9 +101,9 @@ struct __attribute__((__packed__)) ServerMsgBacktraceV1
 struct __attribute__((__packed__)) ServerMsgSymbolInfosDataV1
 {
 	uint64_t addr;
-	char object_name[255];
+	char object_name[256];
 	uint64_t object_addr;
-	char symbol_name[100];
+	char symbol_name[96];
 	uint64_t symbol_addr;
 } _ServerMsgSymbolInfosDataV1;
 

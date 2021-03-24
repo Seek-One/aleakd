@@ -33,3 +33,8 @@ void IMemOpRcptServerHandler::onBacktraceReceived(const BacktraceSharedPtr& pBac
 {
 
 }
+
+void IMemOpRcptServerHandler::onSymbolInfosReceived(const SymbolInfosSharedPtr& pSymbolInfos)
+{
+
+}

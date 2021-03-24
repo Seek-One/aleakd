@@ -322,14 +322,6 @@ void servercomm_msg_backtrace_make(struct ServerMsgBacktraceV1* pBacktrace, void
 	{
 		void* addr = listBackTraceAddr[i];
 		pBacktrace->data.list_addr[i] = (uint64_t)addr;
-
-				/*
-		struct ServerMsgBacktraceRowV1* pRow = &(pBacktrace->data.list_addr[i]);
-		pRow->addr = (uint64_t)addr;
-		backtrace_get_infos((void*)pRow->addr, &pRow->object_name, NULL, &pRow->symbol_name, NULL);
-		pRow->object_name_size = strlen(pRow->object_name);
-		pRow->symbol_name_size = strlen(pRow->symbol_name);
-				 */
 	}
 }
 
