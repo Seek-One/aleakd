@@ -284,9 +284,6 @@ int servercomm_msg_memory_send_v1(struct ServerMsgMemoryV1* pServerMemoryMsg)
 
 void servercomm_msg_thread_init_v1(struct ServerMsgThreadV1* pServerMsgThread)
 {
-	struct timeval tvNow;
-	gettimeofday(&tvNow, NULL);
-
 	pServerMsgThread->msg_version = ALEAKD_MSG_VERSION;
 
 	servercomm_msg_header_init_v1(&pServerMsgThread->header);
@@ -301,15 +298,37 @@ int servercomm_msg_thread_send_v1(struct ServerMsgThreadV1* pServerMsgThread)
 	return servercomm_send_safe(pServerMsgThread, sizeof(struct ServerMsgThreadV1));
 }
 
-void servercomm_make_backtrace(void** listBackTraceAddr, int iSize, struct ServerMsgBacktraceV1* pBacktrace)
+void servercomm_msg_backtrace_init_v1(struct ServerMsgBacktraceV1* pServerMsgBacktrace)
 {
+	pServerMsgBacktrace->msg_version = ALEAKD_MSG_VERSION;
+
+	servercomm_msg_header_init_v1(&pServerMsgBacktrace->header);
+	pServerMsgBacktrace->header.msg_code = ALeakD_MsgCode_backtrace;
+
+	pServerMsgBacktrace->data.origin_msg_num = 0;
+	pServerMsgBacktrace->data.backtrace_size = 0;
+	memset(pServerMsgBacktrace->data.list_addr, 0, sizeof(pServerMsgBacktrace->data.list_addr));
+}
+
+int servercomm_msg_backtrace_send_v1(struct ServerMsgBacktraceV1* pServerMsgBacktrace)
+{
+	return servercomm_send_safe(pServerMsgBacktrace, sizeof(struct ServerMsgBacktraceV1));
+}
+
+void servercomm_msg_backtrace_make(struct ServerMsgBacktraceV1* pBacktrace, void** listBackTraceAddr, int iSize)
+{
+	pBacktrace->data.backtrace_size = iSize;
 	for(int i=0; i<iSize; i++)
 	{
 		void* addr = listBackTraceAddr[0];
-		struct ServerMsgBacktraceRowV1* pRow = &(pBacktrace->list_backtrace[i]);
+		pBacktrace->data.list_addr[i] = (uint64_t)addr;
+
+				/*
+		struct ServerMsgBacktraceRowV1* pRow = &(pBacktrace->data.list_addr[i]);
 		pRow->addr = (uint64_t)addr;
 		backtrace_get_infos((void*)pRow->addr, &pRow->object_name, NULL, &pRow->symbol_name, NULL);
 		pRow->object_name_size = strlen(pRow->object_name);
 		pRow->symbol_name_size = strlen(pRow->symbol_name);
+				 */
 	}
 }

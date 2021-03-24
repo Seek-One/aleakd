@@ -5,4 +5,4 @@
 #define NAMED_PIPE_FILE "/tmp/aleakd.namedpipe"
 
 #define BUFFERIZE_TRANSFERT
-#define BACKTRACE_MAX_SIZE 20
+#define BACKTRACE_MAX_SIZE 50

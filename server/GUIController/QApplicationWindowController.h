@@ -35,6 +35,7 @@ public:
 	void onNewConnection();
 	void onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation);
 	void onThreadOperationReceived(const ThreadOperationSharedPtr& pThreadOperation);
+	void onBacktraceReceived(const BacktraceSharedPtr& pBacktrace);
 
 private slots:
 	void onFilterButtonClicked();
@@ -47,6 +48,7 @@ private:
 	void updateThreadInfosAddAlloc(uint64_t iThreadId, uint64_t iSize, struct timeval& tvOperation);
 	void updateThreadInfosAddFree(uint64_t iThreadId, uint64_t iSize, struct timeval& tvOperation);
 	ThreadInfosSharedPtr getThreadInfos(uint64_t iThreadId, bool bThreadCreation, struct timeval& tvOperation);
+	void addBacktrace(const BacktraceSharedPtr& pBacktrace);
 
 private:
 	QApplicationWindow* m_pApplicationWindow;
@@ -55,10 +57,11 @@ private:
 
 	QTimer m_timerUpdate;
 
-	// List of memory operation
+	// List data
 	QReadWriteLock m_lockListMemoryOperation;
 	MemoryOperationList m_listMemoryOperation;
-	MemoryOperationList m_listMemoryOperationNonFreed;
+	MemoryOperationList m_listMemoryOperationNonFreed; // Used to speed up the search
+	MemoryOperationList m_listMemoryOperationNoBacktrace; // Used to speed up the search
 	ThreadInfosList m_listThreadInfos;
 	ThreadInfosList m_listThreadInfosAlive;
 

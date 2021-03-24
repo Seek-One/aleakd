@@ -7,6 +7,7 @@
 
 #include "Model/MemoryOperation.h"
 #include "Model/ThreadOperation.h"
+#include "Model/Backtrace.h"
 
 class IMemOpRcptServerHandler
 {
@@ -18,6 +19,7 @@ public:
 	virtual void onNewConnection();
 	virtual void onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation);
 	virtual void onThreadOperationReceived(const ThreadOperationSharedPtr& pThreadOperation);
+	virtual void onBacktraceReceived(const BacktraceSharedPtr& pBackTrace);
 };
 
 #endif //ALEAKD_IMEMOPRCPTSERVERHANDLER_H

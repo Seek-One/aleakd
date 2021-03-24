@@ -26,6 +26,12 @@ enum ALeakD_MsgCode {
 	// pthread function
 	ALeakD_MsgCode_pthread_create = 31,
 	ALeakD_MsgCode_pthread_set_name = 32,
+
+	// backtrace function
+	ALeakD_MsgCode_backtrace = 41,
+
+	// symbol infos function
+	ALeakD_MsgCode_syminfos = 51,
 };
 
 const char* ALeakD_MsgLabel(enum ALeakD_MsgCode iFuncType);

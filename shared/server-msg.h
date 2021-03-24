@@ -89,12 +89,18 @@ struct __attribute__((__packed__)) ServerMsgBacktraceRowV1
 	const char* object_name;
 } _ServerMsgBacktraceRowV1;
 
+struct __attribute__((__packed__)) ServerMsgBacktraceDataV1
+{
+	uint16_t origin_msg_num;
+	uint8_t backtrace_size;
+	uint64_t list_addr[BACKTRACE_MAX_SIZE];
+} _ServerMsgBacktraceDataV1;
+
 struct __attribute__((__packed__)) ServerMsgBacktraceV1
 {
 	servermsg_version_t msg_version;
 	struct ServerMsgHeaderV1 header;
-	uint16_t origin_msg_num;
-	struct ServerMsgBacktraceRowV1 list_backtrace[BACKTRACE_MAX_SIZE];
+	struct ServerMsgBacktraceDataV1 data;
 } _ServerMsgBacktraceV1;
 
 #endif //ALEAKD_SERVER_MSG_H

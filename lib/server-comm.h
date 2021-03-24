@@ -20,6 +20,8 @@ int servercomm_msg_memory_send_v1(struct ServerMsgMemoryV1* pServerMsgMemory);
 void servercomm_msg_thread_init_v1(struct ServerMsgThreadV1* pServerMsgThread);
 int servercomm_msg_thread_send_v1(struct ServerMsgThreadV1* pServerMsgThread);
 
-void servercomm_make_backtrace(void** listBackTraceAddr, int iSize, struct ServerMsgBacktraceV1* pBacktrace);
+void servercomm_msg_backtrace_init_v1(struct ServerMsgBacktraceV1* pServerMsgBacktrace);
+int servercomm_msg_backtrace_send_v1(struct ServerMsgBacktraceV1* pServerMsgBacktrace);
+void servercomm_msg_backtrace_make(struct ServerMsgBacktraceV1* pBacktrace, void** listBackTraceAddr, int iSize);
 
 #endif // ALEAKD_SERVER_COMM

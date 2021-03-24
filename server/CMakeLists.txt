@@ -29,6 +29,8 @@ SET (ALEAKD_SERVER_SRC
 	GUIModel/QMemoryOperationModel.h
 	GUIModel/QThreadInfosModel.cpp
 	GUIModel/QThreadInfosModel.h
+	Model/Backtrace.cpp
+	Model/Backtrace.h
 	Model/MemoryOperation.cpp
 	Model/MemoryOperation.h
 	Model/MemoryStats.cpp

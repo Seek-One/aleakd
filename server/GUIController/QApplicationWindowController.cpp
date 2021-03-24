@@ -97,6 +97,7 @@ void QApplicationWindowController::clearData()
 	m_lockListMemoryOperation.lockForWrite();
 	m_listMemoryOperation.clear();
 	m_listMemoryOperationNonFreed.clear();
+	m_listMemoryOperationNoBacktrace.clear();
 	m_lockListMemoryOperation.unlock();
 
 	m_searchStats.reset();
@@ -124,6 +125,7 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 		}
 	}
 	m_listMemoryOperation.append(pMemoryOperation);
+	m_listMemoryOperationNoBacktrace.append(pMemoryOperation);
 	if(pMemoryOperation->hasAllocOperation()) {
 		m_listMemoryOperationNonFreed.append(pMemoryOperation);
 	}
@@ -249,6 +251,20 @@ ThreadInfosSharedPtr QApplicationWindowController::getThreadInfos(uint64_t iThre
 	}
 
 	return pThreadInfos;
+}
+
+void QApplicationWindowController::addBacktrace(const BacktraceSharedPtr& pBacktrace)
+{
+	m_lockListMemoryOperation.lockForWrite();
+	MemoryOperationSharedPtr pMemoryOperation = m_listMemoryOperationNoBacktrace.takeByMsgNum(pBacktrace->m_iOriginMsgNum);
+	if(pMemoryOperation){
+		pMemoryOperation->m_pBackTrace = pBacktrace;
+	}
+	m_lockListMemoryOperation.unlock();
+
+	m_lockGlobalStats.lockForWrite();
+	m_globalStats.m_iMessageCount++;
+	m_lockGlobalStats.unlock();
 }
 
 void QApplicationWindowController::onFilterButtonClicked()
@@ -439,4 +455,9 @@ void QApplicationWindowController::onMemoryOperationReceived(const MemoryOperati
 void QApplicationWindowController::onThreadOperationReceived(const ThreadOperationSharedPtr& pThreadOperation)
 {
 	updateThreadInfos(pThreadOperation);
+}
+
+void QApplicationWindowController::onBacktraceReceived(const BacktraceSharedPtr& pBacktrace)
+{
+	addBacktrace(pBacktrace);
 }

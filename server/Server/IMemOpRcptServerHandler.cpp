@@ -28,3 +28,8 @@ void IMemOpRcptServerHandler::onThreadOperationReceived(const ThreadOperationSha
 {
 
 }
+
+void IMemOpRcptServerHandler::onBacktraceReceived(const BacktraceSharedPtr& pBackTrace)
+{
+
+}

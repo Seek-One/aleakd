@@ -15,6 +15,8 @@ extern "C" {
 #include "../shared/global-const.h"
 };
 
+#include "Model/Backtrace.h"
+
 class MemoryOperation;
 typedef QSharedPointer<MemoryOperation> MemoryOperationSharedPtr;
 
@@ -29,6 +31,7 @@ public:
 
 public:
 	struct timeval m_tvOperation;
+	uint32_t m_iMsgNum;
 	// Msg type
 	ALeakD_MsgCode m_iMsgCode;
 	// Current thread
@@ -42,6 +45,9 @@ public:
 	// Free infos
 	uint64_t m_iFreePtr;
 	bool m_bFreed;
+
+	// Backtrace
+	BacktraceSharedPtr m_pBackTrace;
 };
 
 class MemoryOperationList : public QList<MemoryOperationSharedPtr>
@@ -52,6 +58,8 @@ public:
 
 	MemoryOperationSharedPtr getPtrNotFreed(uint64_t iPtrAddr) const;
 	MemoryOperationSharedPtr takeByPtrNotFreed(uint64_t iPtrAddr);
+	MemoryOperationSharedPtr takeByMsgNum(uint32_t iMsgNum);
+
 };
 
 #endif //ALEAKD_MEMORYOPERATION_H

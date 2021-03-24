@@ -8,6 +8,7 @@ MemoryOperation::MemoryOperation()
 {
 	m_tvOperation.tv_sec = 0;
 	m_tvOperation.tv_usec = 0;
+	m_iMsgNum = 0;
 	m_iMsgCode = ALeakD_MsgCode_unknown;
 
 	// Current thread
@@ -95,6 +96,25 @@ MemoryOperationSharedPtr MemoryOperationList::takeByPtrNotFreed(uint64_t iPtrAdd
 		iter--;
 		const MemoryOperationSharedPtr& pMemoryOperation = (*iter);
 		if(pMemoryOperation->m_iAllocPtr == iPtrAddr && !pMemoryOperation->m_bFreed)
+		{
+			MemoryOperationSharedPtr pMemoryOperationResult = pMemoryOperation;
+			erase(iter);
+			return pMemoryOperationResult;
+		}
+	}
+
+	return MemoryOperationSharedPtr();
+}
+
+MemoryOperationSharedPtr MemoryOperationList::takeByMsgNum(uint32_t iMsgNum)
+{
+	MemoryOperationList::iterator iter;
+	iter = end();
+	while(iter != begin())
+	{
+		iter--;
+		const MemoryOperationSharedPtr& pMemoryOperation = (*iter);
+		if(pMemoryOperation->m_iMsgNum == iMsgNum)
 		{
 			MemoryOperationSharedPtr pMemoryOperationResult = pMemoryOperation;
 			erase(iter);

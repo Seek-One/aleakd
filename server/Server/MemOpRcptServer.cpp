@@ -235,6 +235,7 @@ qint64 MemOpRcptServer::doProcessMsgV1(char* pBuffer, qint64 iMaxSize)
 		MemoryOperation *pMemoryOperation = new MemoryOperation();
 		pMemoryOperation->m_tvOperation.tv_sec = header.time_sec;
 		pMemoryOperation->m_tvOperation.tv_usec = header.time_usec;
+		pMemoryOperation->m_iMsgNum = header.msg_num;
 		pMemoryOperation->m_iMsgCode = (ALeakD_MsgCode) header.msg_code;
 		pMemoryOperation->m_iCallerThreadId = header.thread_id;
 		pMemoryOperation->m_iAllocSize = data.alloc_size;
@@ -263,7 +264,6 @@ qint64 MemOpRcptServer::doProcessMsgV1(char* pBuffer, qint64 iMaxSize)
 //		 	tvProcess.tv_sec, tvProcess.tv_usec);
 	}
 
-
 	// Thread operation
 	if (header.msg_code >= 30 && header.msg_code < 40)
 	{
@@ -278,6 +278,7 @@ qint64 MemOpRcptServer::doProcessMsgV1(char* pBuffer, qint64 iMaxSize)
 		ThreadOperation *pThreadOperation = new ThreadOperation();
 		pThreadOperation->m_tvOperation.tv_sec = header.time_sec;
 		pThreadOperation->m_tvOperation.tv_usec = header.time_usec;
+		pThreadOperation->m_iMsgNum = header.msg_num;
 		pThreadOperation->m_iMsgCode = (ALeakD_MsgCode) header.msg_code;
 		pThreadOperation->m_iCallerThreadId = header.thread_id;
 		pThreadOperation->m_iThreadId = data.thread_id;
@@ -289,6 +290,30 @@ qint64 MemOpRcptServer::doProcessMsgV1(char* pBuffer, qint64 iMaxSize)
 		if (m_pHandler) {
 			m_pHandler->onThreadOperationReceived(ThreadOperationSharedPtr(pThreadOperation));
 		}
+	}
+
+	// Backtrace operation
+	if (header.msg_code >= 40 && header.msg_code < 50)
+	{
+		if(iMaxSize - iSizeRead < sizeof(ServerMsgBacktraceV1)){
+			return 0;
+		}
+
+		ServerMsgBacktraceDataV1 data;
+		memcpy(&data, pBuffer+iSizeRead, sizeof(data));
+		iSizeRead += sizeof(data);
+
+		Backtrace *pBacktrace = new Backtrace();
+		pBacktrace->m_iOriginMsgNum = header.msg_num;
+
+		for(int i=0; i < data.backtrace_size; i++){
+			pBacktrace->m_listAddr.append(data.list_addr[i]);
+		}
+
+		if (m_pHandler) {
+			m_pHandler->onBacktraceReceived(BacktraceSharedPtr(pBacktrace));
+		}
+
 	}
 
 	return iSizeRead;
