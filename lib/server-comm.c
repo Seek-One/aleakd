@@ -217,17 +217,12 @@ int servercomm_send_safe(const void* buff, size_t size)
 {
 	int res = 0;
 
-	pthread_mutex_lock(&g_lockMsgCount);
-	g_iMsgNum++;
 	if(g_bInit == 0){
-		fprintf(stderr, "[aleakd] message sent in state unitialized: #%d (%lu bytes)\n", g_iMsgNum, size);
+		struct ServerMsgHeaderV1 headers;
+		memcpy(&headers, buff+sizeof(servermsg_version_t), sizeof(headers));
+		fprintf(stderr, "[aleakd] message sent in state unitialized: #%d (%lu bytes)\n", headers.msg_num, size);
+		//fprintf(stderr, "[aleakd] message #%d sent (%lu bytes): thread:%lu, msg_code=%d\n", g_iMsgNum, size, headers.thread_id, headers.msg_code);
 	}
-
-	//struct ServerMsgHeaderV1 headers;
-	//memcpy(&headers, buff+2, sizeof(headers));
-	//fprintf(stderr, "[aleakd] message #%d sent (%lu bytes): thread:%lu, msg_code=%d\n", g_iMsgNum, size, headers.thread_id, headers.msg_code);
-
-	pthread_mutex_unlock(&g_lockMsgCount);
 
 	if(g_socket != -1) {
 		res = servercomm_send((void*)buff, size);
@@ -240,7 +235,7 @@ int servercomm_send_safe(const void* buff, size_t size)
 	return res;
 }
 
-void servercomm_msg_header_init_v1(struct ServerMsgHeaderV1* pServerMsgHeader, int iBacktraceSize)
+void servercomm_msg_header_init_v1(struct ServerMsgHeaderV1* pServerMsgHeader)
 {
 	struct timeval tvNow;
 	gettimeofday(&tvNow, NULL);
@@ -249,13 +244,19 @@ void servercomm_msg_header_init_v1(struct ServerMsgHeaderV1* pServerMsgHeader, i
 	pServerMsgHeader->time_usec = tvNow.tv_usec;
 	pServerMsgHeader->thread_id = (int64_t)pthread_self();
 	pServerMsgHeader->msg_code = ALeakD_MsgCode_init;
-	pServerMsgHeader->backtrace_size = iBacktraceSize;
+
+	// Compute message num
+	pthread_mutex_lock(&g_lockMsgCount);
+	g_iMsgNum++;
+	pServerMsgHeader->msg_num = g_iMsgNum;
+	pthread_mutex_unlock(&g_lockMsgCount);
+
 }
 
 void servercomm_msg_app_init_v1(struct ServerMsgAppV1* pServerMsgApp)
 {
 	pServerMsgApp->msg_version = ALEAKD_MSG_VERSION;
-	servercomm_msg_header_init_v1(&pServerMsgApp->header, 0);
+	servercomm_msg_header_init_v1(&pServerMsgApp->header);
 }
 
 int servercomm_msg_app_send_v1(struct ServerMsgAppV1* pServerMsgApp)
@@ -263,11 +264,11 @@ int servercomm_msg_app_send_v1(struct ServerMsgAppV1* pServerMsgApp)
 	return servercomm_send_safe(pServerMsgApp, sizeof(struct ServerMsgAppV1));
 }
 
-void servercomm_msg_memory_init_v1(struct ServerMsgMemoryV1* pServerMemoryMsg, int iBacktraceSize)
+void servercomm_msg_memory_init_v1(struct ServerMsgMemoryV1* pServerMemoryMsg)
 {
 	pServerMemoryMsg->msg_version = ALEAKD_MSG_VERSION;
 
-	servercomm_msg_header_init_v1(&pServerMemoryMsg->header, iBacktraceSize);
+	servercomm_msg_header_init_v1(&pServerMemoryMsg->header);
 
 	pServerMemoryMsg->data.alloc_size = 0;
 	pServerMemoryMsg->data.alloc_ptr = 0;
@@ -275,26 +276,26 @@ void servercomm_msg_memory_init_v1(struct ServerMsgMemoryV1* pServerMemoryMsg, i
 	pServerMemoryMsg->data.free_ptr = 0;
 }
 
-int servercomm_msg_memory_send_v1(struct ServerMsgMemoryV1* pServerMemoryMsg, struct ServerMsgBacktraceV1* pBacktrace)
+int servercomm_msg_memory_send_v1(struct ServerMsgMemoryV1* pServerMemoryMsg)
 {
 	//fprintf(stderr, "[aleakd] memory msg: %d %lu\n", pServerMemoryMsg->header.msg_code, pServerMemoryMsg->header.thread_id);
 	return servercomm_send_safe(pServerMemoryMsg, sizeof(struct ServerMsgMemoryV1));
 }
 
-void servercomm_msg_thread_init_v1(struct ServerMsgThreadV1* pServerMsgThread, int iBacktraceSize)
+void servercomm_msg_thread_init_v1(struct ServerMsgThreadV1* pServerMsgThread)
 {
 	struct timeval tvNow;
 	gettimeofday(&tvNow, NULL);
 
 	pServerMsgThread->msg_version = ALEAKD_MSG_VERSION;
 
-	servercomm_msg_header_init_v1(&pServerMsgThread->header, iBacktraceSize);
+	servercomm_msg_header_init_v1(&pServerMsgThread->header);
 
 	pServerMsgThread->data.thread_id = 0;
 	memset(pServerMsgThread->data.thread_name, 0, sizeof(pServerMsgThread->data.thread_name));
 }
 
-int servercomm_msg_thread_send_v1(struct ServerMsgThreadV1* pServerMsgThread, struct ServerMsgBacktraceV1* pBacktrace)
+int servercomm_msg_thread_send_v1(struct ServerMsgThreadV1* pServerMsgThread)
 {
 	//fprintf(stderr, "[aleakd] thread msg: %d %lu\n", pServerMsgThread->header.msg_code, pServerMsgThread->header.thread_id);
 	return servercomm_send_safe(pServerMsgThread, sizeof(struct ServerMsgThreadV1));

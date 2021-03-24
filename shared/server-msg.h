@@ -21,10 +21,8 @@ struct __attribute__((__packed__)) ServerMsgHeaderV1
 	uint64_t thread_id;
 
 	// Msg type
+	uint32_t msg_num;
 	uint8_t msg_code;
-
-	// Backtrace
-	uint8_t backtrace_size;
 } _ServerMsgHeaderV1;
 
 ///////////////////////
@@ -93,6 +91,9 @@ struct __attribute__((__packed__)) ServerMsgBacktraceRowV1
 
 struct __attribute__((__packed__)) ServerMsgBacktraceV1
 {
+	servermsg_version_t msg_version;
+	struct ServerMsgHeaderV1 header;
+	uint16_t origin_msg_num;
 	struct ServerMsgBacktraceRowV1 list_backtrace[BACKTRACE_MAX_SIZE];
 } _ServerMsgBacktraceV1;
 
