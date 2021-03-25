@@ -19,6 +19,7 @@ public:
 	virtual ~QApplicationWindow();
 
 public:
+	QTabWidget* getTabWidget() const;
 	QThreadInfosView* getThreadInfosView() const;
 	QMemoryOperationListView* getMemoryOperationListView() const;
 

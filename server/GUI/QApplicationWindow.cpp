@@ -78,6 +78,11 @@ QStatusBar* QApplicationWindow::createStatusBar(QWidget* pParent)
 	return pMainWidget;
 }
 
+QTabWidget* QApplicationWindow::getTabWidget() const
+{
+	return m_pTabWidget;
+}
+
 QThreadInfosView* QApplicationWindow::getThreadInfosView() const
 {
 	return m_pThreadInfosView;

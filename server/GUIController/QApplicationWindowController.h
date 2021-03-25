@@ -42,6 +42,7 @@ private slots:
 	void onFilterButtonClicked();
 	void onTimerUpdate();
 	void onMemoryOperationDoubleClicked(const QModelIndex &index);
+	void onThreadInfosDoubleClicked(const QModelIndex &index);
 
 private:
 	void clearData();
@@ -52,6 +53,8 @@ private:
 	ThreadInfosSharedPtr getThreadInfos(uint64_t iThreadId, bool bThreadCreation, struct timeval& tvOperation);
 	void addBacktrace(const BacktraceSharedPtr& pBacktrace);
 	void addSymbolInfos(const SymbolInfosSharedPtr& pSymbolInfos);
+
+	void textToTimeval(const QString& szText, struct timeval& tv);
 
 private:
 	QApplicationWindow* m_pApplicationWindow;

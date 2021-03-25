@@ -25,6 +25,14 @@
 
 #include "GUIController/QApplicationWindowController.h"
 
+#define timer_eq(a, b) !timercmp(a, b, !=)
+#define timer_ne(a, b) timercmp(a, b, !=)
+#define timer_gt(a, b) timercmp(a, b, >)
+#define timer_ge(a, b) !timercmp(a, b, <)
+#define timer_lt(a, b) timercmp(a, b, <)
+#define timer_le(a, b) !timercmp(a, b, >)
+
+
 QApplicationWindowController::QApplicationWindowController()
 {
 	m_pApplicationWindow = NULL;
@@ -64,6 +72,9 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 		pTreeView->header()->resizeSection(3, 150);
 		pTreeView->header()->resizeSection(4, 150);
 		pTreeView->header()->resizeSection(5, 150);
+
+		// Double clicked
+		connect(m_pThreadInfosView->getTreeView(), SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(onThreadInfosDoubleClicked(const QModelIndex &)));
 	}
 
 	// Memory infos tab
@@ -87,10 +98,11 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 		pTreeView->header()->resizeSection(QMemoryOperationModel::FreePtrColumn, 150);
 
 		connect(m_pMemoryOperationListView->getFilterButton(), SIGNAL(clicked()), this, SLOT(onFilterButtonClicked()));
-	}
 
-	// Double clicked
-	connect(m_pMemoryOperationListView->getTreeView(), SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(onMemoryOperationDoubleClicked(const QModelIndex &)));
+		// Double clicked
+		connect(m_pMemoryOperationListView->getTreeView(), SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(onMemoryOperationDoubleClicked(const QModelIndex &)));
+
+	}
 
 	// Refresh timer
 	m_timerUpdate.setInterval(1000);
@@ -299,8 +311,17 @@ void QApplicationWindowController::onFilterButtonClicked()
 	qDebug("[aleakd-server] Start search");
 	timer.start();
 
-	qulonglong iTimeMin = m_pMemoryOperationListView->getTimeStampMinLineEdit()->text().toULongLong();
-	qulonglong iTimeMax = m_pMemoryOperationListView->getTimeStampMaxLineEdit()->text().toULongLong();
+	QString szTmp;
+	QStringList tokens;
+	struct timeval tvMin;
+	struct timeval tvMax;
+	timerclear(&tvMin);
+	timerclear(&tvMax);
+
+	szTmp = m_pMemoryOperationListView->getTimeStampMinLineEdit()->text();
+	textToTimeval(szTmp, tvMin);
+	szTmp = m_pMemoryOperationListView->getTimeStampMaxLineEdit()->text();
+	textToTimeval(szTmp, tvMax);
 
 	qulonglong iThreadId = 0;
 	if(m_pMemoryOperationListView->getThreadIdComboBox()->currentIndex() != -1){
@@ -330,13 +351,13 @@ void QApplicationWindowController::onFilterButtonClicked()
 				bAccept = false;
 			}
 		}
-		if(iTimeMin > 0){
-			if(pMemoryOperation->m_tvOperation.tv_sec < iTimeMin){
+		if(timerisset(&tvMin)){
+			if(timer_lt(&pMemoryOperation->m_tvOperation, &tvMin)){
 				bAccept = false;
 			}
 		}
-		if(iTimeMax > 0){
-			if(pMemoryOperation->m_tvOperation.tv_sec > iTimeMax){
+		if(timerisset(&tvMax)){
+			if(timer_gt(&pMemoryOperation->m_tvOperation, &tvMax)){
 				bAccept = false;
 			}
 		}
@@ -555,6 +576,34 @@ void QApplicationWindowController::onMemoryOperationDoubleClicked(const QModelIn
 	}
 }
 
+void QApplicationWindowController::onThreadInfosDoubleClicked(const QModelIndex &index)
+{
+	ThreadInfosSharedPtr pThreadInfos = m_listThreadInfos.value(index.row());
+	if(pThreadInfos) {
+		QString szTmp;
+		if(timerisset(&pThreadInfos->m_tvCreation)) {
+			szTmp = QString("%0,%1").arg(pThreadInfos->m_tvCreation.tv_sec).arg(pThreadInfos->m_tvCreation.tv_usec, 6, 10, QChar('0'));
+		}else{
+			szTmp = QString();
+		}
+		m_pMemoryOperationListView->getTimeStampMinLineEdit()->setText(szTmp);
+
+		if(timerisset(&pThreadInfos->m_tvTermination)) {
+			szTmp = QString("%0,%1").arg(pThreadInfos->m_tvTermination.tv_sec).arg(
+					pThreadInfos->m_tvTermination.tv_usec, 6, 10, QChar('0'));
+		}else{
+			szTmp = QString();
+		}
+		m_pMemoryOperationListView->getTimeStampMaxLineEdit()->setText(szTmp);
+
+		m_pMemoryOperationListView->getThreadIdComboBox()->setCurrentIndex(-1);
+		szTmp = QString::number(pThreadInfos->m_iThreadId);
+		m_pMemoryOperationListView->getThreadIdComboBox()->setEditText(szTmp);
+	}
+
+	m_pApplicationWindow->getTabWidget()->setCurrentIndex(1);
+}
+
 void QApplicationWindowController::onNewConnection()
 {
 	clearData();
@@ -581,4 +630,18 @@ void QApplicationWindowController::onBacktraceReceived(const BacktraceSharedPtr&
 void QApplicationWindowController::onSymbolInfosReceived(const SymbolInfosSharedPtr& pSymbolInfos)
 {
 	addSymbolInfos(pSymbolInfos);
+}
+
+void QApplicationWindowController::textToTimeval(const QString& szText, struct timeval& tv)
+{
+	if(!szText.isEmpty()) {
+		QStringList tokens = szText.split(",");
+		if (tokens.count() == 2) {
+			tv.tv_sec = tokens[0].toULong();
+			tv.tv_usec = tokens[1].toULong();
+		} else {
+			tv.tv_sec = tokens[0].toULong();
+			tv.tv_usec = 0;
+		}
+	}
 }
