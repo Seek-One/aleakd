@@ -74,15 +74,17 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 		m_pModelMemoryOperation->setMemoryOperationList(&m_listFilterMemoryOperation);
 
 		QTreeView *pTreeView = m_pMemoryOperationListView->getTreeView();
+		pTreeView->setIndentation(0);
 		pTreeView->setModel(m_pModelMemoryOperation);
 
-		pTreeView->header()->resizeSection(0, 200);
-		pTreeView->header()->resizeSection(1, 150);
-		pTreeView->header()->resizeSection(2, 100);
-		pTreeView->header()->resizeSection(3, 100);
-		pTreeView->header()->resizeSection(4, 150);
-		pTreeView->header()->resizeSection(5, 100);
-		pTreeView->header()->resizeSection(6, 150);
+		pTreeView->header()->resizeSection(QMemoryOperationModel::MsgNum, 50);
+		pTreeView->header()->resizeSection(QMemoryOperationModel::TimeStampColumn, 200);
+		pTreeView->header()->resizeSection(QMemoryOperationModel::ThreadColumn, 150);
+		pTreeView->header()->resizeSection(QMemoryOperationModel::OperationColumn, 100);
+		pTreeView->header()->resizeSection(QMemoryOperationModel::AllocSizeColumn, 100);
+		pTreeView->header()->resizeSection(QMemoryOperationModel::AllocPtrColumn, 150);
+		pTreeView->header()->resizeSection(QMemoryOperationModel::AllocNumColumn, 100);
+		pTreeView->header()->resizeSection(QMemoryOperationModel::FreePtrColumn, 150);
 
 		connect(m_pMemoryOperationListView->getFilterButton(), SIGNAL(clicked()), this, SLOT(onFilterButtonClicked()));
 	}

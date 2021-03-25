@@ -74,6 +74,8 @@ QVariant QMemoryOperationModel::data(const QModelIndex &index, int role) const
 		}
 
 		switch(index.column()) {
+		case MsgNum:
+			return QString::number(pMemoryOperation->m_iMsgNum);
 		case TimeStampColumn:
 			return QString("%0,%1").arg(pMemoryOperation->m_tvOperation.tv_sec).arg(pMemoryOperation->m_tvOperation.tv_usec, 6, 10, QChar('0'));
 		case ThreadColumn:
@@ -142,6 +144,8 @@ QVariant QMemoryOperationModel::headerData(int section, Qt::Orientation orientat
 	if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
 	{
 		switch (section) {
+		case MsgNum:
+			return tr("Msg num");
 		case TimeStampColumn:
 			return tr("Timestamp");
 		case ThreadColumn:

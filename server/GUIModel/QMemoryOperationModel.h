@@ -19,7 +19,8 @@ public:
 
 public:
 	enum Cols {
-		TimeStampColumn = 0,
+		MsgNum = 0,
+		TimeStampColumn,
 		ThreadColumn,
 		OperationColumn,
 		AllocSizeColumn,
