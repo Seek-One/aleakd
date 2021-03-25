@@ -434,6 +434,9 @@ void QApplicationWindowController::onTimerUpdate()
 	m_pApplicationWindow->setCaptureMemoryOperationCount(Utils::getBeautifulNumberString(QString::number(m_globalStats.m_iMemoryOperationCount)));
 	m_pApplicationWindow->setCaptureMemorySizeUsed(Utils::getBeautifulNumberString(QString::number(m_globalStats.m_iMemoryOperationSize)));
 	m_pApplicationWindow->setCaptureThreadCount(Utils::getBeautifulNumberString(QString::number(m_listThreadInfos.count())));
+	m_lockSymbolInfos.lockForRead();
+	m_pApplicationWindow->setCaptureSymbolInfosCount(Utils::getBeautifulNumberString(QString::number(m_listSymbolInfos.count())));
+	m_lockSymbolInfos.unlock();
 
 	QComboBox* pThreadIdComboBox = m_pMemoryOperationListView->getThreadIdComboBox();
 	m_listFilterThreadInfos.clear();

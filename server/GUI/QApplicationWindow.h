@@ -27,6 +27,7 @@ public:
 	void setCaptureMemoryOperationCount(const QString& szValue);
 	void setCaptureMemorySizeUsed(const QString& szValue);
 	void setCaptureThreadCount(const QString& szValue);
+	void setCaptureSymbolInfosCount(const QString& szValue);
 
 private:
 	QWidget* createTabs(QWidget* pParent);
@@ -44,6 +45,7 @@ private:
 	QLabel* m_pCaptureMemoryOperationCountLabel;
 	QLabel* m_pCaptureMemorySizeUsedLabel;
 	QLabel* m_pCaptureThreadCountLabel;
+	QLabel* m_pCaptureSymbolInfosCountLabel;
 };
 
 

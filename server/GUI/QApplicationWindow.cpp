@@ -71,6 +71,10 @@ QStatusBar* QApplicationWindow::createStatusBar(QWidget* pParent)
 	pMainWidget->addPermanentWidget(m_pCaptureThreadCountLabel);
 	setCaptureThreadCount("0");
 
+	m_pCaptureSymbolInfosCountLabel = new QLabel();
+	pMainWidget->addPermanentWidget(m_pCaptureSymbolInfosCountLabel);
+	setCaptureSymbolInfosCount("0");
+
 	return pMainWidget;
 }
 
@@ -106,4 +110,10 @@ void QApplicationWindow::setCaptureThreadCount(const QString& szValue)
 {
 	QString szTmp = QString("Threads: %0").arg(szValue);
 	m_pCaptureThreadCountLabel->setText(szTmp);
+}
+
+void QApplicationWindow::setCaptureSymbolInfosCount(const QString& szValue)
+{
+	QString szTmp = QString("Symbols: %0").arg(szValue);
+	m_pCaptureSymbolInfosCountLabel->setText(szTmp);
 }
