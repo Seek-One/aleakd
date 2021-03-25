@@ -326,6 +326,8 @@ void QApplicationWindowController::onFilterButtonClicked()
 	qulonglong iThreadId = 0;
 	if(m_pMemoryOperationListView->getThreadIdComboBox()->currentIndex() != -1){
 		iThreadId = m_pMemoryOperationListView->getThreadIdComboBox()->currentData().toULongLong();
+	}else{
+		iThreadId = m_pMemoryOperationListView->getThreadIdComboBox()->currentText().toULongLong();
 	}
 	bool bNotFreed = m_pMemoryOperationListView->getNotFreeOnlyCheckBox()->isChecked();
 
