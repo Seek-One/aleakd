@@ -82,7 +82,7 @@ struct __attribute__((__packed__)) ServerMsgThreadV1
 
 struct __attribute__((__packed__)) ServerMsgBacktraceDataV1
 {
-	uint16_t origin_msg_num;
+	uint32_t origin_msg_num;
 	uint8_t backtrace_size;
 	uint64_t list_addr[BACKTRACE_MAX_SIZE];
 } _ServerMsgBacktraceDataV1;
