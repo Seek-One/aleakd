@@ -12,7 +12,7 @@
 
 #include "backtrace.h"
 
-#define MAX_BUFF_ADDR 1000
+#define MAX_BUFF_ADDR 16384
 static void* g_listAddr[MAX_BUFF_ADDR];
 static int g_listAddrCount[MAX_BUFF_ADDR];
 
