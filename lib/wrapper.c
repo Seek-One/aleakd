@@ -237,8 +237,6 @@ void *malloc(size_t size)
 				void *listBacktraceAddr[BACKTRACE_MAX_SIZE];
 				int iBacktraceSize = backtrace(listBacktraceAddr, BACKTRACE_MAX_SIZE);
 				backtrace_send(listBacktraceAddr, iBacktraceSize, msg.header.msg_num);
-
-				backtrace_print2();
 			}
 		}
 	}

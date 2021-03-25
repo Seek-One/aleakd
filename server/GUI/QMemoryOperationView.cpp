@@ -32,8 +32,6 @@ QMemoryOperationView::QMemoryOperationView(QWidget* parent) : QDialog(parent) {
 		pTmpBoxLayout->addWidget(m_pBacktraceTreeview);
 	}
 
-	pMainLayout->addStretch();
-
 	{
 		QFrame* pLineFrame = new QFrame(parent);
 		pLineFrame->setFrameShape(QFrame::HLine);

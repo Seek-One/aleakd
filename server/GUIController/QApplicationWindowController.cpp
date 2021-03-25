@@ -285,6 +285,10 @@ void QApplicationWindowController::addSymbolInfos(const SymbolInfosSharedPtr& pS
 		m_listSymbolInfos.insert(pSymbolInfos->m_iAddr, pSymbolInfos);
 	}
 	m_lockSymbolInfos.unlock();
+
+	m_lockGlobalStats.lockForWrite();
+	m_globalStats.m_iMessageCount++;
+	m_lockGlobalStats.unlock();
 }
 
 void QApplicationWindowController::onFilterButtonClicked()
@@ -541,7 +545,8 @@ void QApplicationWindowController::onMemoryOperationDoubleClicked(const QModelIn
 		pTreeView->header()->resizeSection(1, 150);
 		pTreeView->header()->resizeSection(2, 200);
 		pTreeView->header()->resizeSection(3, 150);
-		pTreeView->header()->resizeSection(4, 400);
+		pTreeView->header()->resizeSection(4, 1000);
+		pTreeView->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
 		dialog.exec();
 
