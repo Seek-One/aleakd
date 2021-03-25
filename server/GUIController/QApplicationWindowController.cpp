@@ -246,6 +246,7 @@ ThreadInfosSharedPtr QApplicationWindowController::getThreadInfos(uint64_t iThre
 	if(pThreadInfos && bThreadCreation){
 		// This is a recycled thread, we create a new entry
 		pThreadInfos->m_bIsTerminated = true;
+		pThreadInfos->m_tvTermination = tvOperation;
 		pThreadInfos = ThreadInfosSharedPtr();
 		m_listThreadInfosAlive.removeById(iThreadId);
 	}
