@@ -156,42 +156,48 @@ void backtrace_send(void** listBacktraceAddr, int iBacktraceSize, int iOriginMsg
 	servercomm_msg_backtrace_make(&bt_msg, listBacktraceAddr, iBacktraceSize);
 	servercomm_msg_backtrace_send_v1(&bt_msg);
 
-	for(int i=0; i<iBacktraceSize; i++){
+	// Send symbol infos if needed
+	for(int i=0; i<iBacktraceSize; i++)
+	{
 		void* addr = listBacktraceAddr[i];
 
-		const char* fname = NULL;
-		void* fbase = NULL;
-		const char* sfname = NULL;
-		void* saddr = NULL;
-		backtrace_get_infos(addr, &fname, &fbase, &sfname, &saddr);
+		// Optimize the number of symbol infos sent
+		if(!backtrace_check_addr(addr))
+		{
+			const char *fname = NULL;
+			void *fbase = NULL;
+			const char *sfname = NULL;
+			void *saddr = NULL;
+			backtrace_get_infos(addr, &fname, &fbase, &sfname, &saddr);
 
-		int iLen;
+			int iLen;
 
-		struct ServerMsgSymbolInfosV1 sym_msg;
-		servercomm_msg_symbolinfos_init_v1(&sym_msg);
+			struct ServerMsgSymbolInfosV1 sym_msg;
+			servercomm_msg_symbolinfos_init_v1(&sym_msg);
 
-		// Addr
-		sym_msg.data.addr = (uint64_t)addr;
-		// Object name
-		if(fname) {
-			iLen = strlen(fname);
-			if (iLen > 0) {
-				memcpy(sym_msg.data.object_name, fname, iLen);
+			// Addr
+			sym_msg.data.addr = (uint64_t) addr;
+			// Object name
+			if (fname) {
+				iLen = strlen(fname);
+				if (iLen > 0) {
+					memcpy(sym_msg.data.object_name, fname, iLen);
+				}
 			}
-		}
-		// Object addr
-		sym_msg.data.object_addr = (uint64_t)fbase;
-		// Symbol name
-		if(sfname) {
-			iLen = strlen(sfname);
-			if (iLen > 0) {
-				memcpy(sym_msg.data.symbol_name, sfname, iLen);
+			// Object addr
+			sym_msg.data.object_addr = (uint64_t) fbase;
+			// Symbol name
+			if (sfname) {
+				iLen = strlen(sfname);
+				if (iLen > 0) {
+					memcpy(sym_msg.data.symbol_name, sfname, iLen);
+				}
 			}
-		}
-		// Symbol addr
-		sym_msg.data.symbol_addr = (uint64_t)saddr;
+			// Symbol addr
+			sym_msg.data.symbol_addr = (uint64_t) saddr;
 
-		servercomm_msg_symbolinfos_send_v1(&sym_msg);
+			servercomm_msg_symbolinfos_send_v1(&sym_msg);
+		}
 	}
 }
 
@@ -231,6 +237,8 @@ void *malloc(size_t size)
 				void *listBacktraceAddr[BACKTRACE_MAX_SIZE];
 				int iBacktraceSize = backtrace(listBacktraceAddr, BACKTRACE_MAX_SIZE);
 				backtrace_send(listBacktraceAddr, iBacktraceSize, msg.header.msg_num);
+
+				backtrace_print2();
 			}
 		}
 	}

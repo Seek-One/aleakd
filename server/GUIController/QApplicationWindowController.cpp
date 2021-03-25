@@ -496,24 +496,30 @@ void QApplicationWindowController::onMemoryOperationDoubleClicked(const QModelIn
 				QList<QStandardItem*> listCols;
 
 				// Addr
-				pItem = new QStandardItem("0x" + QString::number(iAddr));
+				pItem = new QStandardItem("0x" + QString::number(iAddr, 16));
 				pItem->setEditable(false);
 				listCols.append(pItem);
 
 				SymbolInfosSharedPtr pSymbolInfos = m_listSymbolInfos.getByAddr(iAddr);
 				if(pSymbolInfos){
 					// Symbol addr
-					pItem = new QStandardItem("0x" + QString::number(pSymbolInfos->m_iSymbolAddr));
+					pItem = new QStandardItem("0x" + QString::number(pSymbolInfos->m_iSymbolAddr, 16));
 					pItem->setEditable(false);
 					listCols.append(pItem);
 
 					// Symbol name
-					pItem = new QStandardItem(pSymbolInfos->m_szSymbolName);
+					quint64 iDiff;
+					if(pSymbolInfos->m_iSymbolAddr){
+						iDiff = pSymbolInfos->m_iAddr - pSymbolInfos->m_iSymbolAddr;
+					}else{
+						iDiff = pSymbolInfos->m_iAddr - pSymbolInfos->m_iObjectAddr;
+					}
+					pItem = new QStandardItem(QString("%0+0x%1").arg(pSymbolInfos->m_szSymbolName).arg(QString::number(iDiff, 16)));
 					pItem->setEditable(false);
 					listCols.append(pItem);
 
 					// Object addr
-					pItem = new QStandardItem("0x" + QString::number(pSymbolInfos->m_iObjectAddr));
+					pItem = new QStandardItem("0x" + QString::number(pSymbolInfos->m_iObjectAddr, 16));
 					pItem->setEditable(false);
 					listCols.append(pItem);
 
