@@ -558,6 +558,9 @@ void QApplicationWindowController::onMemoryOperationDoubleClicked(const QModelIn
 void QApplicationWindowController::onNewConnection()
 {
 	clearData();
+	m_lockGlobalStats.lockForWrite();
+	m_globalStats.m_iMessageCount++;
+	m_lockGlobalStats.unlock();
 }
 
 void QApplicationWindowController::onMemoryOperationReceived(const MemoryOperationSharedPtr& pMemoryOperation)

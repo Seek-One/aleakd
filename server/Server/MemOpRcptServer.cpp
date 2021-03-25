@@ -319,7 +319,7 @@ qint64 MemOpRcptServer::doProcessMsgV1(char* pBuffer, qint64 iMaxSize)
 	// Symbol infos operation
 	if (header.msg_code >= 50 && header.msg_code < 60)
 	{
-		if(iMaxSize - iSizeRead < sizeof(ServerMsgSymbolInfosV1)){
+		if(iMaxSize - iSizeRead < sizeof(ServerMsgSymbolInfosDataV1)){
 			return 0;
 		}
 

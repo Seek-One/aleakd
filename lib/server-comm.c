@@ -144,11 +144,12 @@ int servercomm_init()
 void servercomm_dispose()
 {
 	if(g_socket != -1){
-		fprintf(stderr, "[aleakd] dispose socket, total message: %d\n", g_iMsgNum);
 		if(g_bTransfertBufferEnabled) {
+			fprintf(stderr, "[aleakd] sending last transfert buffer data: %lu bytes\n", g_iTransfertBufferSize);
 			servercomm_send_physical(g_pTransferBuffer, g_iTransfertBufferSize);
 			g_bTransfertBufferEnabled = 0;
 		}
+		fprintf(stderr, "[aleakd] dispose socket, total message: %d\n", g_iMsgNum);
 		// Don't close socket because more message can arrive
 		//close(g_socket);
 		//g_socket == -1;
