@@ -57,7 +57,7 @@ int QMemoryOperationModel::rowCount(const QModelIndex &parent) const
 
 int QMemoryOperationModel::columnCount(const QModelIndex &parent) const
 {
-	return 7;
+	return ColCount;
 }
 
 QVariant QMemoryOperationModel::data(const QModelIndex &index, int role) const

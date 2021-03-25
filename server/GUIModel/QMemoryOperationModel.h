@@ -27,6 +27,7 @@ public:
 		AllocPtrColumn,
 		AllocNumColumn,
 		FreePtrColumn,
+		ColCount,
 	};
 
 public:
