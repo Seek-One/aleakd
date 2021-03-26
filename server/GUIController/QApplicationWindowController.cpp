@@ -155,7 +155,9 @@ void QApplicationWindowController::clearData()
 	m_pModelMemoryOperation->clear();
 	m_listFilterThreadInfos.clear();
 	m_pModelThreadInfos->clear();
+
 	m_pMemoryOperationListView->getThreadIdComboBox()->clear();
+	m_pMemoryUsageView->getLineSeries()->clear();
 }
 
 void QApplicationWindowController::addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation)
