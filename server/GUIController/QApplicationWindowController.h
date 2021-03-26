@@ -17,6 +17,7 @@
 #include "Server/IMemOpRcptServerHandler.h"
 
 class QApplicationWindow;
+class QMemoryUsageView;
 class QMemoryOperationListView;
 class QMemoryOperationModel;
 class QThreadInfosView;
@@ -59,6 +60,7 @@ private:
 
 private:
 	QApplicationWindow* m_pApplicationWindow;
+	QMemoryUsageView* m_pMemoryUsageView;
 	QThreadInfosView* m_pThreadInfosView;
 	QMemoryOperationListView* m_pMemoryOperationListView;
 

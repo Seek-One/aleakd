@@ -9,6 +9,7 @@
 
 class QLabel;
 
+class QMemoryUsageView;
 class QThreadInfosView;
 class QMemoryOperationListView;
 
@@ -20,6 +21,7 @@ public:
 
 public:
 	QTabWidget* getTabWidget() const;
+	QMemoryUsageView* getMemoryUsageView() const;
 	QThreadInfosView* getThreadInfosView() const;
 	QMemoryOperationListView* getMemoryOperationListView() const;
 
@@ -37,6 +39,7 @@ private:
 private:
 	// Tabs
 	QTabWidget* m_pTabWidget;
+	QMemoryUsageView* m_pMemoryUsageView;
 	QThreadInfosView* m_pThreadInfosView;
 	QMemoryOperationListView* m_pMemoryOperationListView;
 

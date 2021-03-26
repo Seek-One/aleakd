@@ -6,6 +6,7 @@
 #define ALEAKD_MEMORYSTATS_H
 
 #include <stdint.h>
+#include <sys/time.h>
 
 class MemoryStats
 {
@@ -18,6 +19,9 @@ public:
 public:
 	int m_iMessageCount;
 
+	struct timeval m_tvStartTime;
+	struct timeval m_tvLastTime;
+
 	int m_iMemoryOperationCount;
 	uint64_t m_iMemoryOperationSize;
 
@@ -29,6 +33,7 @@ public:
 
 	int m_iTotalRemainingCount;
 	uint64_t m_iTotalRemainingSize;
+	uint64_t m_iPeakRemainingSize;
 
 	int m_iMallocCount;
 	int m_iReallocCount;

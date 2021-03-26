@@ -32,7 +32,7 @@ Build
 
 Install dependencies:
 ```
-    apt-get install git cmake qtbase5-dev qttools5-dev qttools5-dev-tools
+    apt-get install git cmake qtbase5-dev qttools5-dev qttools5-dev-tools libqt5charts5-dev
 ```
 
 Edit the config.h file to modify some options.

@@ -8,6 +8,9 @@ MemoryStats::MemoryStats()
 {
 	m_iMessageCount = 0;
 
+	timerclear(&m_tvStartTime);
+	timerclear(&m_tvLastTime);
+
 	m_iMemoryOperationCount = 0;
 	m_iMemoryOperationSize = 0;
 
@@ -38,6 +41,9 @@ MemoryStats::~MemoryStats(){
 void MemoryStats::reset()
 {
 	m_iMessageCount = 0;
+
+	timerclear(&m_tvStartTime);
+	timerclear(&m_tvLastTime);
 
 	m_iMemoryOperationCount = 0;
 	m_iMemoryOperationSize = 0;

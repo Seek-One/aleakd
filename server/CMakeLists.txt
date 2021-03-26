@@ -5,7 +5,7 @@
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt5 COMPONENTS Core Gui Widgets Network REQUIRED)
+find_package(Qt5 COMPONENTS Core Gui Widgets Network Charts REQUIRED)
 
 #################
 # Sources
@@ -23,6 +23,8 @@ SET (ALEAKD_SERVER_SRC
 	GUI/QMemoryOperationView.h
 	GUI/QMemoryOperationListView.cpp
 	GUI/QMemoryOperationListView.h
+	GUI/QMemoryUsageView.cpp
+	GUI/QMemoryUsageView.h
 	GUI/QThreadInfosView.cpp
 	GUI/QThreadInfosView.h
 	GUIController/QApplicationWindowController.cpp
@@ -57,6 +59,6 @@ include_directories(".")
 ####################
 
 add_executable(aleakd-server ${ALEAKD_SERVER_SRC})
-target_link_libraries(aleakd-server Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network)
+target_link_libraries(aleakd-server Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network Qt5::Charts)
 
 install (TARGETS aleakd-server DESTINATION bin)

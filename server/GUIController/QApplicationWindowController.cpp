@@ -12,10 +12,13 @@
 #include <QComboBox>
 #include <QLineEdit>
 #include <QStandardItemModel>
+#include <QLineSeries>
+#include <QDateTime>
 
 #include "Global/Utils.h"
 
 #include "GUI/QApplicationWindow.h"
+#include "GUI/QMemoryUsageView.h"
 #include "GUI/QMemoryOperationListView.h"
 #include "GUI/QMemoryOperationView.h"
 #include "GUI/QThreadInfosView.h"
@@ -24,6 +27,13 @@
 #include "GUIModel/QThreadInfosModel.h"
 
 #include "GUIController/QApplicationWindowController.h"
+
+#define timerset(dst, sec, usec) \
+		(dst)->tv_sec = sec; \
+		(dst)->tv_usec = usec;
+#define timercpy(dst, src) \
+		(dst)->tv_sec = (src)->tv_sec; \
+		(dst)->tv_usec = (src)->tv_usec;
 
 #define timer_eq(a, b) !timercmp(a, b, !=)
 #define timer_ne(a, b) timercmp(a, b, !=)
@@ -36,6 +46,9 @@
 QApplicationWindowController::QApplicationWindowController()
 {
 	m_pApplicationWindow = NULL;
+	m_pMemoryUsageView = NULL;
+	m_pThreadInfosView = NULL;
+	m_pMemoryOperationListView = NULL;
 	m_pModelMemoryOperation = NULL;
 	m_pModelThreadInfos = NULL;
 }
@@ -55,6 +68,13 @@ QApplicationWindowController::~QApplicationWindowController()
 bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 {
 	m_pApplicationWindow = pApplicationWindow;
+
+	// Memory usage
+	{
+		m_pMemoryUsageView = pApplicationWindow->getMemoryUsageView();
+
+
+	}
 
 	// Thread infos tab
 	{
@@ -157,10 +177,17 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 
 	m_lockGlobalStats.lockForWrite();
 	m_globalStats.m_iMessageCount++;
+	if(!timerisset(&m_globalStats.m_tvStartTime)){
+		timercpy(&m_globalStats.m_tvStartTime, &pMemoryOperation->m_tvOperation);
+	}
+	timercpy(&m_globalStats.m_tvLastTime, &pMemoryOperation->m_tvOperation);
 	m_globalStats.m_iMemoryOperationCount++;
 	m_globalStats.m_iMemoryOperationSize += sizeof(MemoryOperation);
 	m_globalStats.m_iTotalAllocSize += pMemoryOperation->m_iAllocSize;
 	m_globalStats.m_iTotalRemainingSize += pMemoryOperation->m_iAllocSize;
+	if(m_globalStats.m_iTotalRemainingSize > m_globalStats.m_iPeakRemainingSize){
+		m_globalStats.m_iPeakRemainingSize = m_globalStats.m_iTotalRemainingSize;
+	}
 	if(pMemoryOperationFreed){
 		m_globalStats.m_iTotalFreeSize += pMemoryOperationFreed->m_iAllocSize;
 		m_globalStats.m_iTotalRemainingSize -= pMemoryOperationFreed->m_iAllocSize;
@@ -399,6 +426,9 @@ void QApplicationWindowController::onFilterButtonClicked()
 			m_searchStats.m_iMemoryOperationCount++;
 			m_searchStats.m_iTotalAllocSize += pMemoryOperation->m_iAllocSize;
 			m_searchStats.m_iTotalRemainingSize += pMemoryOperation->m_iAllocSize;
+			if(m_searchStats.m_iTotalRemainingSize > m_searchStats.m_iPeakRemainingSize){
+				m_searchStats.m_iPeakRemainingSize = m_searchStats.m_iTotalRemainingSize;
+			}
 			if(pMemoryOperation->m_bFreed){
 				m_searchStats.m_iTotalFreeSize += pMemoryOperation->m_iAllocSize;
 				m_searchStats.m_iTotalRemainingSize -= pMemoryOperation->m_iAllocSize;
@@ -458,6 +488,11 @@ void QApplicationWindowController::onFilterButtonClicked()
 
 void QApplicationWindowController::onTimerUpdate()
 {
+	quint64 iCurrentMemoryUsage = 0;
+	quint64 iPeakMemoryUsage = 0;
+	struct timeval tvStart;
+	struct timeval tvLast;
+
 	m_lockGlobalStats.lockForRead();
 
 	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_OpCount, QString::number(m_searchStats.m_iMemoryOperationCount));
@@ -529,7 +564,21 @@ void QApplicationWindowController::onTimerUpdate()
 		m_listFilterThreadInfos.append(pThreadInfos);
 	}
 	m_pModelThreadInfos->refresh();
+
+	iCurrentMemoryUsage = m_globalStats.m_iTotalRemainingSize;
+	iPeakMemoryUsage = m_globalStats.m_iPeakRemainingSize;
+	timercpy(&tvStart, &m_globalStats.m_tvStartTime);
+	timercpy(&tvLast, &m_globalStats.m_tvLastTime);
+
 	m_lockGlobalStats.unlock();
+
+	QDateTime dtNow = QDateTime::currentDateTime();
+
+	QtCharts::QLineSeries *pMemoryUsageSeries = m_pMemoryUsageView->getLineSeries();
+	if(timerisset(&tvStart)){
+		pMemoryUsageSeries->append(tvLast.tv_sec, iCurrentMemoryUsage);
+		m_pMemoryUsageView->updateChartRange(tvStart.tv_sec, tvLast.tv_sec, 0, iPeakMemoryUsage);
+	}
 }
 
 void QApplicationWindowController::onMemoryOperationDoubleClicked(const QModelIndex &index)
