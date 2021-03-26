@@ -688,7 +688,7 @@ void QApplicationWindowController::onThreadInfosDoubleClicked(const QModelIndex 
 		m_pMemoryOperationListView->getThreadIdComboBox()->setEditText(szTmp);
 	}
 
-	m_pApplicationWindow->getTabWidget()->setCurrentIndex(1);
+	m_pApplicationWindow->getTabWidget()->setCurrentIndex(QApplicationWindow::TabMemoryOperation);
 }
 
 void QApplicationWindowController::onNewConnection()

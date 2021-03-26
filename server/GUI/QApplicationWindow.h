@@ -20,6 +20,13 @@ public:
 	virtual ~QApplicationWindow();
 
 public:
+	enum Tab {
+		TabMemoryUsage = 0,
+		TabThreads = 1,
+		TabMemoryOperation = 2,
+	};
+
+public:
 	QTabWidget* getTabWidget() const;
 	QMemoryUsageView* getMemoryUsageView() const;
 	QThreadInfosView* getThreadInfosView() const;
