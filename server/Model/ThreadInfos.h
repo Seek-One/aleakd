@@ -23,6 +23,9 @@ public:
 	uint64_t m_iThreadId;
 	QString m_szThreadName;
 
+	uint32_t m_iCreationMsgNum;
+	uint32_t m_iLastAllocMsgNum;
+
 	struct timeval m_tvCreation;
 	struct timeval m_tvTermination;
 	bool m_bIsTerminated;
@@ -40,6 +43,7 @@ public:
 	virtual ~ThreadInfosList();
 
 	ThreadInfosSharedPtr getById(uint64_t iThreadId) const;
+	ThreadInfosSharedPtr getByIdAndMsgNum(uint64_t iThreadId, uint32_t iMsgNum) const;
 	void removeById(uint64_t iThreadId);
 };
 

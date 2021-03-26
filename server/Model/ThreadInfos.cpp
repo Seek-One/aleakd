@@ -8,6 +8,9 @@ ThreadInfos::ThreadInfos()
 {
 	m_iThreadId = 0;
 
+	m_iCreationMsgNum = 0;
+	m_iLastAllocMsgNum = 0;
+
 	timerclear(&m_tvCreation);
 	timerclear(&m_tvTermination);
 	m_bIsTerminated = false;
@@ -43,6 +46,25 @@ ThreadInfosSharedPtr ThreadInfosList::getById(uint64_t iThreadId) const
 		if(pThreadInfos->m_iThreadId == iThreadId)
 		{
 			return pThreadInfos;
+		}
+		iter++;
+	}
+	return ThreadInfosSharedPtr();
+}
+
+ThreadInfosSharedPtr ThreadInfosList::getByIdAndMsgNum(uint64_t iThreadId, uint32_t iMsgNum) const
+{
+	ThreadInfosList::const_iterator iter;
+	iter = constBegin();
+	while(iter != constEnd())
+	{
+		const ThreadInfosSharedPtr& pThreadInfos = (*iter);
+		if(pThreadInfos->m_iThreadId == iThreadId)
+		{
+			if(pThreadInfos->m_iCreationMsgNum <= iMsgNum && iMsgNum <= pThreadInfos->m_iLastAllocMsgNum)
+			{
+				return pThreadInfos;
+			}
 		}
 		iter++;
 	}

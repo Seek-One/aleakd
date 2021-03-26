@@ -163,10 +163,10 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 	if(pMemoryOperationFreed){
 		m_globalStats.m_iTotalFreeSize += pMemoryOperationFreed->m_iAllocSize;
 		m_globalStats.m_iTotalRemainingSize -= pMemoryOperationFreed->m_iAllocSize;
-		updateThreadInfosAddFree(pMemoryOperationFreed->m_iCallerThreadId, pMemoryOperationFreed->m_iAllocSize, pMemoryOperation->m_tvOperation);
+		updateThreadInfosAddFree(pMemoryOperationFreed->m_iCallerThreadId, pMemoryOperationFreed->m_iMsgNum, pMemoryOperationFreed->m_iAllocSize, pMemoryOperation->m_tvOperation);
 	}
 	if(pMemoryOperation->m_iAllocPtr) {
-		updateThreadInfosAddAlloc(pMemoryOperation->m_iCallerThreadId, pMemoryOperation->m_iAllocSize, pMemoryOperation->m_tvOperation);
+		updateThreadInfosAddAlloc(pMemoryOperation->m_iCallerThreadId, pMemoryOperation->m_iMsgNum, pMemoryOperation->m_iAllocSize, pMemoryOperation->m_tvOperation);
 	}
 	switch (pMemoryOperation->m_iMsgCode) {
 	case ALeakD_MsgCode_malloc:
@@ -222,6 +222,12 @@ void QApplicationWindowController::updateThreadInfos(const ThreadOperationShared
 	m_lockGlobalStats.lockForWrite();
 	m_globalStats.m_iMessageCount++;
 	ThreadInfosSharedPtr pThreadInfos = getThreadInfos(pThreadOperation->m_iThreadId, bThreadCreation, pThreadOperation->m_tvOperation);
+	if (pThreadOperation->m_iMsgCode == ALeakD_MsgCode_pthread_create) {
+		if(pThreadInfos) {
+			pThreadInfos->m_iCreationMsgNum = pThreadOperation->m_iMsgNum;
+			pThreadInfos->m_iLastAllocMsgNum = pThreadOperation->m_iMsgNum;
+		}
+	}
 	if (pThreadOperation->m_iMsgCode == ALeakD_MsgCode_pthread_set_name) {
 		if(pThreadInfos) {
 			pThreadInfos->m_szThreadName = pThreadOperation->m_szThreadName;
@@ -230,10 +236,14 @@ void QApplicationWindowController::updateThreadInfos(const ThreadOperationShared
 	m_lockGlobalStats.unlock();
 }
 
-void QApplicationWindowController::updateThreadInfosAddAlloc(uint64_t iThreadId, uint64_t iSize, struct timeval& tvOperation)
+void QApplicationWindowController::updateThreadInfosAddAlloc(uint64_t iThreadId, uint32_t iMsgNum, uint64_t iSize, struct timeval& tvOperation)
 {
 	ThreadInfosSharedPtr pThreadInfos = getThreadInfos(iThreadId, false, tvOperation);
 	if(pThreadInfos){
+		if(pThreadInfos->m_iCreationMsgNum == 0){
+			pThreadInfos->m_iCreationMsgNum = iMsgNum;
+		}
+		pThreadInfos->m_iLastAllocMsgNum = iMsgNum;
 		pThreadInfos->m_iCurrentSize += iSize;
 		pThreadInfos->m_iCurrentAllocCount++;
 		pThreadInfos->m_iTotalAllocCount++;
@@ -243,9 +253,13 @@ void QApplicationWindowController::updateThreadInfosAddAlloc(uint64_t iThreadId,
 	}
 }
 
-void QApplicationWindowController::updateThreadInfosAddFree(uint64_t iThreadId, uint64_t iSize, struct timeval& tvOperation)
+void QApplicationWindowController::updateThreadInfosAddFree(uint64_t iThreadId, uint32_t iAllocMsgNum, uint64_t iSize, struct timeval& tvOperation)
 {
-	ThreadInfosSharedPtr pThreadInfos = getThreadInfos(iThreadId, false, tvOperation);
+	ThreadInfosSharedPtr pThreadInfos = getThreadInfosForMsgNum(iThreadId, iAllocMsgNum);
+	if(!pThreadInfos){
+		// Not supposed to occurs
+		pThreadInfos = getThreadInfos(iThreadId, false, tvOperation);
+	}
 	if(pThreadInfos){
 		pThreadInfos->m_iCurrentSize -= iSize;
 		pThreadInfos->m_iCurrentAllocCount--;
@@ -277,6 +291,21 @@ ThreadInfosSharedPtr QApplicationWindowController::getThreadInfos(uint64_t iThre
 
 	return pThreadInfos;
 }
+
+ThreadInfosSharedPtr QApplicationWindowController::getThreadInfosForMsgNum(uint64_t iThreadId, uint32_t iMsgNum)
+{
+	// Assume m_listThreadInfos has been protected by caller
+	ThreadInfosSharedPtr pThreadInfos;
+	// Check first in thread alive
+	pThreadInfos = m_listThreadInfosAlive.getByIdAndMsgNum(iThreadId, iMsgNum);
+	if(pThreadInfos){
+		return pThreadInfos;
+	}
+	// Fallback into global list
+	pThreadInfos = m_listThreadInfos.getByIdAndMsgNum(iThreadId, iMsgNum);
+	return pThreadInfos;
+}
+
 
 void QApplicationWindowController::addBacktrace(const BacktraceSharedPtr& pBacktrace)
 {

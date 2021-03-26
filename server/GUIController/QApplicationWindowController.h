@@ -48,9 +48,10 @@ private:
 	void clearData();
 	void addMemoryOperation(const MemoryOperationSharedPtr& pMemoryOperation);
 	void updateThreadInfos(const ThreadOperationSharedPtr& pThreadOperation);
-	void updateThreadInfosAddAlloc(uint64_t iThreadId, uint64_t iSize, struct timeval& tvOperation);
-	void updateThreadInfosAddFree(uint64_t iThreadId, uint64_t iSize, struct timeval& tvOperation);
+	void updateThreadInfosAddAlloc(uint64_t iThreadId, uint32_t iMsgNum, uint64_t iSize, struct timeval& tvOperation);
+	void updateThreadInfosAddFree(uint64_t iThreadId, uint32_t iAllocMsgNum, uint64_t iSize, struct timeval& tvOperation);
 	ThreadInfosSharedPtr getThreadInfos(uint64_t iThreadId, bool bThreadCreation, struct timeval& tvOperation);
+	ThreadInfosSharedPtr getThreadInfosForMsgNum(uint64_t iThreadId, uint32_t iMsgNum);
 	void addBacktrace(const BacktraceSharedPtr& pBacktrace);
 	void addSymbolInfos(const SymbolInfosSharedPtr& pSymbolInfos);
 
