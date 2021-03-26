@@ -72,6 +72,7 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 		pTreeView->header()->resizeSection(3, 150);
 		pTreeView->header()->resizeSection(4, 150);
 		pTreeView->header()->resizeSection(5, 150);
+		pTreeView->header()->resizeSections(QHeaderView::Interactive);
 
 		// Double clicked
 		connect(m_pThreadInfosView->getTreeView(), SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(onThreadInfosDoubleClicked(const QModelIndex &)));
@@ -87,7 +88,6 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 		QTreeView *pTreeView = m_pMemoryOperationListView->getTreeView();
 		pTreeView->setIndentation(0);
 		pTreeView->setModel(m_pModelMemoryOperation);
-
 		pTreeView->header()->resizeSection(QMemoryOperationModel::MsgNum, 50);
 		pTreeView->header()->resizeSection(QMemoryOperationModel::TimeStampColumn, 200);
 		pTreeView->header()->resizeSection(QMemoryOperationModel::ThreadColumn, 150);
@@ -96,6 +96,7 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 		pTreeView->header()->resizeSection(QMemoryOperationModel::AllocPtrColumn, 150);
 		pTreeView->header()->resizeSection(QMemoryOperationModel::AllocNumColumn, 100);
 		pTreeView->header()->resizeSection(QMemoryOperationModel::FreePtrColumn, 150);
+		pTreeView->header()->resizeSections(QHeaderView::Interactive);
 
 		connect(m_pMemoryOperationListView->getFilterButton(), SIGNAL(clicked()), this, SLOT(onFilterButtonClicked()));
 
@@ -600,11 +601,11 @@ void QApplicationWindowController::onMemoryOperationDoubleClicked(const QModelIn
 		dialog.setBacktraceModel(&modelBacktrace);
 		QTreeView *pTreeView = dialog.getBacktraceTreeView();
 		pTreeView->header()->resizeSection(0, 150);
-		pTreeView->header()->resizeSection(1, 150);
+		pTreeView->header()->resizeSection(1, 120);
 		pTreeView->header()->resizeSection(2, 200);
-		pTreeView->header()->resizeSection(3, 150);
-		pTreeView->header()->resizeSection(4, 1000);
-		pTreeView->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+		pTreeView->header()->resizeSection(3, 120);
+		pTreeView->header()->resizeSection(4, 400);
+		pTreeView->header()->resizeSections(QHeaderView::Interactive);
 
 		dialog.exec();
 
