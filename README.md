@@ -26,6 +26,7 @@ Features
 - Use filter in the GUI to find a memory operation
 - Colored view for each memory allocation to view directly the state (free or not free)
 - Get backtrace for every memory operation
+- View graphical memory usage
 
 Build
 --------
@@ -74,3 +75,5 @@ Screenshot
 
 ![alt text](https://raw.githubusercontent.com/Jet1oeil/aleakd/master/doc/aleakd-screenshot-1.png)
 ![alt text](https://raw.githubusercontent.com/Jet1oeil/aleakd/master/doc/aleakd-screenshot-2.png)
+![alt text](https://raw.githubusercontent.com/Jet1oeil/aleakd/master/doc/aleakd-screenshot-3.png)
+![alt text](https://raw.githubusercontent.com/Jet1oeil/aleakd/master/doc/aleakd-screenshot-4.png)
