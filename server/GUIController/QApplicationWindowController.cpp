@@ -179,7 +179,9 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 		break;
 	case ALeakD_MsgCode_realloc:
 		m_globalStats.m_iTotalAllocCount++;
-		m_globalStats.m_iTotalFreeCount++;
+		if(pMemoryOperation->m_iFreePtr) {
+			m_globalStats.m_iTotalFreeCount++;
+		}
 		m_globalStats.m_iReallocCount++;
 		break;
 	case ALeakD_MsgCode_free:
@@ -411,7 +413,9 @@ void QApplicationWindowController::onFilterButtonClicked()
 				break;
 			case ALeakD_MsgCode_realloc:
 				m_searchStats.m_iTotalAllocCount++;
-				m_searchStats.m_iTotalFreeCount++;
+				if(pMemoryOperation->m_iFreePtr) {
+					m_searchStats.m_iTotalFreeCount++;
+				}
 				m_searchStats.m_iReallocCount++;
 				break;
 			case ALeakD_MsgCode_free:
