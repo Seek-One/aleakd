@@ -14,7 +14,7 @@ Requirements
 ------------
 
 - CMake
-- Qt version 5
+- Qt version 5.11 or superior
 
 Features
 --------
