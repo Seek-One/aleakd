@@ -17,33 +17,34 @@ public:
 	virtual ~QMemoryStatsView();
 
 public:
-	enum StatusBarRows {
-		StatusBarRow_Headers,
-		StatusBarRow_Search,
-		StatusBarRow_Global
+	enum TitleItem {
+		Headers,
+		Filter,
+		Global
 	};
 
-	enum StatusBarCols {
-		StatusBarCol_Title,
-		StatusBarCol_OpCount,
+	enum DataItem {
+		Title,
+		OpCount,
 		// Global
-		StatusBarCol_TotalAllocCount,
-		StatusBarCol_TotalAllocSize,
-		StatusBarCol_TotalFreeCount,
-		StatusBarCol_TotalFreeSize,
-		StatusBarCol_TotalRemainingCount,
-		StatusBarCol_TotalRemainingSize,
+		TotalAllocCount,
+		TotalAllocSize,
+		TotalFreeCount,
+		TotalFreeSize,
+		TotalRemainingCount,
+		TotalRemainingSize,
 		// Alloc operation
-		StatusBarCol_malloc,
-		StatusBarCol_calloc,
-		StatusBarCol_realloc,
-		StatusBarCol_free,
-		StatusBarCol_posix_memalign,
-		StatusBarCol_aligned_alloc,
-		StatusBarCol_memalign,
-		StatusBarCol_valloc,
-		StatusBarCol_pvalloc,
-		StatusBarCol_ColCount,
+		malloc,
+		calloc,
+		realloc,
+		free,
+		posix_memalign,
+		aligned_alloc,
+		memalign,
+		valloc,
+		pvalloc,
+
+		ColCount,
 	};
 
 public:
