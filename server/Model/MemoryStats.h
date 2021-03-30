@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include <sys/time.h>
 
+#include "MemoryUsage.h"
+
 class MemoryStats
 {
 public:
@@ -34,6 +36,8 @@ public:
 	int m_iTotalRemainingCount;
 	uint64_t m_iTotalRemainingSize;
 	uint64_t m_iPeakRemainingSize;
+
+	MemoryUsage m_memoryUsage;
 
 	int m_iMallocCount;
 	int m_iReallocCount;

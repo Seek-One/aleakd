@@ -22,6 +22,7 @@ MemoryStats::MemoryStats()
 
 	m_iTotalRemainingCount = 0;
 	m_iTotalRemainingSize = 0;
+	m_iPeakRemainingSize = 0;
 
 	m_iMallocCount = 0;
 	m_iReallocCount = 0;
@@ -66,4 +67,6 @@ void MemoryStats::reset()
 	m_iVAllocCount = 0;
 	m_iPVAllocCount = 0;
 	m_iFreeCount = 0;
+
+	m_memoryUsage.clear();
 }

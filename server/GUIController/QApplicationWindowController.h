@@ -67,6 +67,7 @@ private:
 	QMemoryStatsView* m_pMemoryStatsView;
 
 	QTimer m_timerUpdate;
+	quint64 m_iLastUpdateTime;
 
 	// List data
 	QReadWriteLock m_lockListMemoryOperation;

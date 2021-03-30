@@ -47,6 +47,8 @@ SET (ALEAKD_SERVER_SRC
 	Model/ThreadInfos.h
 	Model/ThreadOperation.cpp
 	Model/ThreadOperation.h
+	Model/MemoryUsage.cpp
+	Model/MemoryUsage.h
 	Server/IMemOpRcptServerHandler.cpp
 	Server/IMemOpRcptServerHandler.h
 	Server/MemOpRcptServer.cpp

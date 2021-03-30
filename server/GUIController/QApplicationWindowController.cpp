@@ -53,6 +53,8 @@ QApplicationWindowController::QApplicationWindowController()
 	m_pModelMemoryOperation = NULL;
 	m_pModelThreadInfos = NULL;
 	m_pMemoryStatsView = NULL;
+
+	m_iLastUpdateTime = 0;
 }
 
 QApplicationWindowController::~QApplicationWindowController()
@@ -163,6 +165,8 @@ void QApplicationWindowController::clearData()
 
 	m_pMemoryOperationListView->getThreadIdComboBox()->clear();
 	m_pMemoryUsageView->getLineSeries()->clear();
+
+	m_iLastUpdateTime = 0;
 }
 
 void QApplicationWindowController::addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation)
@@ -200,6 +204,7 @@ void QApplicationWindowController::addMemoryOperation(const QSharedPointer<Memor
 		m_globalStats.m_iTotalRemainingSize -= pMemoryOperationFreed->m_iAllocSize;
 		updateThreadInfosAddFree(pMemoryOperationFreed->m_iCallerThreadId, pMemoryOperationFreed->m_iMsgNum, pMemoryOperationFreed->m_iAllocSize, pMemoryOperation->m_tvOperation);
 	}
+	m_globalStats.m_memoryUsage.update(pMemoryOperation->m_tvOperation.tv_sec, m_globalStats.m_iTotalRemainingSize);
 	if(pMemoryOperation->m_iAllocPtr) {
 		updateThreadInfosAddAlloc(pMemoryOperation->m_iCallerThreadId, pMemoryOperation->m_iMsgNum, pMemoryOperation->m_iAllocSize, pMemoryOperation->m_tvOperation);
 	}
@@ -495,10 +500,9 @@ void QApplicationWindowController::onFilterButtonClicked()
 
 void QApplicationWindowController::onTimerUpdate()
 {
-	quint64 iCurrentMemoryUsage = 0;
+	MemoryUsage memoryUsageUpdate;
 	quint64 iPeakMemoryUsage = 0;
 	struct timeval tvStart;
-	struct timeval tvLast;
 
 	m_lockGlobalStats.lockForRead();
 
@@ -572,19 +576,34 @@ void QApplicationWindowController::onTimerUpdate()
 	}
 	m_pModelThreadInfos->refresh();
 
-	iCurrentMemoryUsage = m_globalStats.m_iTotalRemainingSize;
 	iPeakMemoryUsage = m_globalStats.m_iPeakRemainingSize;
 	timercpy(&tvStart, &m_globalStats.m_tvStartTime);
-	timercpy(&tvLast, &m_globalStats.m_tvLastTime);
+
+	quint64 iStartTime = (m_iLastUpdateTime == 0 ? m_globalStats.m_memoryUsage.m_iFirstTime : m_iLastUpdateTime+1);
+	if(iStartTime != 0)
+	{
+		for (quint64 i = iStartTime; i <= m_globalStats.m_memoryUsage.m_iLastTime; i++)
+		{
+			quint64 iSize = m_globalStats.m_memoryUsage.value(i);
+			memoryUsageUpdate.update(i, iSize);
+		}
+		if(memoryUsageUpdate.count() > 0) {
+			m_iLastUpdateTime = memoryUsageUpdate.m_iLastTime;
+		}
+	}
 
 	m_lockGlobalStats.unlock();
 
-	QDateTime dtNow = QDateTime::currentDateTime();
-
-	QtCharts::QLineSeries *pMemoryUsageSeries = m_pMemoryUsageView->getLineSeries();
-	if(timerisset(&tvStart)){
-		pMemoryUsageSeries->append(tvLast.tv_sec, iCurrentMemoryUsage);
-		m_pMemoryUsageView->updateChartRange(tvStart.tv_sec, tvLast.tv_sec, 0, iPeakMemoryUsage);
+	if(memoryUsageUpdate.count() != 0)
+	{
+		QtCharts::QLineSeries *pMemoryUsageSeries = m_pMemoryUsageView->getLineSeries();
+		for(quint64 iTimestamp = memoryUsageUpdate.m_iFirstTime; iTimestamp<=memoryUsageUpdate.m_iLastTime; iTimestamp++)
+		{
+			quint64 iSize = memoryUsageUpdate.value(iTimestamp);
+			qDebug("%llu => %llu", iTimestamp, iSize);
+			pMemoryUsageSeries->append(iTimestamp, iSize);
+			m_pMemoryUsageView->updateChartRange(tvStart.tv_sec, iTimestamp, 0, iPeakMemoryUsage);
+		}
 	}
 }
 
