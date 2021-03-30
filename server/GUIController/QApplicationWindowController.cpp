@@ -22,6 +22,7 @@
 #include "GUI/QMemoryOperationListView.h"
 #include "GUI/QMemoryOperationView.h"
 #include "GUI/QThreadInfosView.h"
+#include "GUI/QMemoryStatsView.h"
 
 #include "GUIModel/QMemoryOperationModel.h"
 #include "GUIModel/QThreadInfosModel.h"
@@ -51,6 +52,7 @@ QApplicationWindowController::QApplicationWindowController()
 	m_pMemoryOperationListView = NULL;
 	m_pModelMemoryOperation = NULL;
 	m_pModelThreadInfos = NULL;
+	m_pMemoryStatsView = NULL;
 }
 
 QApplicationWindowController::~QApplicationWindowController()
@@ -72,8 +74,6 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 	// Memory usage
 	{
 		m_pMemoryUsageView = pApplicationWindow->getMemoryUsageView();
-
-
 	}
 
 	// Thread infos tab
@@ -123,6 +123,11 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 		// Double clicked
 		connect(m_pMemoryOperationListView->getTreeView(), SIGNAL(doubleClicked(const QModelIndex &)), this, SLOT(onMemoryOperationDoubleClicked(const QModelIndex &)));
 
+	}
+
+	// Memory stats
+	{
+		m_pMemoryStatsView = pApplicationWindow->getMemoryStatsView();
 	}
 
 	// Refresh timer
@@ -497,39 +502,39 @@ void QApplicationWindowController::onTimerUpdate()
 
 	m_lockGlobalStats.lockForRead();
 
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_OpCount, QString::number(m_searchStats.m_iMemoryOperationCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_TotalAllocCount, QString::number(m_searchStats.m_iTotalAllocCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_TotalAllocSize, QString::number(m_searchStats.m_iTotalAllocSize));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_TotalFreeCount, QString::number(m_searchStats.m_iTotalFreeCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_TotalFreeSize, QString::number(m_searchStats.m_iTotalFreeSize));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_TotalRemainingCount, QString::number(m_searchStats.m_iTotalRemainingCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_TotalRemainingSize, QString::number(m_searchStats.m_iTotalRemainingSize));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_malloc, QString::number(m_searchStats.m_iMallocCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_calloc, QString::number(m_searchStats.m_iCallocCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_realloc, QString::number(m_searchStats.m_iReallocCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_free, QString::number(m_searchStats.m_iFreeCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_posix_memalign, QString::number(m_searchStats.m_iPosixMemalignCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_aligned_alloc, QString::number(m_searchStats.m_iAlignedAllocCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_memalign, QString::number(m_searchStats.m_iMemAlignCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_valloc, QString::number(m_searchStats.m_iVAllocCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Search, QMemoryOperationListView::StatusBarCol_pvalloc, QString::number(m_searchStats.m_iPVAllocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_OpCount, QString::number(m_searchStats.m_iMemoryOperationCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_TotalAllocCount, QString::number(m_searchStats.m_iTotalAllocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_TotalAllocSize, QString::number(m_searchStats.m_iTotalAllocSize));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_TotalFreeCount, QString::number(m_searchStats.m_iTotalFreeCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_TotalFreeSize, QString::number(m_searchStats.m_iTotalFreeSize));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_TotalRemainingCount, QString::number(m_searchStats.m_iTotalRemainingCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_TotalRemainingSize, QString::number(m_searchStats.m_iTotalRemainingSize));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_malloc, QString::number(m_searchStats.m_iMallocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_calloc, QString::number(m_searchStats.m_iCallocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_realloc, QString::number(m_searchStats.m_iReallocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_free, QString::number(m_searchStats.m_iFreeCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_posix_memalign, QString::number(m_searchStats.m_iPosixMemalignCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_aligned_alloc, QString::number(m_searchStats.m_iAlignedAllocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_memalign, QString::number(m_searchStats.m_iMemAlignCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_valloc, QString::number(m_searchStats.m_iVAllocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Search, QMemoryStatsView::StatusBarCol_pvalloc, QString::number(m_searchStats.m_iPVAllocCount));
 
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_TotalAllocCount, QString::number(m_globalStats.m_iTotalAllocCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_OpCount, QString::number(m_globalStats.m_iMemoryOperationCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_TotalAllocSize, QString::number(m_globalStats.m_iTotalAllocSize));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_TotalFreeCount, QString::number(m_globalStats.m_iTotalFreeCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_TotalFreeSize, QString::number(m_globalStats.m_iTotalFreeSize));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_TotalRemainingCount, QString::number(m_globalStats.m_iTotalRemainingCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_TotalRemainingSize, QString::number(m_globalStats.m_iTotalRemainingSize));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_malloc, QString::number(m_globalStats.m_iMallocCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_calloc, QString::number(m_globalStats.m_iCallocCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_realloc, QString::number(m_globalStats.m_iReallocCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_free, QString::number(m_globalStats.m_iFreeCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_posix_memalign, QString::number(m_globalStats.m_iPosixMemalignCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_aligned_alloc, QString::number(m_globalStats.m_iAlignedAllocCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_memalign, QString::number(m_globalStats.m_iMemAlignCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_valloc, QString::number(m_globalStats.m_iVAllocCount));
-	m_pMemoryOperationListView->setData(QMemoryOperationListView::StatusBarRow_Global, QMemoryOperationListView::StatusBarCol_pvalloc, QString::number(m_globalStats.m_iPVAllocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_TotalAllocCount, QString::number(m_globalStats.m_iTotalAllocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_OpCount, QString::number(m_globalStats.m_iMemoryOperationCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_TotalAllocSize, QString::number(m_globalStats.m_iTotalAllocSize));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_TotalFreeCount, QString::number(m_globalStats.m_iTotalFreeCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_TotalFreeSize, QString::number(m_globalStats.m_iTotalFreeSize));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_TotalRemainingCount, QString::number(m_globalStats.m_iTotalRemainingCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_TotalRemainingSize, QString::number(m_globalStats.m_iTotalRemainingSize));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_malloc, QString::number(m_globalStats.m_iMallocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_calloc, QString::number(m_globalStats.m_iCallocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_realloc, QString::number(m_globalStats.m_iReallocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_free, QString::number(m_globalStats.m_iFreeCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_posix_memalign, QString::number(m_globalStats.m_iPosixMemalignCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_aligned_alloc, QString::number(m_globalStats.m_iAlignedAllocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_memalign, QString::number(m_globalStats.m_iMemAlignCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_valloc, QString::number(m_globalStats.m_iVAllocCount));
+	m_pMemoryStatsView->setData(QMemoryStatsView::StatusBarRow_Global, QMemoryStatsView::StatusBarCol_pvalloc, QString::number(m_globalStats.m_iPVAllocCount));
 
 	m_pApplicationWindow->setCaptureMessageCount(Utils::getBeautifulNumberString(QString::number(m_globalStats.m_iMessageCount)));
 	m_pApplicationWindow->setCaptureMemoryOperationCount(Utils::getBeautifulNumberString(QString::number(m_globalStats.m_iMemoryOperationCount)));

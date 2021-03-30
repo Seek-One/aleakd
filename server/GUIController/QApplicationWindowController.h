@@ -22,6 +22,7 @@ class QMemoryOperationListView;
 class QMemoryOperationModel;
 class QThreadInfosView;
 class QThreadInfosModel;
+class QMemoryStatsView;
 
 class QApplicationWindowController : public QObject, public IMemOpRcptServerHandler {
 	Q_OBJECT
@@ -63,6 +64,7 @@ private:
 	QMemoryUsageView* m_pMemoryUsageView;
 	QThreadInfosView* m_pThreadInfosView;
 	QMemoryOperationListView* m_pMemoryOperationListView;
+	QMemoryStatsView* m_pMemoryStatsView;
 
 	QTimer m_timerUpdate;
 

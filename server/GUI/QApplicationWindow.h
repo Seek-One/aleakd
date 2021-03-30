@@ -12,6 +12,7 @@ class QLabel;
 class QMemoryUsageView;
 class QThreadInfosView;
 class QMemoryOperationListView;
+class QMemoryStatsView;
 
 class QApplicationWindow : public QMainWindow
 {
@@ -31,6 +32,7 @@ public:
 	QMemoryUsageView* getMemoryUsageView() const;
 	QThreadInfosView* getThreadInfosView() const;
 	QMemoryOperationListView* getMemoryOperationListView() const;
+	QMemoryStatsView* getMemoryStatsView() const;
 
 	// Status bar
 	void setCaptureMessageCount(const QString& szValue);
@@ -49,6 +51,7 @@ private:
 	QMemoryUsageView* m_pMemoryUsageView;
 	QThreadInfosView* m_pThreadInfosView;
 	QMemoryOperationListView* m_pMemoryOperationListView;
+	QMemoryStatsView* m_pMemoryStatsView;
 
 	// Status bar
 	QStatusBar* m_pStatusBar;

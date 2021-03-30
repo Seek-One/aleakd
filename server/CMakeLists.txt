@@ -23,6 +23,8 @@ SET (ALEAKD_SERVER_SRC
 	GUI/QMemoryOperationView.h
 	GUI/QMemoryOperationListView.cpp
 	GUI/QMemoryOperationListView.h
+	GUI/QMemoryStatsView.cpp
+	GUI/QMemoryStatsView.h
 	GUI/QMemoryUsageView.cpp
 	GUI/QMemoryUsageView.h
 	GUI/QThreadInfosView.cpp
