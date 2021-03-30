@@ -12,9 +12,8 @@
 
 #include "backtrace.h"
 
-#define MAX_BUFF_ADDR 16384
-static void* g_listAddr[MAX_BUFF_ADDR];
-static int g_listAddrCount[MAX_BUFF_ADDR];
+static void* g_listAddr[BACKTRACE_ADDR_CACHE_COUNT];
+static int g_listAddrCount[BACKTRACE_ADDR_CACHE_COUNT];
 
 pthread_mutex_t g_lockAddrCount = PTHREAD_MUTEX_INITIALIZER;
 
@@ -51,7 +50,7 @@ int backtrace_check_addr(void* addr)
 	int iValMin = INT32_MAX;
 
 	pthread_mutex_lock(&g_lockAddrCount);
-	for(int i=0; i<MAX_BUFF_ADDR; i++)
+	for(int i=0; i<BACKTRACE_ADDR_CACHE_COUNT; i++)
 	{
 		if(g_listAddr[i] == addr){
 			// Increment occurrence count
