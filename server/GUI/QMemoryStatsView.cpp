@@ -5,50 +5,63 @@
 #include <QGridLayout>
 #include <QLabel>
 
+#include "Global/Utils.h"
+
 #include "QMemoryStatsView.h"
 
 QMemoryStatsView::QMemoryStatsView(QWidget* parent)
 {
+	QBoxLayout* pMainLayout = new QVBoxLayout();
+	setLayout(pMainLayout);
+
 	QGridLayout* pGridLayout;
 	pGridLayout = new QGridLayout();
-	setLayout(pGridLayout);
+	pMainLayout->addLayout(pGridLayout);
 
 	// Global row
 	QLabel* pTmpLabel;
-	for(int i=0; i<ColCount; i++)
+	for(int i=0; i<DataCount; i++)
 	{
 		// Header row
 		pTmpLabel = new QLabel();
 		if(i == Title) {
 			pTmpLabel->setText(QString());
 		}else{
-			pTmpLabel->setText(getColName(i));
-			pTmpLabel->setAlignment(Qt::AlignCenter);
+			pTmpLabel->setText(getColName(i) + ":");
+			pTmpLabel->setAlignment(Qt::AlignLeft);
 		}
-		pGridLayout->addWidget(pTmpLabel, 0, i);
+		pGridLayout->addWidget(pTmpLabel, i, 0);
 
 		// Search row
 		pTmpLabel = new QLabel();
 		if(i == Title) {
-			pTmpLabel->setText(tr("Filter:"));
+			pTmpLabel->setText(tr("Filter"));
+			QFont font = pTmpLabel->font();
+			font.setBold(true);
+			pTmpLabel->setFont(font);
 		}else{
 			pTmpLabel->setText("0");
-			pTmpLabel->setAlignment(Qt::AlignCenter);
 		}
+		pTmpLabel->setAlignment(Qt::AlignHCenter);
 		m_listStatusRow1.append(pTmpLabel);
-		pGridLayout->addWidget(pTmpLabel, 1, i);
+		pGridLayout->addWidget(pTmpLabel, i, 1);
 
 		// Global row
 		pTmpLabel = new QLabel();
 		if(i == Title) {
-			pTmpLabel->setText(tr("Global:"));
+			pTmpLabel->setText(tr("Global"));
+			QFont font = pTmpLabel->font();
+			font.setBold(true);
+			pTmpLabel->setFont(font);
 		}else{
 			pTmpLabel->setText("0");
-			pTmpLabel->setAlignment(Qt::AlignCenter);
 		}
+		pTmpLabel->setAlignment(Qt::AlignHCenter);
 		m_listStatusRow2.append(pTmpLabel);
-		pGridLayout->addWidget(pTmpLabel, 2, i);
+		pGridLayout->addWidget(pTmpLabel, i, 2);
 	}
+
+	pMainLayout->addStretch();
 }
 
 QMemoryStatsView::~QMemoryStatsView()
@@ -58,11 +71,13 @@ QMemoryStatsView::~QMemoryStatsView()
 
 void QMemoryStatsView::setData(int iRow, int iCol, const QString& szValue)
 {
+	QString szTmp = Utils::getBeautifulNumberString(szValue);
+
 	if(iRow == Filter){
-		m_listStatusRow1.value(iCol)->setText(szValue);
+		m_listStatusRow1.value(iCol)->setText(szTmp);
 	}
 	if(iRow == Global){
-		m_listStatusRow2.value(iCol)->setText(szValue);
+		m_listStatusRow2.value(iCol)->setText(szTmp);
 	}
 }
 

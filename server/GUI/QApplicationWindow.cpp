@@ -22,7 +22,7 @@ QApplicationWindow::QApplicationWindow(QWidget* parent)
 	pMainWidget->setContentsMargins(0, 0, 0, 0);
 	setCentralWidget(pMainWidget);
 
-	QBoxLayout* pMainLayout = new QVBoxLayout();
+	QBoxLayout* pMainLayout = new QHBoxLayout();
 	pMainLayout->setContentsMargins(0, 0, 0, 0);
 	pMainWidget->setLayout(pMainLayout);
 

@@ -108,7 +108,7 @@ bool QApplicationWindowController::init(QApplicationWindow* pApplicationWindow)
 		QTreeView *pTreeView = m_pMemoryOperationListView->getTreeView();
 		pTreeView->setIndentation(0);
 		pTreeView->setModel(m_pModelMemoryOperation);
-		pTreeView->header()->resizeSection(QMemoryOperationModel::MsgNum, 50);
+		pTreeView->header()->resizeSection(QMemoryOperationModel::MsgNum, 75);
 		pTreeView->header()->resizeSection(QMemoryOperationModel::TimeStampColumn, 200);
 		pTreeView->header()->resizeSection(QMemoryOperationModel::ThreadColumn, 150);
 		pTreeView->header()->resizeSection(QMemoryOperationModel::OperationColumn, 100);

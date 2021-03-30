@@ -44,7 +44,7 @@ public:
 		valloc,
 		pvalloc,
 
-		ColCount,
+		DataCount,
 	};
 
 public:
