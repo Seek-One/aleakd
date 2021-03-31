@@ -68,6 +68,7 @@ private:
 
 	QTimer m_timerUpdate;
 	quint64 m_iLastUpdateTime;
+	quint64 m_iLastUpdateValue;
 
 	// List data
 	QReadWriteLock m_lockListMemoryOperation;

@@ -55,6 +55,7 @@ QApplicationWindowController::QApplicationWindowController()
 	m_pMemoryStatsView = NULL;
 
 	m_iLastUpdateTime = 0;
+	m_iLastUpdateValue = 0;
 }
 
 QApplicationWindowController::~QApplicationWindowController()
@@ -167,6 +168,7 @@ void QApplicationWindowController::clearData()
 	m_pMemoryUsageView->getLineSeries()->clear();
 
 	m_iLastUpdateTime = 0;
+	m_iLastUpdateValue = 0;
 }
 
 void QApplicationWindowController::addMemoryOperation(const QSharedPointer<MemoryOperation>& pMemoryOperation)
@@ -579,16 +581,29 @@ void QApplicationWindowController::onTimerUpdate()
 	iPeakMemoryUsage = m_globalStats.m_iPeakRemainingSize;
 	timercpy(&tvStart, &m_globalStats.m_tvStartTime);
 
-	quint64 iStartTime = (m_iLastUpdateTime == 0 ? m_globalStats.m_memoryUsage.m_iFirstTime : m_iLastUpdateTime+1);
+	quint64 iStartTime = (m_iLastUpdateTime == 0 ? m_globalStats.m_memoryUsage.m_iFirstTime : m_iLastUpdateTime);
 	if(iStartTime != 0)
 	{
+		quint64 iLastSize = 0;
+
 		for (quint64 i = iStartTime; i <= m_globalStats.m_memoryUsage.m_iLastTime; i++)
 		{
-			quint64 iSize = m_globalStats.m_memoryUsage.value(i);
-			memoryUsageUpdate.update(i, iSize);
+			if(m_globalStats.m_memoryUsage.contains(i)) {
+				quint64 iSize = m_globalStats.m_memoryUsage.value(i);
+
+				if(i == m_iLastUpdateTime){
+					if(m_iLastUpdateValue != iSize){
+						memoryUsageUpdate.update(i, iSize);
+					}
+				}else{
+					memoryUsageUpdate.update(i, iSize);
+				}
+				iLastSize = iSize;
+			}
 		}
 		if(memoryUsageUpdate.count() > 0) {
 			m_iLastUpdateTime = memoryUsageUpdate.m_iLastTime;
+			m_iLastUpdateValue = iLastSize;
 		}
 	}
 
@@ -599,10 +614,11 @@ void QApplicationWindowController::onTimerUpdate()
 		QtCharts::QLineSeries *pMemoryUsageSeries = m_pMemoryUsageView->getLineSeries();
 		for(quint64 iTimestamp = memoryUsageUpdate.m_iFirstTime; iTimestamp<=memoryUsageUpdate.m_iLastTime; iTimestamp++)
 		{
-			quint64 iSize = memoryUsageUpdate.value(iTimestamp);
-			qDebug("%llu => %llu", iTimestamp, iSize);
-			pMemoryUsageSeries->append(iTimestamp, iSize);
-			m_pMemoryUsageView->updateChartRange(tvStart.tv_sec, iTimestamp, 0, iPeakMemoryUsage);
+			if(memoryUsageUpdate.contains(iTimestamp)) {
+				quint64 iSize = memoryUsageUpdate.value(iTimestamp);
+				pMemoryUsageSeries->append(iTimestamp, iSize);
+				m_pMemoryUsageView->updateChartRange(tvStart.tv_sec, iTimestamp, 0, iPeakMemoryUsage);
+			}
 		}
 	}
 }
