@@ -11,7 +11,7 @@
 
 typedef uint16_t servermsg_version_t;
 
-struct __attribute__((__packed__)) ServerMsgHeaderV1
+typedef struct __attribute__((__packed__)) ServerMsgHeaderV1
 {
 	// Msg timestamp
 	uint64_t time_sec;
@@ -29,7 +29,7 @@ struct __attribute__((__packed__)) ServerMsgHeaderV1
 // Application message
 ///////////////////////
 
-struct __attribute__((__packed__)) ServerMsgAppV1
+typedef struct __attribute__((__packed__)) ServerMsgAppV1
 {
 	servermsg_version_t msg_version;
 	struct ServerMsgHeaderV1 header;
@@ -39,7 +39,7 @@ struct __attribute__((__packed__)) ServerMsgAppV1
 // Memory message
 ///////////////////////
 
-struct __attribute__((__packed__)) ServerMsgMemoryDataV1
+typedef struct __attribute__((__packed__)) ServerMsgMemoryDataV1
 {
 	// Alloc infos
 	uint64_t alloc_size;
@@ -50,7 +50,7 @@ struct __attribute__((__packed__)) ServerMsgMemoryDataV1
 
 } _ServerMsgMemoryDataV1;
 
-struct __attribute__((__packed__)) ServerMsgMemoryV1
+typedef struct __attribute__((__packed__)) ServerMsgMemoryV1
 {
 	servermsg_version_t msg_version;
 	struct ServerMsgHeaderV1 header;
@@ -61,15 +61,15 @@ struct __attribute__((__packed__)) ServerMsgMemoryV1
 // Thread message
 ///////////////////////
 
-struct __attribute__((__packed__)) ServerMsgThreadDataV1
+typedef struct __attribute__((__packed__)) ServerMsgThreadDataV1
 {
 	// Thread
 	uint64_t thread_id;
 	// Free infos
 	char thread_name[24];
-};
+} _ServerMsgThreadDataV1;
 
-struct __attribute__((__packed__)) ServerMsgThreadV1
+typedef struct __attribute__((__packed__)) ServerMsgThreadV1
 {
 	servermsg_version_t msg_version;
 	struct ServerMsgHeaderV1 header;
@@ -80,14 +80,14 @@ struct __attribute__((__packed__)) ServerMsgThreadV1
 // Backtrace message
 ///////////////////////
 
-struct __attribute__((__packed__)) ServerMsgBacktraceDataV1
+typedef struct __attribute__((__packed__)) ServerMsgBacktraceDataV1
 {
 	uint32_t origin_msg_num;
 	uint8_t backtrace_size;
 	uint64_t list_addr[BACKTRACE_MAX_SIZE];
 } _ServerMsgBacktraceDataV1;
 
-struct __attribute__((__packed__)) ServerMsgBacktraceV1
+typedef struct __attribute__((__packed__)) ServerMsgBacktraceV1
 {
 	servermsg_version_t msg_version;
 	struct ServerMsgHeaderV1 header;
@@ -98,7 +98,7 @@ struct __attribute__((__packed__)) ServerMsgBacktraceV1
 // Symbol table infos
 ///////////////////////
 
-struct __attribute__((__packed__)) ServerMsgSymbolInfosDataV1
+typedef struct __attribute__((__packed__)) ServerMsgSymbolInfosDataV1
 {
 	uint64_t addr;
 	char object_name[256];
@@ -107,7 +107,7 @@ struct __attribute__((__packed__)) ServerMsgSymbolInfosDataV1
 	uint64_t symbol_addr;
 } _ServerMsgSymbolInfosDataV1;
 
-struct __attribute__((__packed__)) ServerMsgSymbolInfosV1
+typedef struct __attribute__((__packed__)) ServerMsgSymbolInfosV1
 {
 	servermsg_version_t msg_version;
 	struct ServerMsgHeaderV1 header;
