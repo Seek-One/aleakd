@@ -32,7 +32,7 @@ static void* (*real_pvalloc)(size_t size);
 
 
 // Dummy buffer to wrap initialization because dlsym can call malloc function
-char tmpbuf[4096];
+char tmpbuf[8192];
 unsigned long tmppos = 0;
 unsigned long tmpallocs = 0;
 
@@ -83,6 +83,7 @@ int wrapper_init()
 		if (NULL == real_malloc) {
 			fprintf(stderr, "[aleakd] Error in `dlsym`: %s\n", dlerror());
 		}
+		fprintf(stderr, "[aleakd] malloc=%p\n", real_malloc);
 
 		real_calloc = dlsym(RTLD_NEXT, "calloc");
 		if (NULL == real_calloc) {
