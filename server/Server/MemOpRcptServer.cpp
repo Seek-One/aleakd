@@ -31,12 +31,13 @@ MemOpRcptServer::MemOpRcptServer(QObject* parent)
 
 	m_iTransferMode = TRANSFER_MODE_USED;
 
-	m_pTcpClientSocket = NULL;
-	m_pUdpServerSocket = NULL;
-	m_pNamedPipeFile = NULL;
+	m_pTcpServer = nullptr;
+	m_pTcpClientSocket = nullptr;
+	m_pUdpServerSocket = nullptr;
+	m_pNamedPipeFile = nullptr;
 
 	m_iMsgCount = 0;
-	m_pHandler = NULL;
+	m_pHandler = nullptr;
 
 	moveToThread(this);
 }
@@ -71,7 +72,7 @@ void MemOpRcptServer::onNewConnection()
 		return;
 	}
 
-	qInfo("[aleakd-server] New connection on socket %lu", pSocket->socketDescriptor());
+	qInfo("[aleakd-server] New connection on socket %lu", (unsigned long)pSocket->socketDescriptor());
 	if(!m_pTcpClientSocket) {
 		connect(pSocket, SIGNAL(readyRead()), this, SLOT(onSocketReadyToRead()));
 		connect(pSocket, SIGNAL(disconnected()), this, SLOT(onSocketDisconnected()));

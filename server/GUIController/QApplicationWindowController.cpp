@@ -497,7 +497,7 @@ void QApplicationWindowController::onFilterButtonClicked()
 	m_pModelMemoryOperation->clear();
 	m_pModelMemoryOperation->fetchTo(m_listFilterMemoryOperation.count());
 
-	qDebug("[aleakd-server] Search done in %ld ms", timer.elapsed());
+	qDebug("[aleakd-server] Search done in %ld ms", (long)timer.elapsed());
 }
 
 void QApplicationWindowController::onTimerUpdate()

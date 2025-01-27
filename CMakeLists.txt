@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 3.13)
 
 project (aleakd VERSION 1.0.0 DESCRIPTION "Another leak detection library")
 

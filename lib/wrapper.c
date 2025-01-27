@@ -544,7 +544,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)
 	res = real_pthread_create(thread, attr, start, arg);
 
 	if(thread){
-		fprintf(stderr, "[aleakd] created thread: %llu\n", *thread);
+		fprintf(stderr, "[aleakd] created thread: %llu\n", (unsigned long long)*thread);
 
 		if(g_bUseServerMessage) {
 			struct ServerMsgThreadV1 msg;
